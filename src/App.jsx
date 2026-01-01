@@ -1,17 +1,25 @@
 // src/App.jsx
-import React, { useState, useEffect } from "react"; // Tambahkan useEffect
+import React, { useState, useEffect } from "react";
 import LandingPage from "./pages/LandingPage.jsx";
 import HalalFinder from "./pages/HalalFinder.jsx";
+import AuthenticationPage from "./pages/AuthenticationPage.jsx";
 import "./App.css";
 
 function App() {
-  // 1. Ganti default value dengan function yang mengecek LocalStorage
+  // 1. Modifikasi Logic Inisialisasi State
   const [currentPage, setCurrentPage] = useState(() => {
-    // Cek apakah ada data tersimpan, jika tidak ada default ke "landing"
-    return localStorage.getItem("last_visited_page") || "landing";
+    const savedPage = localStorage.getItem("last_visited_page");
+
+    // LOGIC: Jika yang tersimpan adalah 'auth', paksa balik ke 'landing'
+    // Jika tidak, pakai halaman yang tersimpan (misal 'finder')
+    if (savedPage === "auth") {
+      return "landing";
+    }
+
+    return savedPage || "landing";
   });
 
-  // 2. Tambahkan useEffect untuk menyimpan posisi setiap kali currentPage berubah
+  // 2. useEffect tetap menyimpan halaman apapun yang dibuka
   useEffect(() => {
     localStorage.setItem("last_visited_page", currentPage);
   }, [currentPage]);
@@ -22,6 +30,8 @@ function App() {
         return <LandingPage onNavigate={setCurrentPage} />;
       case "finder":
         return <HalalFinder onNavigate={setCurrentPage} />;
+      case "auth":
+        return <AuthenticationPage onNavigate={setCurrentPage} />;
       default:
         return <LandingPage onNavigate={setCurrentPage} />;
     }

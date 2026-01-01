@@ -11,8 +11,6 @@ import {
   Rate,
   Modal,
   message,
-  Divider,
-  Space,
 } from "antd";
 import {
   SearchOutlined,
@@ -27,7 +25,6 @@ import {
   InstagramFilled,
   YoutubeFilled,
   StopOutlined,
-  ClockCircleOutlined,
   ShoppingCartOutlined,
   CoffeeOutlined,
   FireOutlined,
@@ -36,9 +33,15 @@ import {
   AndroidFilled,
   FilterOutlined,
   ArrowRightOutlined,
+  TranslationOutlined,
 } from "@ant-design/icons";
 import "../App.css";
-import logoImage from '../assets/logo.jpeg';
+import logoImage from "../assets/logo.jpeg";
+
+// 👇 IMPORT BAHASA DARI FILE TERPISAH
+import { en } from "../lang/en";
+import { cn } from "../lang/cn";
+
 const { Title, Text, Paragraph } = Typography;
 
 // --- Components Helper ---
@@ -62,13 +65,25 @@ const CheckListItem = ({ text }) => (
 
 function LandingPage({ onNavigate }) {
   // --- STATE MANAGEMENT ---
+  const [lang, setLang] = useState("en"); // 'en' or 'cn'
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [activeFilters, setActiveFilters] = useState(["Verified Halal"]);
   const [activeStep, setActiveStep] = useState("search");
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
 
+  // 👇 LOGIC BAHASA (Gabungkan object)
+  const TRANSLATIONS = { en, cn };
+  const t = (key) => TRANSLATIONS[lang][key];
+
   // --- HANDLERS ---
+  const toggleLanguage = () => {
+    setLang((prev) => (prev === "en" ? "cn" : "en"));
+    message.success(
+      lang === "en" ? "Switched to Chinese" : "Switched to English"
+    );
+  };
+
   const handleSearch = () => {
     if (!searchText.trim()) {
       message.warning("Please enter a keyword to search!");
@@ -101,8 +116,8 @@ function LandingPage({ onNavigate }) {
                   style={{ fontSize: 40, color: "var(--primary-green)" }}
                 />
               </div>
-              <Title level={4}>Restaurants</Title>
-              <Text type="secondary">Prayer room available</Text>
+              <Title level={4}>{t("lbl_restaurants")}</Title>
+              <Text type="secondary">{t("lbl_prayer_avail")}</Text>
             </Col>
             <Col xs={0} md={1} style={{ textAlign: "center" }}>
               <div
@@ -133,9 +148,9 @@ function LandingPage({ onNavigate }) {
                   Halal
                 </div>
               </div>
-              <Tag color="green">No Alcohol</Tag>
+              <Tag color="green">{t("filter_no_alcohol")}</Tag>
               <Tag color="blue" style={{ marginTop: 8 }}>
-                Family Friendly
+                {t("filter_family")}
               </Tag>
             </Col>
             <Col xs={0} md={1} style={{ textAlign: "center" }}>
@@ -156,10 +171,8 @@ function LandingPage({ onNavigate }) {
                   marginBottom: 16,
                 }}
               />
-              <Title level={4}>Halal Labels</Title>
-              <Text type="secondary">
-                Verified Halal, Muslim-owned, <br /> No Pork, No Alcohol
-              </Text>
+              <Title level={4}>{t("lbl_halal_labels")}</Title>
+              <Text type="secondary">{t("lbl_halal_desc")}</Text>
             </Col>
           </Row>
         );
@@ -174,13 +187,12 @@ function LandingPage({ onNavigate }) {
                 marginBottom: 24,
               }}
             />
-            <Title level={3}>Smart Filters</Title>
+            <Title level={3}>{t("lbl_smart_filters")}</Title>
             <Paragraph
               type="secondary"
               style={{ fontSize: 16, maxWidth: 600, margin: "0 auto 24px" }}
             >
-              Easily filter for specific needs: <b>Pork-Free</b>,{" "}
-              <b>Prayer Space</b>, or <b>Kids Friendly</b>.
+              {t("lbl_smart_desc")}
             </Paragraph>
             <div
               style={{
@@ -191,10 +203,10 @@ function LandingPage({ onNavigate }) {
               }}
             >
               <Tag color="green" style={{ padding: "8px 16px", fontSize: 14 }}>
-                Certified Halal
+                {t("filter_verified")}
               </Tag>
               <Tag color="blue" style={{ padding: "8px 16px", fontSize: 14 }}>
-                Prayer Space
+                {t("filter_prayer")}
               </Tag>
               <Tag color="purple" style={{ padding: "8px 16px", fontSize: 14 }}>
                 WiFi
@@ -213,13 +225,12 @@ function LandingPage({ onNavigate }) {
                 marginBottom: 24,
               }}
             />
-            <Title level={3}>Go with Confidence</Title>
+            <Title level={3}>{t("lbl_confidence")}</Title>
             <Paragraph
               type="secondary"
               style={{ fontSize: 16, maxWidth: 600, margin: "0 auto 24px" }}
             >
-              Check real photos, read reviews from fellow Muslim travelers, and
-              use built-in maps navigation.
+              {t("lbl_confidence_desc")}
             </Paragraph>
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
               <Tag color="gold" style={{ padding: "8px 16px", fontSize: 14 }}>
@@ -243,36 +254,33 @@ function LandingPage({ onNavigate }) {
         <div className="container navbar">
           <div className="brand-logo">
             <div className="logo-icon-wrapper">
-        {/* 2. Ganti GlobalOutlined dengan tag img */}
-        <img 
-            src={logoImage} 
-            alt="Logo Brand" 
-            className="logo-icon" 
-        />
-      </div>
+              <img src={logoImage} alt="Logo Brand" className="logo-icon" />
+            </div>
             <span>QingzhenMu</span>
           </div>
 
           <div className="nav-links">
-            <Button
-              type="link"
-              onClick={() => {
-                onNavigate("finder");
-              }}
-            >
-              Halal Finder
+            <Button type="link" onClick={() => onNavigate("finder")}>
+              {t("nav_finder")}
             </Button>
-            <Button type="link">Mosque</Button>
-            <Button type="link">Prayer Times</Button>
-            <Button type="link">Community</Button>
-            <Button type="link">Blog</Button>
+            <Button type="link">{t("nav_mosque")}</Button>
+            <Button type="link">{t("nav_prayer")}</Button>
+            <Button type="link">{t("nav_community")}</Button>
+            <Button type="link">{t("nav_blog")}</Button>
           </div>
           <div className="nav-actions">
+            {/* LANGUAGE TOGGLE BUTTON */}
             <Button
               type="text"
-              onClick={() => message.info("Login coming soon!")}
+              icon={<TranslationOutlined />}
+              onClick={toggleLanguage}
+              style={{ fontWeight: "bold", marginRight: 8 }}
             >
-              Sign in
+              {lang === "en" ? "CN" : "EN"}
+            </Button>
+
+            <Button type="text" onClick={() => onNavigate("auth")}>
+              {t("nav_signin")}
             </Button>
             <Button
               type="primary"
@@ -280,7 +288,7 @@ function LandingPage({ onNavigate }) {
               className="btn-gold"
               onClick={() => setIsDownloadModalOpen(true)}
             >
-              Download App
+              {t("nav_download")}
             </Button>
           </div>
         </div>
@@ -300,7 +308,7 @@ function LandingPage({ onNavigate }) {
                   fontWeight: 800,
                 }}
               >
-                Find Halal. <br /> Feel at Ease.
+                {t("hero_title")}
               </Title>
               <Paragraph
                 style={{
@@ -310,13 +318,12 @@ function LandingPage({ onNavigate }) {
                   maxWidth: "90%",
                 }}
               >
-                Halal restaurants, prayer-friendly places, and trusted
-                info—wherever you go in China.
+                {t("hero_desc")}
               </Paragraph>
 
               <div className="hero-search-bar">
                 <Input
-                  placeholder="Search city / food / halal shop..."
+                  placeholder={t("search_placeholder")}
                   prefix={
                     <SearchOutlined
                       className="text-muted"
@@ -334,7 +341,7 @@ function LandingPage({ onNavigate }) {
                       onClick={handleSearch}
                       loading={isSearching}
                     >
-                      {isSearching ? "Searching" : "Search"}
+                      {isSearching ? t("search_loading") : t("search_btn")}
                     </Button>
                   }
                   bordered={false}
@@ -345,25 +352,25 @@ function LandingPage({ onNavigate }) {
               <div className="hero-filters">
                 <FilterPill
                   icon={<SafetyCertificateFilled />}
-                  text="Verified Halal"
+                  text={t("filter_verified")}
                   active={activeFilters.includes("Verified Halal")}
                   onClick={() => toggleFilter("Verified Halal")}
                 />
                 <FilterPill
                   icon={<StopOutlined />}
-                  text="No Alcohol"
+                  text={t("filter_no_alcohol")}
                   active={activeFilters.includes("No Alcohol")}
                   onClick={() => toggleFilter("No Alcohol")}
                 />
                 <FilterPill
                   icon={<UsergroupAddOutlined />}
-                  text="Family-Friendly"
+                  text={t("filter_family")}
                   active={activeFilters.includes("Family-Friendly")}
                   onClick={() => toggleFilter("Family-Friendly")}
                 />
                 <FilterPill
                   icon={<CompassOutlined />}
-                  text="Prayer Space"
+                  text={t("filter_prayer")}
                   active={activeFilters.includes("Prayer Space")}
                   onClick={() => toggleFilter("Prayer Space")}
                 />
@@ -372,9 +379,9 @@ function LandingPage({ onNavigate }) {
 
             <Col xs={24} md={10}>
               <Card className="glass-card">
-                <CheckListItem text="Verified listings & trusted sources" />
-                <CheckListItem text="Community reviews you can rely on" />
-                <CheckListItem text="Clear halal labels (certified/muslim-owned)" />
+                <CheckListItem text={t("checklist_1")} />
+                <CheckListItem text={t("checklist_2")} />
+                <CheckListItem text={t("checklist_3")} />
                 <div style={{ marginTop: 24 }}>
                   <Button
                     type="primary"
@@ -382,8 +389,9 @@ function LandingPage({ onNavigate }) {
                     className="btn-green"
                     size="large"
                     shape="round"
+                    onClick={() => onNavigate("finder")}
                   >
-                    Explore Map <ArrowRightOutlined />
+                    {t("explore_map")} <ArrowRightOutlined />
                   </Button>
                 </div>
               </Card>
@@ -392,7 +400,7 @@ function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* FEATURES SECTION (UPDATED LAYOUT) */}
+      {/* FEATURES SECTION */}
       <section className="section-container">
         <div className="container">
           <Title
@@ -400,16 +408,15 @@ function LandingPage({ onNavigate }) {
             className="text-center mb-large"
             style={{ color: "var(--primary-green)" }}
           >
-            Discover Halal & Muslim-friendly Features
+            {t("discover_title")}
           </Title>
 
           <Row gutter={[24, 24]}>
-            {/* LEFT COLUMN: GABUNGAN HALAL FINDER & MOSQUE (1 CARD) */}
             <Col xs={24} lg={15}>
               <Card
                 className="feature-card"
                 bordered={false}
-                bodyStyle={{ padding: 0 }} // Reset padding
+                bodyStyle={{ padding: 0 }}
               >
                 <Row>
                   {/* Left Side: Halal Finder */}
@@ -437,15 +444,14 @@ function LandingPage({ onNavigate }) {
                         level={4}
                         style={{ margin: 0, color: "var(--text-dark)" }}
                       >
-                        Halal Finder
+                        {t("card_finder_title")}
                       </Title>
                     </div>
                     <Paragraph
                       type="secondary"
                       style={{ marginBottom: 24, flex: 1 }}
                     >
-                      Neatify halal restaurants, groceries, hotels & more
-                      nearby.
+                      {t("card_finder_desc")}
                     </Paragraph>
                     <div
                       style={{
@@ -512,15 +518,14 @@ function LandingPage({ onNavigate }) {
                         level={4}
                         style={{ margin: 0, color: "var(--text-dark)" }}
                       >
-                        Mosque Space
+                        {t("card_mosque_title")}
                       </Title>
                     </div>
                     <Paragraph
                       type="secondary"
                       style={{ marginBottom: 24, flex: 1 }}
                     >
-                      Find our mosques matane, prayer spaces, locally areas
-                      comfortably.
+                      {t("card_mosque_desc")}
                     </Paragraph>
                     <div
                       style={{
@@ -591,7 +596,7 @@ function LandingPage({ onNavigate }) {
                       style={{ fontSize: 22, color: "var(--text-dark)" }}
                     />
                     <Title level={4} style={{ margin: 0 }}>
-                      Top Categories
+                      {t("cat_title")}
                     </Title>
                   </div>
                   <Tag
@@ -602,11 +607,10 @@ function LandingPage({ onNavigate }) {
                       fontWeight: 600,
                     }}
                   >
-                    New All
+                    {t("cat_new")}
                   </Tag>
                 </div>
 
-                {/* Styled Buttons/Pills for Categories */}
                 <Row gutter={[12, 12]}>
                   <Col span={14}>
                     <Button
@@ -621,7 +625,7 @@ function LandingPage({ onNavigate }) {
                       }}
                       icon={<ShopOutlined />}
                     >
-                      Restaurants
+                      {t("cat_rest")}
                     </Button>
                   </Col>
                   <Col span={10}>
@@ -638,7 +642,7 @@ function LandingPage({ onNavigate }) {
                       }}
                       icon={<ShoppingCartOutlined />}
                     >
-                      Groceries
+                      {t("cat_groceries")}
                     </Button>
                   </Col>
                   <Col span={10}>
@@ -655,7 +659,7 @@ function LandingPage({ onNavigate }) {
                       }}
                       icon={<BankOutlined />}
                     >
-                      Hotels
+                      {t("cat_hotels")}
                     </Button>
                   </Col>
                   <Col span={14}>
@@ -672,7 +676,7 @@ function LandingPage({ onNavigate }) {
                       }}
                       icon={<CoffeeOutlined />}
                     >
-                      Cafes
+                      {t("cat_cafes")}
                     </Button>
                   </Col>
                   <Col span={24}>
@@ -690,7 +694,7 @@ function LandingPage({ onNavigate }) {
                       }}
                       icon={<FireOutlined />}
                     >
-                      Butcher
+                      {t("cat_butcher")}
                     </Button>
                   </Col>
                 </Row>
@@ -707,7 +711,7 @@ function LandingPage({ onNavigate }) {
                     size="large"
                     style={{ fontWeight: 600 }}
                   >
-                    View All Categories
+                    {t("view_all")}
                   </Button>
                 </div>
               </Card>
@@ -722,10 +726,9 @@ function LandingPage({ onNavigate }) {
           <Row gutter={[48, 48]} align="middle" style={{ padding: "20px 0" }}>
             <Col xs={24} md={24}>
               <Title level={2} className="mb-medium text-center">
-                Find Halal & Prayer Spots Easily
+                {t("how_title")}
               </Title>
 
-              {/* TAB BUTTONS */}
               <div className="step-tabs" style={{ justifyContent: "center" }}>
                 <Button
                   type={activeStep === "search" ? "primary" : "text"}
@@ -735,7 +738,7 @@ function LandingPage({ onNavigate }) {
                   size="large"
                   onClick={() => setActiveStep("search")}
                 >
-                  Search
+                  {t("step_search")}
                 </Button>
                 <Button
                   type={activeStep === "filter" ? "primary" : "text"}
@@ -745,7 +748,7 @@ function LandingPage({ onNavigate }) {
                   size="large"
                   onClick={() => setActiveStep("filter")}
                 >
-                  Filter by halal level
+                  {t("step_filter")}
                 </Button>
                 <Button
                   type={activeStep === "go" ? "primary" : "text"}
@@ -755,16 +758,15 @@ function LandingPage({ onNavigate }) {
                   size="large"
                   onClick={() => setActiveStep("go")}
                 >
-                  Go with confidence
+                  {t("step_go")}
                 </Button>
               </div>
 
-              {/* CONTENT FRAME */}
               <Card className="section-frame-card" bordered={false}>
                 {renderStepContent()}
               </Card>
 
-              {/* 2. FRAME BAWAH (CONFIDENCE) */}
+              {/* 2. CONFIDENCE FRAME */}
               <Card
                 className="section-frame-card"
                 bordered={false}
@@ -790,11 +792,9 @@ function LandingPage({ onNavigate }) {
                     />
                     <div>
                       <Title level={4} style={{ margin: 0 }}>
-                        Halal Confidence
+                        {t("conf_title")}
                       </Title>
-                      <Text type="secondary">
-                        Reliable data verified by community & certificates.
-                      </Text>
+                      <Text type="secondary">{t("conf_subtitle")}</Text>
                     </div>
                   </div>
                 </div>
@@ -805,10 +805,10 @@ function LandingPage({ onNavigate }) {
                       <CheckCircleFilled className="sub-feature-icon" />
                       <div>
                         <Title level={5} style={{ margin: 0 }}>
-                          Verified Halal
+                          {t("feat_verified")}
                         </Title>
                         <Text type="secondary" style={{ fontSize: 13 }}>
-                          Listing places with verified certificates.
+                          {t("feat_verified_desc")}
                         </Text>
                       </div>
                     </div>
@@ -821,10 +821,10 @@ function LandingPage({ onNavigate }) {
                       />
                       <div>
                         <Title level={5} style={{ margin: 0 }}>
-                          Muslim-Owned
+                          {t("feat_owned")}
                         </Title>
                         <Text type="secondary" style={{ fontSize: 13 }}>
-                          Prioritizing local Muslim businesses.
+                          {t("feat_owned_desc")}
                         </Text>
                       </div>
                     </div>
@@ -837,10 +837,10 @@ function LandingPage({ onNavigate }) {
                       />
                       <div>
                         <Title level={5} style={{ margin: 0 }}>
-                          Real Reviews
+                          {t("feat_reviews")}
                         </Title>
                         <Text type="secondary" style={{ fontSize: 13 }}>
-                          Honest feedback from travelers.
+                          {t("feat_reviews_desc")}
                         </Text>
                       </div>
                     </div>
@@ -856,24 +856,24 @@ function LandingPage({ onNavigate }) {
       <section className="section-container">
         <div className="container">
           <Title level={2} className="text-center mb-large">
-            Loved by Muslim Travelers
+            {t("testi_title")}
           </Title>
           <Row gutter={[24, 24]}>
             {[
               {
                 name: "Aisyah Rahman",
                 img: "https://i.pravatar.cc/150?img=5",
-                text: "Love this app! Found a halal restaurant with a prayer space easily right in Beijing.",
+                text: t("testi_1"),
               },
               {
                 name: "Hassan Abdullah",
                 img: "https://i.pravatar.cc/150?img=11",
-                text: "Great to find family friendly places with no alcohol. Super useful for travelers.",
+                text: t("testi_2"),
               },
               {
                 name: "Nurul Wahyuni",
                 img: "https://i.pravatar.cc/150?img=9",
-                text: "Reliable halal ratings and detailed notes. A must-have for Muslims in China!",
+                text: t("testi_3"),
               },
             ].map((item, idx) => (
               <Col xs={24} md={8} key={idx}>
@@ -913,7 +913,7 @@ function LandingPage({ onNavigate }) {
         style={{ padding: "80px 0" }}
       >
         <div className="container">
-          <Title level={2}>Partners & For Business</Title>
+          <Title level={2}>{t("cta_title")}</Title>
           <Paragraph
             type="secondary"
             style={{
@@ -922,8 +922,7 @@ function LandingPage({ onNavigate }) {
               margin: "0 auto 32px auto",
             }}
           >
-            Attract Muslim customers to your restaurant, hotel, or business in
-            China.
+            {t("cta_desc")}
           </Paragraph>
           <Button
             type="primary"
@@ -933,7 +932,7 @@ function LandingPage({ onNavigate }) {
               message.success("Thank you! We will contact you soon.")
             }
           >
-            Get Listed
+            {t("cta_btn")}
           </Button>
         </div>
       </section>
@@ -951,16 +950,16 @@ function LandingPage({ onNavigate }) {
                 <span>QingzhenMu</span>
               </div>
               <Paragraph style={{ color: "rgba(255,255,255,0.6)" }}>
-                Your trusted companion for Muslim-friendly travel in China.
+                {t("footer_desc")}
               </Paragraph>
             </div>
 
             <div className="footer-links">
-              <Button type="link">About Us</Button>
-              <Button type="link">Careers</Button>
-              <Button type="link">Privacy Policy</Button>
-              <Button type="link">Terms</Button>
-              <Button type="link">Contact</Button>
+              <Button type="link">{t("footer_about")}</Button>
+              <Button type="link">{t("footer_careers")}</Button>
+              <Button type="link">{t("footer_privacy")}</Button>
+              <Button type="link">{t("footer_terms")}</Button>
+              <Button type="link">{t("footer_contact")}</Button>
             </div>
 
             <div className="footer-social">
@@ -972,7 +971,7 @@ function LandingPage({ onNavigate }) {
 
           <div className="copyright">
             <Text style={{ color: "rgba(255,255,255,0.4)" }}>
-              © 2024 QingzhenMu Inc. All rights reserved.
+              {t("copyright")}
             </Text>
           </div>
         </div>
@@ -995,11 +994,8 @@ function LandingPage({ onNavigate }) {
               marginBottom: 16,
             }}
           />
-          <Title level={3}>Download QingzhenMu</Title>
-          <Paragraph>
-            Get the full experience on your mobile device. Available on iOS and
-            Android.
-          </Paragraph>
+          <Title level={3}>{t("modal_title")}</Title>
+          <Paragraph>{t("modal_desc")}</Paragraph>
           <div
             style={{
               display: "flex",

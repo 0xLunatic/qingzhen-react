@@ -1,7 +1,8 @@
-/* --- Variables --- */
+/* --- Variables & Imports --- */
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans/index.css");
 @import "leaflet/dist/leaflet.css";
-/* 👇 Tambahkan ini untuk style garis navigasi */
 @import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
+
 :root {
   --primary-green: #0f5132;
   --secondary-green: #198754;
@@ -15,6 +16,16 @@
 }
 
 /* --- Layout Utilities --- */
+body,
+html,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  /* overflow: hidden;  <-- Hapus ini jika ingin landing page bisa discroll, 
+     tapi untuk HalalFinder kita handle sendiri */
+}
+
 .landing-page {
   width: 100%;
   overflow-x: hidden;
@@ -86,29 +97,24 @@
   background-color: var(--secondary-green) !important;
   border-color: var(--secondary-green) !important;
 }
-.btn-outline-gray {
-  border-color: #e0e0e0 !important;
-  color: var(--text-muted) !important;
-  background: white !important;
-}
-.btn-outline-gray:hover {
-  border-color: var(--primary-green) !important;
-  color: var(--primary-green) !important;
-}
 
-/* --- NAVBAR & LOGO --- */
+/* --- NAVBAR --- */
 .navbar-container {
   width: 100%;
-  padding: 16px 0;
+  padding: 0;
+  height: 64px; /* Fix height agar kalkulasi layout pas */
   background: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   position: relative;
-  z-index: 100;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
 }
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 100%;
 }
 .nav-links button {
   color: var(--text-dark);
@@ -117,9 +123,9 @@
 }
 .nav-actions {
   display: flex;
+  align-items: center;
   gap: 12px;
 }
-
 .brand-logo {
   display: flex;
   align-items: center;
@@ -129,36 +135,22 @@
   color: var(--text-dark);
 }
 .logo-icon {
-  /* HAPUS atau comment properti lama ini: */
-  /* color: var(--primary-green); */ /* Tidak berlaku untuk PNG */
-  /* font-size: 28px; */             /* Tidak berlaku untuk <img> */
-
-  /* GANTI dengan ini: */
-  width: 28px;        /* Samakan dengan ukuran font-size sebelumnya */
-  height: auto;       /* Agar proporsional (tidak gepeng) */
-  object-fit: contain; /* Memastikan gambar pas di dalam ukurannya */
-  
-  /* Opsional: Jika gambar menempel ke atas/bawah */
-  display: block; 
+  width: 28px;
+  height: auto;
+  object-fit: contain;
+  display: block;
 }
 
-/* --- HERO SECTION --- */
+/* --- HERO SECTION (LANDING) --- */
 .hero-section {
   width: 100%;
-  background: 
-  /* linear-gradient(
-      135deg,
-      rgba(15, 81, 50, 0.9) 0%,
-      rgba(25, 135, 84, 0.8) 100%
-    ), */
-    url("assets/bg\ \(2\).png");
+  background: url("assets/bg\ \(2\).png"); /* Sesuaikan path jika perlu */
   background-size: cover;
   background-position: center center;
   padding: 100px 0 140px 0;
   position: relative;
   color: white;
 }
-
 .hero-search-bar {
   background: white;
   padding: 8px;
@@ -180,7 +172,6 @@
   font-size: 16px !important;
   border-radius: 40px !important;
 }
-
 .hero-filters {
   display: flex;
   gap: 12px;
@@ -207,7 +198,6 @@
   color: var(--primary-green);
   border-color: white;
 }
-
 .glass-card {
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(10px);
@@ -234,12 +224,11 @@
   font-weight: 500;
 }
 
-/* --- FEATURES & COMMON CARDS --- */
+/* --- FEATURES SECTIONS --- */
 .section-container {
   width: 100%;
   padding: 100px 0;
 }
-
 .feature-card {
   border-radius: var(--border-radius-lg) !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06) !important;
@@ -251,150 +240,20 @@
 .feature-card:hover {
   transform: translateY(-5px);
 }
-.fc-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.fc-icon-wrapper {
-  background: rgba(15, 81, 50, 0.1);
-  padding: 10px;
-  border-radius: 12px;
-}
-.fc-icon {
-  font-size: 24px;
-  color: var(--primary-green);
-}
-.fc-img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: var(--border-radius-md);
-  margin-top: 24px;
-  display: block;
-}
-.fc-check {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  color: var(--primary-green);
-  font-size: 24px;
-  background: white;
-  border-radius: 50%;
-  padding: 2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.sidebar-card {
-  border-radius: var(--border-radius-lg) !important;
-  background: white !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06) !important;
-  border: none !important;
-}
-.sc-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
-}
-.cat-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.cat-pill.ant-tag {
-  padding: 10px 20px;
-  border-radius: var(--border-radius-sm);
-  border: 1px solid #eee;
-  background: #f9f9f9;
-  font-size: 15px;
-  margin: 0;
-  color: var(--text-dark);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s;
-  cursor: pointer;
-}
-.cat-pill.ant-tag:hover {
-  background: #f0f0f0;
-}
-.cat-pill.active {
-  background: var(--primary-green);
-  color: white;
-  border-color: var(--primary-green);
-}
-.cat-pill.active .anticon {
-  color: white;
-}
-
-/* --- FIND HALAL & PRAYER SPOTS SECTION (REWORKED) --- */
 .step-tabs {
   display: flex;
   gap: 16px;
   margin-bottom: 40px;
   flex-wrap: wrap;
 }
-.step-tabs .ant-btn {
-  font-size: 16px;
-  height: auto;
-  padding: 10px 24px;
-  font-weight: 600;
-  box-shadow: none;
-}
-.step-tabs .btn-green {
-  box-shadow: 0 4px 12px rgba(15, 81, 50, 0.2);
-}
-
-/* === UPDATE: FRAME CARD STYLE === */
 .section-frame-card {
   background: white !important;
   border-radius: var(--border-radius-lg) !important;
-  /* Border hijau muda tipis */
   border: 1px solid #d1e7dd !important;
-  /* Bayangan halus */
   box-shadow: 0 4px 24px rgba(15, 81, 50, 0.08) !important;
   padding: 16px;
   margin-bottom: 40px;
 }
-
-/* Column Styles inside the card */
-.fs-col-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.fs-icon {
-  font-size: 24px;
-  color: var(--primary-green);
-}
-.fs-list-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 12px;
-  font-size: 15px;
-  color: var(--text-dark);
-  font-weight: 500;
-}
-.fs-list-item .anticon {
-  color: var(--primary-green);
-  margin-top: 4px;
-  font-size: 16px;
-}
-.fs-divider {
-  height: 100%;
-  width: 1px;
-  background: #eee;
-  margin: 0 auto;
-}
-
-/* Halal Slider Visual */
 .halal-slider-visual {
   background: #f0f0f0;
   border-radius: 20px;
@@ -432,35 +291,6 @@
   border: 3px solid var(--primary-green);
   border-radius: 50%;
 }
-.slider-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-.slider-label.active {
-  color: var(--primary-green);
-}
-
-/* Confidence Banner */
-.confidence-banner {
-  background: rgba(15, 81, 50, 0.08);
-  border-radius: var(--border-radius-md);
-  padding: 24px;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 40px;
-}
-.confidence-icon {
-  font-size: 32px;
-  color: var(--primary-green);
-  background: white;
-  padding: 8px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(15, 81, 50, 0.1);
-}
-
-/* Sub-features */
 .sub-feature {
   display: flex;
   gap: 16px;
@@ -469,48 +299,6 @@
   font-size: 28px;
   color: var(--primary-green);
 }
-
-/* Right Column Extra Buttons */
-.extra-action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 32px;
-}
-.extra-pill-btn {
-  background: rgba(15, 81, 50, 0.08);
-  color: var(--primary-green);
-  padding: 10px 20px;
-  border-radius: 30px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-.extra-pill-btn:hover {
-  background: rgba(15, 81, 50, 0.15);
-}
-.extra-pill-icon {
-  font-size: 20px;
-}
-
-/* Phone Mockup */
-.phone-mockup-container {
-  text-align: center;
-  position: relative;
-  z-index: 1;
-}
-.phone-mockup {
-  max-width: 320px;
-  border-radius: 48px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
-  border: 10px solid #111;
-  background: #111;
-}
-
-/* --- TESTIMONIALS --- */
 .testimonial-card {
   padding: 24px !important;
 }
@@ -545,9 +333,6 @@
   font-weight: 500;
   font-size: 16px;
 }
-.footer-links button:hover {
-  color: var(--accent-gold) !important;
-}
 .footer-social {
   font-size: 24px;
   display: flex;
@@ -558,316 +343,44 @@
   font-size: 14px;
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 992px) {
-  .hero-section {
-    padding: 80px 0;
-    text-align: center;
-  }
-  .hero-search-bar {
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 600px;
-  }
-  .hero-filters {
-    justify-content: center;
-  }
-  .fs-divider {
-    display: none;
-  }
-  .section-frame-card .ant-col {
-    margin-bottom: 32px;
-  }
-  .phone-mockup-container {
-    margin-top: 60px;
-  }
-  .extra-action-buttons {
-    flex-direction: row;
-    justify-content: center;
-    margin-top: 40px;
-    margin-bottom: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .nav-links,
-  .nav-actions {
-    display: none;
-  }
-  .footer-content {
-    flex-direction: column;
-    gap: 32px;
-    text-align: center;
-  }
-  .footer-links {
-    flex-direction: column;
-    gap: 12px;
-  }
-  .step-tabs {
-    overflow-x: auto;
-    padding-bottom: 16px;
-  }
-  .extra-action-buttons {
-    flex-direction: column;
-  }
-}
-
-/* --- LUXURY FINDER STYLES --- */
+/* ========================================= */
+/* HALAL FINDER LAYOUT (RESPONSIVE)     */
+/* ========================================= */
 
 .finder-layout {
   display: flex;
-  height: calc(100vh - 80px);
-  background-color: #f8f9fa; /* Light gray background */
-}
-
-/* Kiri: List Area */
-.finder-list-container {
-  flex: 0 0 450px; /* Fixed width yang nyaman */
-  height: 100%;
-  overflow-y: auto;
-  padding: 0;
-  background: white;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.05);
-  position: relative;
-  z-index: 2;
-}
-
-/* Custom Scrollbar yang elegan */
-.finder-list-container::-webkit-scrollbar {
-  width: 6px;
-}
-.finder-list-container::-webkit-scrollbar-thumb {
-  background-color: #e0e0e0;
-  border-radius: 4px;
-}
-
-/* Header yang Sticky & Glassy */
-.finder-header-luxury {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 24px 24px 16px 24px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-/* Filter Pills Horizontal Scroll */
-.filter-scroll-container {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  margin-top: 12px;
-}
-.filter-scroll-container::-webkit-scrollbar {
-  display: none; /* Hide scrollbar */
-}
-
-.luxury-filter-pill {
-  border-radius: 20px;
-  padding: 6px 16px;
-  border: 1px solid #eee;
-  background: white;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  color: var(--text-dark);
-}
-.luxury-filter-pill:hover,
-.luxury-filter-pill.active {
-  background: var(--primary-green);
-  color: white;
-  border-color: var(--primary-green);
-  box-shadow: 0 4px 12px rgba(15, 81, 50, 0.2);
-}
-
-/* Luxury Place Card */
-.luxury-card {
-  margin: 24px;
-  border-radius: 20px !important;
-  border: none !important;
-  background: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.luxury-card:hover,
-.luxury-card.active-card {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1) !important;
-}
-
-.luxury-card.active-card {
-  border: 1px solid var(--primary-green) !important;
-}
-
-.card-image-container {
-  height: 180px;
+  /* Desktop: Sidebar kiri, Peta kanan */
+  flex-direction: row;
+  height: calc(100vh - 64px);
   width: 100%;
   position: relative;
   overflow: hidden;
-}
-
-.card-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
-.luxury-card:hover .card-image {
-  transform: scale(1.05);
-}
-
-.card-badge-overlay {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  padding: 6px 12px;
-  border-radius: 30px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--primary-green);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.card-content {
-  padding: 16px 20px;
-}
-
-.card-meta-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.card-tags {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.soft-tag {
-  background: #f4f8f6;
-  color: var(--primary-green);
-  border: none;
-  border-radius: 8px;
-  padding: 2px 10px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* Map Area */
-.finder-map-container {
-  flex: 1;
-  position: relative;
-  background: #eef2f5;
-}
-
-/* Luxury Map Pin */
-.luxury-pin {
-  position: absolute;
-  transform: translate(-50%, -100%);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: 1;
-}
-
-.luxury-pin-bubble {
-  background: white;
-  padding: 8px 16px;
-  border-radius: 12px;
-  font-weight: 700;
-  color: var(--text-dark);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 2px solid white;
-}
-
-.luxury-pin:hover {
-  z-index: 100;
-  transform: translate(-50%, -110%) scale(1.1);
-}
-
-.luxury-pin.active .luxury-pin-bubble {
-  background: var(--text-dark); /* Hitam Mewah */
-  color: white;
-  border-color: var(--text-dark);
-}
-
-.luxury-pin.active .luxury-pin-arrow {
-  border-top-color: var(--text-dark);
-}
-
-.luxury-pin-arrow {
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid white;
-  margin: -1px auto 0; /* Overlap slightly */
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
-}
-
-/* Responsive adjustments */
-@media (max-width: 992px) {
-  .finder-list-container {
-    flex: 0 0 100%;
-    width: 100%;
-  }
-  .finder-map-container {
-    display: none; /* Hide map on mobile for this layout, or stack it */
-  }
-}
-
-/* Import Leaflet CSS */
-
-/* Fix z-index issue with Ant Design */
-.leaflet-pane {
-  z-index: 1 !important;
-}
-.leaflet-bottom,
-.leaflet-top {
-  z-index: 2 !important;
-}
-.leaflet-routing-container {
-  display: none !important;
-}
-
-/* --- APP.CSS TAMBAHAN UNTUK HALAL FINDER --- */
-
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
-/* Layout Body */
-.finder-layout {
-  display: flex;
-  height: calc(100vh - 80px); /* Adjust for navbar height */
-  overflow: hidden;
-  position: relative;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #f2f4f6;
+  font-family: "Plus Jakarta Sans", sans-serif;
 }
 
 /* Map Container */
 .finder-map-container {
-  flex: 1; 
+  flex: 1;
   position: relative;
+  height: 100%;
   background: #eef2f5;
+  z-index: 1;
 }
 
-/* Map Overlay Elements */
+/* Sidebar List Container */
+.finder-list-container {
+  width: 420px; /* Fixed width di Desktop */
+  height: 100%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #eee;
+  z-index: 2;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Map Overlays --- */
 .map-overlay-top-left {
   position: absolute;
   top: 24px;
@@ -876,6 +389,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-width: 420px;
 }
 
 .main-overlay-bar {
@@ -883,28 +397,29 @@
   background: white;
   border-radius: 12px;
   padding: 6px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   align-items: center;
 }
 
 .overlay-search-btn {
-  background-color: #1B4D3E !important;
+  background-color: #1b4d3e !important;
   color: white !important;
   border-radius: 8px !important;
   height: 38px;
-  padding: 0 24px;
+  padding: 0 16px;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .overlay-divider {
   width: 1px;
   height: 24px;
   background: #eee;
-  margin: 0 12px;
+  margin: 0 8px;
 }
 
 .overlay-text-btn {
@@ -915,46 +430,50 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 0 8px;
+  font-size: 13px;
+  white-space: nowrap;
 }
-.overlay-text-btn:hover { color: #1B4D3E; }
 
-.overlay-pills { display: flex; gap: 8px; }
+.overlay-pills {
+  display: flex;
+  gap: 8px;
+}
+
 .overlay-pill {
   background: white;
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
-  color: #1B4D3E;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  color: #1b4d3e;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
   transition: transform 0.2s;
 }
-.overlay-pill:hover { transform: translateY(-2px); }
-
-/* Sidebar */
-.finder-list-container {
-  width: 420px;
-  background: #F9FAFB;
-  display: flex;
-  flex-direction: column;
-  box-shadow: -2px 0 20px rgba(0,0,0,0.03);
-  z-index: 10;
-  border-left: 1px solid #eee;
+.overlay-pill:hover {
+  transform: translateY(-2px);
+}
+.overlay-pill.active {
+  background-color: #1b4d3e !important;
+  color: white !important;
+}
+.overlay-pill.active span {
+  color: white;
 }
 
+/* --- Sidebar Components --- */
 .sidebar-header {
   padding: 20px 24px;
   background: white;
   border-bottom: 1px solid #f0f0f0;
   z-index: 20;
 }
-
 .sidebar-search-input .ant-input {
   background: #f5f5f5;
   border: 1px solid transparent;
@@ -962,38 +481,59 @@
   padding: 10px 16px;
   font-size: 14px;
 }
-.sidebar-search-input .ant-input:focus {
-  background: white;
-  border-color: #1B4D3E;
-  box-shadow: 0 0 0 2px rgba(27, 77, 62, 0.1);
+.sidebar-tabs {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  /* Scrollbar hidden by default */
+}
+.sidebar-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+.sidebar-tabs::-webkit-scrollbar-thumb {
+  background: #eee;
+  border-radius: 4px;
 }
 
-/* List Area */
-/* --- APP.CSS (UPDATE BAGIAN LIST SCROLL AREA) --- */
-
-/* Cari bagian .list-scroll-area dan ganti dengan ini: */
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tab-item.active {
+  background: #1b4d3e;
+  color: white;
+  border-color: #1b4d3e;
+}
 
 .list-scroll-area {
   flex: 1;
   overflow-y: auto;
   padding: 20px 24px;
-  
-  /* Background Dasar */
-  background-color: #F2F4F6;
-  
-  /* Pola Garis Miring */
+  background-color: #f2f4f6;
   background-image: repeating-linear-gradient(
     45deg,
     transparent,
     transparent 10px,
-    rgba(27, 77, 62, 0.03) 10px, /* Menggunakan warna tema transparan tipis */
+    rgba(27, 77, 62, 0.03) 10px,
     rgba(27, 77, 62, 0.03) 12px
   );
 }
 
-/* Section Header Hijau */
 .list-section-header {
-  background: #1B4D3E;
+  background: #1b4d3e;
   color: white;
   padding: 14px 20px;
   border-radius: 16px;
@@ -1006,56 +546,65 @@
   box-shadow: 0 4px 12px rgba(27, 77, 62, 0.2);
 }
 
-/* Sidebar Card */
+/* Cards */
 .sidebar-card {
   position: relative;
   background: white;
-  border-radius: 20px; 
+  border-radius: 20px;
   margin-bottom: 16px;
   padding: 16px 20px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid rgba(0,0,0,0.03);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  height: auto;
-  min-height: 140px; 
+  min-height: 140px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-
 .sidebar-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
-
 .sidebar-card.active {
-  border: 1px solid #1B4D3E;
-  background: #F4F9F6;
+  border: 1px solid #1b4d3e;
+  background: #f4f9f6;
 }
 
-/* Promo Badge */
 .promo-ribbon {
-  position: absolute; top: 12px; right: -30px; background: #D32F2F; color: white;
-  font-size: 10px; font-weight: bold; padding: 4px 30px; transform: rotate(45deg);
-  z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  position: absolute;
+  top: 12px;
+  right: -30px;
+  background: #d32f2f;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 4px 30px;
+  transform: rotate(45deg);
+  z-index: 5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
-/* Visited Badge */
 .visited-badge {
-  position: absolute; top: 12px; left: 12px; 
-  background: rgba(255,255,255,0.9); border-radius: 50%; width: 28px; height: 28px;
-  display: flex; align-items: center; justify-content: center;
-  z-index: 5; color: #1B4D3E; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  color: #1b4d3e;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
-
-/* Background Image Faded */
 .card-bg-faded {
   position: absolute;
   top: 0;
   right: 0;
-  width: 60%; 
+  width: 60%;
   height: 100%;
   object-fit: cover;
   opacity: 0.8;
@@ -1065,22 +614,18 @@
   pointer-events: none;
   filter: saturate(0.8);
 }
-
 .card-content-wrapper {
   position: relative;
   z-index: 2;
   width: 100%;
 }
-
 .card-title {
   font-size: 17px;
   font-weight: 800;
   color: #222;
   margin-bottom: 6px;
   line-height: 1.2;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.8);
 }
-
 .card-meta {
   font-size: 13px;
   color: #666;
@@ -1088,192 +633,312 @@
   font-weight: 500;
   display: block;
 }
-
-.card-pills-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.card-pills-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
 .card-pill {
   font-size: 11px;
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid #eee;
-  color: #1B4D3E;
+  color: #1b4d3e;
   padding: 4px 10px;
   border-radius: 20px;
   font-weight: 700;
   display: flex;
-  align-items: center;
+  alignitems: center;
   gap: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
 }
 
 /* Map Markers */
+.custom-div-icon {
+  background: transparent;
+  border: none;
+}
 .custom-icon-pin {
-  background-color: #1B4D3E;
+  background-color: #1b4d3e;
   border: 2px solid white;
   border-radius: 50% 50% 50% 0;
-  width: 40px; height: 40px;
+  width: 40px;
+  height: 40px;
   transform: rotate(-45deg);
   display: flex !important;
-  align-items: center; justify-content: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
 }
-.custom-icon-pin i { transform: rotate(45deg); color: white; font-size: 18px; }
-.custom-icon-pin.active { background-color: #C6A87C; transform: scale(1.2) rotate(-45deg); z-index: 1000; }
-
-/* Tabs Scroll */
-/* --- UPDATE BAGIAN INI --- */
-
-.sidebar-tabs {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-  overflow-x: auto; /* Izinkan scroll horizontal */
-  padding-bottom: 8px; /* Beri ruang untuk scrollbar */
-  white-space: nowrap; /* Pastikan item sejajar ke samping, tidak turun */
-  cursor: grab; /* Indikator bisa digeser */
+.custom-icon-pin i {
+  transform: rotate(45deg);
+  color: white;
+  font-size: 18px;
+}
+.custom-icon-pin.active {
+  background-color: #c6a87c;
+  transform: scale(1.2) rotate(-45deg);
+  z-index: 1000;
+}
+.user-marker {
+  z-index: 500 !important;
 }
 
-/* Kustomisasi Scrollbar agar terlihat tapi tetap rapi */
-.sidebar-tabs::-webkit-scrollbar {
-  height: 6px; /* Tinggi scrollbar horizontal */
-  display: block !important; /* PENTING: Paksa muncul */
-}
-
-.sidebar-tabs::-webkit-scrollbar-track {
-  background: transparent; /* Track transparan */
-}
-
-.sidebar-tabs::-webkit-scrollbar-thumb {
-  background-color: #e0e0e0; /* Warna batang scroll abu-abu muda */
-  border-radius: 10px; /* Membulatkan ujung */
-  transition: background 0.3s;
-}
-
-.sidebar-tabs::-webkit-scrollbar-thumb:hover {
-  background-color: #1B4D3E; /* Warna berubah saat mouse mendekat */
-}
-.tab-item { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #fff; border: 1px solid #eee; border-radius: 20px; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; white-space: nowrap; transition: 0.2s; }
-.tab-item.active { background: #1B4D3E; color: white; border-color: #1B4D3E; }
-
-/* Antd Overrides */
-.ant-drawer-content-wrapper { box-shadow: -5px 0 20px rgba(0,0,0,0.1) !important; }
-.ant-rate { color: #C6A87C !important; font-size: 12px; }
-
-/* --- MODERN DRAWER STYLES --- */
+/* Drawer & Modal */
 .detail-hero {
   position: relative;
   height: 280px;
   width: 100%;
 }
-
 .detail-hero-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .detail-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 50%, rgba(27, 77, 62, 0.95) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(27, 77, 62, 0.95) 100%
+  );
   display: flex;
-  flex-direction: column;
+  flexdirection: column;
   justify-content: flex-end;
   padding: 24px;
 }
-
 .detail-sheet-content {
   background: white;
   border-radius: 24px 24px 0 0;
-  margin-top: -20px; /* Overlap effect */
+  margin-top: -20px;
   position: relative;
   z-index: 10;
   padding: 24px;
   min-height: 500px;
 }
-
-/* Stats Grid */
 .detail-stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 12px;
   margin-bottom: 24px;
 }
-
 .stat-box {
   background: #f8f9fa;
   border-radius: 16px;
   padding: 10px 4px;
   text-align: center;
   border: 1px solid #eee;
-  transition: transform 0.2s;
 }
-.stat-box:hover { transform: translateY(-2px); border-color: #1B4D3E; }
-
-.stat-value { font-size: 14px; font-weight: 800; color: #333; display: block; }
-.stat-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-top: 4px; display: block; }
-
-/* Amenities Scroll */
-.amenities-scroll {
+.stat-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: #333;
+  display: block;
+}
+.stat-label {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  font-weight: 600;
+  display: block;
+  margin-top: 4px;
+}
+.qibla-widget {
+  background: linear-gradient(135deg, #1b4d3e 0%, #0f2b23 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 16px;
   display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 8px;
+  alignitems: center;
+  justify-content: space-between;
   margin-bottom: 20px;
 }
-.amenities-scroll::-webkit-scrollbar { height: 4px; }
-.amenities-scroll::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
-
-.amenity-tag {
-  flex-shrink: 0;
+.compass-circle {
+  width: 50px;
+  height: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 12px;
-  background: #f4f6f8;
-  color: #555;
-  font-size: 13px;
-  font-weight: 600;
+  alignitems: center;
+  justify-content: center;
+  font-size: 24px;
 }
-
-/* Qibla Widget */
-.qibla-widget { background: linear-gradient(135deg, #1B4D3E 0%, #0f2b23 100%); color: white; padding: 16px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.compass-circle { width: 50px; height: 50px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-
-/* Tabs Styling Override */
-.custom-tabs .ant-tabs-nav::before { border-bottom: none; }
-.custom-tabs .ant-tabs-tab { 
-  font-size: 15px; 
-  font-weight: 600; 
-  padding: 12px 0;
-  color: #999;
-}
-.custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn { 
-  color: #1B4D3E !important; 
-}
-.custom-tabs .ant-tabs-ink-bar { 
-  background: #1B4D3E !important; 
-  height: 3px; 
-  border-radius: 3px;
-}
-
-/* Review Card Modern */
 .review-card-modern {
   background: #fff;
   border: 1px solid #f0f0f0;
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 
-.overlay-pill.active {
-  background-color: #1B4D3E !important; /* Hijau Tema */
+/* --- MOBILE SPECIFIC FIXES --- */
+@media (max-width: 768px) {
+  /* 1. Navbar Simplification */
+  .nav-links {
+    display: none;
+  } /* Hide menu links */
+  .brand-logo span {
+    display: none;
+  } /* Hide logo text */
+  .nav-actions {
+    gap: 8px;
+  }
+
+  /* 2. Layout Structure */
+  .finder-layout {
+    flex-direction: column; /* Stack vertikal */
+    height: calc(100vh - 64px);
+  }
+
+  /* 3. Map Full Width & Height */
+  .finder-map-container {
+    width: 100% !important;
+    height: 100% !important;
+    flex: 1; /* Ambil semua space */
+  }
+
+  /* 4. Hide Sidebar List by Default (Trigger via Button) */
+  .finder-list-container {
+    display: none; /* Hide list on mobile map view */
+  }
+
+  /* 5. Mobile Drawer for List */
+  .mobile-list-drawer .ant-drawer-body {
+    padding: 0;
+  }
+
+  /* 6. Map Overlay Adjustments */
+  .map-overlay-top-left {
+    top: 16px;
+    left: 16px;
+    right: 16px; /* Full width minus padding */
+    max-width: none;
+    align-items: stretch;
+  }
+
+  .main-overlay-bar {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .overlay-search-btn {
+    flex: 1; /* Search button takes remaining space */
+  }
+
+  /* Hide filter text buttons on mobile to save space */
+  .overlay-divider,
+  .overlay-text-btn {
+    display: none;
+  }
+
+  /* Allow Horizontal Scroll for Pills */
+  .overlay-pills {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .overlay-pill {
+    flex-shrink: 0;
+  }
+
+  /* Adjust Controls Position */
+  .finder-map-container .ant-btn-icon-only {
+    /* Tombol locate me naik dikit biar ga ketutupan tombol "View List" */
+    bottom: 100px !important;
+  }
+
+  /* Detail Drawer on Mobile */
+  .place-detail-drawer .ant-drawer-content-wrapper {
+    width: 100% !important; /* Full width */
+    height: 90vh !important; /* Almost full height */
+    bottom: 0 !important;
+    top: auto !important;
+    border-radius: 24px 24px 0 0;
+  }
+}
+
+/* --- AUTH PAGE --- */
+.auth-page-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: #fff;
+}
+.auth-banner-side {
+  flex: 1;
+  background-image: url("https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=1776&auto=format&fit=crop");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: none;
+}
+@media (min-width: 768px) {
+  .auth-banner-side {
+    display: block;
+  }
+}
+.auth-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(27, 77, 62, 0.85),
+    rgba(27, 77, 62, 0.4)
+  );
+  padding: 60px;
+  display: flex;
+  flexdirection: column;
+  justifycontent: space-between;
+}
+.white-logo {
   color: white !important;
-  box-shadow: 0 4px 12px rgba(27, 77, 62, 0.3);
-  transform: translateY(-1px);
+  font-size: 24px;
+  font-weight: bold;
+  display: flex;
+  alignitems: center;
+  gap: 12px;
+}
+.auth-form-side {
+  flex: 1;
+  display: flex;
+  flexdirection: column;
+  position: relative;
+  overflow-y: auto;
+  padding: 40px 20px;
+  background: #fff;
+}
+.auth-form-container {
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+}
+.auth-back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  color: #666;
+}
+.auth-actions-row {
+  display: flex;
+  justify-content: space-between;
+  alignitems: center;
+  margin-bottom: 24px;
+}
+.social-login-gap {
+  display: flex;
+  gap: 16px;
 }
 
-.overlay-pill.active span {
-  color: white; /* Pastikan icon juga menjadi putih */
+/* LEAFLET Z-INDEX FIX */
+.leaflet-pane {
+  z-index: 1 !important;
+}
+.leaflet-bottom,
+.leaflet-top {
+  z-index: 2 !important;
+}
+.leaflet-routing-container {
+  display: none !important;
 }
