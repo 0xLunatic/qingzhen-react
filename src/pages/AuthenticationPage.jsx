@@ -26,7 +26,7 @@ import {
   TranslationOutlined, // Icon Bahasa
 } from "@ant-design/icons";
 import "../App.css";
-import logoImage from "../assets/logo.jpeg";
+import logoImage from "../assets/logo.png";
 
 // 👇 Import Kamus Bahasa
 import { en } from "../lang/en";

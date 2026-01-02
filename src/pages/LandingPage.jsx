@@ -11,6 +11,8 @@ import {
   Rate,
   Modal,
   message,
+  Grid,
+  Divider,
 } from "antd";
 import {
   SearchOutlined,
@@ -34,15 +36,18 @@ import {
   FilterOutlined,
   ArrowRightOutlined,
   TranslationOutlined,
+  MenuOutlined, // <-- Icon Hamburger
+  CloseOutlined, // <-- Icon Close
 } from "@ant-design/icons";
 import "../App.css";
-import logoImage from "../assets/logo.jpeg";
+import logoImage from "../assets/logo.png";
 
 // 👇 IMPORT BAHASA DARI FILE TERPISAH
 import { en } from "../lang/en";
 import { cn } from "../lang/cn";
 
 const { Title, Text, Paragraph } = Typography;
+const { useBreakpoint } = Grid;
 
 // --- Components Helper ---
 const FilterPill = ({ icon, text, active, onClick }) => (
@@ -65,12 +70,18 @@ const CheckListItem = ({ text }) => (
 
 function LandingPage({ onNavigate }) {
   // --- STATE MANAGEMENT ---
+  const screens = useBreakpoint();
+  const isMobile = !screens.md; // Deteksi layar mobile
+
   const [lang, setLang] = useState("en"); // 'en' or 'cn'
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [activeFilters, setActiveFilters] = useState(["Verified Halal"]);
   const [activeStep, setActiveStep] = useState("search");
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  
+  // State untuk Mobile Menu
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // 👇 LOGIC BAHASA (Gabungkan object)
   const TRANSLATIONS = { en, cn };
@@ -93,6 +104,8 @@ function LandingPage({ onNavigate }) {
     setTimeout(() => {
       setIsSearching(false);
       message.success(`Found 12 halal places for "${searchText}"`);
+      // Optional: Navigate to finder with query
+      // onNavigate("finder"); 
     }, 1500);
   };
 
@@ -249,9 +262,10 @@ function LandingPage({ onNavigate }) {
 
   return (
     <div className="landing-page">
-      {/* HEADER */}
+      {/* HEADER / NAVBAR */}
       <header className="navbar-container">
         <div className="container navbar">
+          {/* Logo */}
           <div className="brand-logo">
             <div className="logo-icon-wrapper">
               <img src={logoImage} alt="Logo Brand" className="logo-icon" />
@@ -259,29 +273,56 @@ function LandingPage({ onNavigate }) {
             <span>QingzhenMu</span>
           </div>
 
-          <div className="nav-links">
+          {/* Desktop Links + Mobile Dropdown Menu */}
+          <div className={`nav-links ${isMobileMenuOpen ? "mobile-open" : ""}`}>
             <Button type="link" onClick={() => onNavigate("finder")}>
               {t("nav_finder")}
             </Button>
-            <Button type="link">{t("nav_mosque")}</Button>
-            <Button type="link">{t("nav_prayer")}</Button>
-            <Button type="link">{t("nav_community")}</Button>
-            <Button type="link">{t("nav_blog")}</Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_mosque")}</Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_prayer")}</Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_community")}</Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_blog")}</Button>
+
+            {/* Item tambahan di dropdown Mobile */}
+            {isMobile && (
+              <>
+                <Divider style={{ margin: "8px 0" }} />
+                <Button 
+                  type="text" 
+                  onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }} 
+                  icon={<TranslationOutlined />}
+                >
+                   {lang === "en" ? "Switch to Chinese" : "Switch to English"}
+                </Button>
+                <Button type="text" onClick={() => onNavigate("auth")}>
+                  {t("nav_signin")}
+                </Button>
+              </>
+            )}
           </div>
+
+          {/* Navbar Actions (Right Side) */}
           <div className="nav-actions">
-            {/* LANGUAGE TOGGLE BUTTON */}
+            {/* LANGUAGE TOGGLE (Hidden on Mobile Header) */}
             <Button
               type="text"
               icon={<TranslationOutlined />}
               onClick={toggleLanguage}
               style={{ fontWeight: "bold", marginRight: 8 }}
+              className="hide-mobile"
             >
               {lang === "en" ? "CN" : "EN"}
             </Button>
 
-            <Button type="text" onClick={() => onNavigate("auth")}>
+            {/* SIGN IN (Hidden on Mobile Header) */}
+            <Button 
+              type="text" 
+              onClick={() => onNavigate("auth")}
+              className="hide-mobile"
+            >
               {t("nav_signin")}
             </Button>
+
             <Button
               type="primary"
               shape="round"
@@ -290,6 +331,14 @@ function LandingPage({ onNavigate }) {
             >
               {t("nav_download")}
             </Button>
+
+            {/* HAMBURGER MENU BUTTON */}
+            <button 
+              className="mobile-menu-toggle" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
+            </button>
           </div>
         </div>
       </header>
@@ -302,7 +351,7 @@ function LandingPage({ onNavigate }) {
               <Title
                 style={{
                   color: "white",
-                  fontSize: "3.5rem",
+                  fontSize: isMobile ? "2.5rem" : "3.5rem", // Responsive Font
                   marginBottom: 16,
                   lineHeight: 1.2,
                   fontWeight: 800,
@@ -500,7 +549,8 @@ function LandingPage({ onNavigate }) {
                       padding: "24px 24px 0 24px",
                       display: "flex",
                       flexDirection: "column",
-                      borderLeft: "1px solid #f0f0f0",
+                      borderLeft: isMobile ? "none" : "1px solid #f0f0f0",
+                      borderTop: isMobile ? "1px solid #f0f0f0" : "none",
                     }}
                   >
                     <div

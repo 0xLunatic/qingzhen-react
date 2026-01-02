@@ -20,7 +20,6 @@ import {
   Tooltip,
   Dropdown,
   Radio,
-  Card,
   Grid,
 } from "antd";
 import {
@@ -52,8 +51,8 @@ import {
   DownOutlined,
   AppstoreOutlined,
   TranslationOutlined,
-  RocketOutlined,
-  UnorderedListOutlined, // Icon untuk tombol List di Mobile
+  UnorderedListOutlined,
+  MenuOutlined, 
 } from "@ant-design/icons";
 import { FaWalking, FaBicycle, FaMotorcycle, FaCar } from "react-icons/fa";
 
@@ -70,13 +69,12 @@ import "leaflet-routing-machine";
 // Import CSS
 import "../App.css";
 
-// 👇 IMPORT BAHASA
+// 👇 IMPORT BAHASA (Pastikan file ini ada, atau hapus jika tidak pakai)
 import { en } from "../lang/en";
 import { cn } from "../lang/cn";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { useBreakpoint } = Grid;
 
 // --- CONSTANTS ---
 const THEME_COLOR = "#1B4D3E";
@@ -373,12 +371,11 @@ const SidebarCard = ({ data, active, onClick, isVisited, t }) => {
 // --- MAIN PAGE ---
 function HalalFinder({ onNavigate }) {
   const screens = Grid.useBreakpoint();
-  // Deteksi Mobile (jika md=false artinya layar kecil)
   const isMobile = !screens.md;
 
   const [lang, setLang] = useState("en");
   const TRANSLATIONS = { en, cn };
-  const t = (key) => TRANSLATIONS[lang][key] || key;
+  const t = (key) => TRANSLATIONS[lang]?.[key] || key;
   const toggleLanguage = () => {
     setLang((prev) => (prev === "en" ? "cn" : "en"));
     message.success(lang === "en" ? "切换到中文" : "Switched to English");
@@ -392,12 +389,15 @@ function HalalFinder({ onNavigate }) {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
-  const [mobileListVisible, setMobileListVisible] = useState(false); // New for mobile list
+  const [mobileListVisible, setMobileListVisible] = useState(false);
+
+  // STATE MOBILE MENU
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Navigation States
   const [isNavigating, setIsNavigating] = useState(false);
   const [destinationCoords, setDestinationCoords] = useState(null);
-  const [transportMode, setTransportMode] = useState("car"); // walk, bike, moto, car
+  const [transportMode, setTransportMode] = useState("car");
   const [routeInfo, setRouteInfo] = useState({
     totalDistance: 0,
     totalTime: 0,
@@ -572,7 +572,7 @@ function HalalFinder({ onNavigate }) {
     setDestinationCoords([selectedPlace.lat, selectedPlace.lng]);
     setIsNavigating(true);
     setDrawerVisible(false);
-    setMobileListVisible(false); // Close mobile list if open
+    setMobileListVisible(false);
     message.loading("Calculating route...", 1.0);
   };
 
@@ -790,7 +790,6 @@ function HalalFinder({ onNavigate }) {
                 onClick={() => {
                   setSelectedPlace(place);
                   setDrawerVisible(true);
-                  // On mobile, close the list drawer when item selected
                   if (isMobile) setMobileListVisible(false);
                 }}
               />
@@ -818,33 +817,68 @@ function HalalFinder({ onNavigate }) {
           >
             <GlobalOutlined className="logo-icon" /> <span>QingzhenMu</span>
           </div>
-          <div className="nav-links">
+           
+          {/* MENU LINKS (DESKTOP + MOBILE DROPDOWN) */}
+          <div className={`nav-links ${isMobileMenuOpen ? "mobile-open" : ""}`}>
             <Button
               type="link"
               className="active text-green"
-              onClick={() => onNavigate("finder")}
+              onClick={() => {
+                 onNavigate("finder");
+                 setIsMobileMenuOpen(false);
+              }}
             >
               {t("nav_finder")}
             </Button>
-            <Button type="link">{t("nav_mosque")}</Button>
-            <Button type="link">{t("nav_prayer")}</Button>
-            <Button type="link">{t("nav_community")}</Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_mosque")}</Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_prayer")}</Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_community")}</Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_blog")}</Button>
+            
+            {/* ITEM KHUSUS MOBILE DALAM DROPDOWN */}
+            {isMobile && (
+              <>
+                <Divider style={{ margin: "8px 0" }} />
+                <Button type="text" onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }} icon={<TranslationOutlined />}>
+                   {lang === "en" ? "Switch to Chinese" : "Switch to English"}
+                </Button>
+                <Button type="text" onClick={() => onNavigate("auth")}>
+                  {t("nav_signin")}
+                </Button>
+              </>
+            )}
           </div>
+
           <div className="nav-actions">
+            {/* Tombol Bahasa & Sign In: Tambahkan class 'hide-mobile' */}
             <Button
               type="text"
+              className="hide-mobile"
               icon={<TranslationOutlined />}
               onClick={toggleLanguage}
               style={{ fontWeight: "bold", marginRight: 8 }}
             >
               {lang === "en" ? "CN" : "EN"}
             </Button>
-            <Button type="text" onClick={() => onNavigate("auth")}>
+            <Button 
+              type="text" 
+              className="hide-mobile"
+              onClick={() => onNavigate("auth")}
+            >
               {t("nav_signin")}
             </Button>
+            
             <Button className="btn-gold" shape="round">
               {t("nav_download")}
             </Button>
+            
+            {/* TOMBOL HAMBURGER */}
+            <button 
+              className="mobile-menu-toggle" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
+            </button>
           </div>
         </div>
       </header>
@@ -867,12 +901,16 @@ function HalalFinder({ onNavigate }) {
             <div
               className="map-overlay-top-left"
               style={{
-                maxWidth: isMobile ? "calc(100% - 32px)" : "420px",
+                position: "absolute",
                 top: isMobile ? 16 : 24,
                 left: isMobile ? 16 : 24,
+                right: isMobile ? 120 : "auto", 
+                // zIndex: 900, sudah ada di CSS
               }}
             >
-              <div className="main-overlay-bar">
+              <div 
+                className="main-overlay-bar" 
+              >
                 <div
                   className="overlay-search-btn"
                   onClick={() =>
@@ -881,9 +919,12 @@ function HalalFinder({ onNavigate }) {
                       : document.getElementById("sidebar-search").focus()
                   }
                 >
-                  <SearchOutlined /> {t("map_btn_search")}
+                  <SearchOutlined style={{ flexShrink: 0 }} /> 
+                  <span>
+                    {t("map_btn_search")}
+                  </span>
                 </div>
-                {/* Hide other buttons on mobile to save space */}
+                
                 {!isMobile && (
                   <>
                     <div className="overlay-divider"></div>
@@ -901,15 +942,8 @@ function HalalFinder({ onNavigate }) {
                 )}
               </div>
 
-              {/* Scrollable Pills on Mobile */}
-              <div
-                className="overlay-pills"
-                style={{
-                  flexWrap: "nowrap",
-                  overflowX: "auto",
-                  paddingBottom: 4,
-                }}
-              >
+              {/* PILLS: Tampilan ini akan diatur CSS jadi Vertical di Mobile */}
+              <div className="overlay-pills">
                 <div
                   className={`overlay-pill ${
                     activeFilter === "All" ? "active" : ""
@@ -941,21 +975,10 @@ function HalalFinder({ onNavigate }) {
           {/* QIBLA WIDGET */}
           {userLocation && (
             <div
+              className="qibla-widget-container"
               style={{
-                position: "absolute",
-                top: isMobile ? 16 : 24,
-                right: isMobile ? 16 : 24,
-                zIndex: 1000,
-                background: "rgba(255, 255, 255, 0.95)",
-                backdropFilter: "blur(5px)",
-                padding: "12px",
-                borderRadius: "20px",
-                boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                width: 90,
-                border: "1px solid rgba(0,0,0,0.05)",
+                 top: isMobile ? 16 : 24,
+                 right: isMobile ? 16 : 24,
               }}
             >
               <div
@@ -1016,12 +1039,12 @@ function HalalFinder({ onNavigate }) {
             </div>
           )}
 
-          {/* 👇👇👇 NEW NAVIGATION HUD (DYNAMIC ISLAND) - CENTER TOP 👇👇👇 */}
+          {/* NEW NAVIGATION HUD (DYNAMIC ISLAND) */}
           {isNavigating && (
             <div
               style={{
                 position: "absolute",
-                top: isMobile ? 20 : 24, // Sedikit lebih rendah di desktop
+                top: isMobile ? 20 : 24,
                 left: "50%",
                 transform: "translateX(-50%)",
                 zIndex: 1000,
@@ -1038,7 +1061,6 @@ function HalalFinder({ onNavigate }) {
                 justifyContent: "center",
               }}
             >
-              {/* Icon Box */}
               <div
                 style={{
                   fontSize: 20,
@@ -1062,8 +1084,6 @@ function HalalFinder({ onNavigate }) {
                   <FaCar />
                 )}
               </div>
-
-              {/* Stats */}
               <div
                 style={{
                   display: "flex",
@@ -1081,7 +1101,6 @@ function HalalFinder({ onNavigate }) {
               </div>
             </div>
           )}
-          {/* 👆👆👆 END HUD 👆👆👆 */}
 
           <MapContainer
             center={safeUserLocation}
@@ -1096,7 +1115,6 @@ function HalalFinder({ onNavigate }) {
             <MapEvents onMoveEnd={handleMapMoveEnd} />
             {!isNavigating && <AutoFitBounds places={safeFilteredPlaces} />}
 
-            {/* ROUTING MACHINE */}
             {isNavigating && safeUserLocation && destinationCoords && (
               <RoutingMachine
                 userLocation={safeUserLocation}
@@ -1135,11 +1153,11 @@ function HalalFinder({ onNavigate }) {
             ))}
           </MapContainer>
 
-          {/* BOTTOM CONTROLS (LOCATE + REDO) */}
+          {/* BOTTOM CONTROLS */}
           <div
             style={{
               position: "absolute",
-              bottom: isMobile ? 100 : 32, // Adjust for mobile floating button
+              bottom: isMobile ? 100 : 32,
               right: isMobile ? 16 : 32,
               zIndex: 900,
               display: "flex",
@@ -1235,7 +1253,7 @@ function HalalFinder({ onNavigate }) {
         )}
       </div>
 
-      {/* MOBILE LIST DRAWER (BOTTOM SHEET) */}
+      {/* MOBILE LIST DRAWER */}
       {isMobile && (
         <Drawer
           title="Halal Places"
@@ -1255,15 +1273,15 @@ function HalalFinder({ onNavigate }) {
         </Drawer>
       )}
 
-      {/* DRAWER DETAILS MODERN (RESPONSIVE) */}
+      {/* DRAWER DETAILS MODERN */}
       <Drawer
         title={null}
-        placement={isMobile ? "bottom" : "right"} // Bottom on Mobile
+        placement={isMobile ? "bottom" : "right"}
         closable={false}
         onClose={() => setDrawerVisible(false)}
         open={drawerVisible}
-        width={isMobile ? "100%" : 480} // Full width on Mobile
-        height={isMobile ? "90vh" : "100%"} // Tall bottom sheet on Mobile
+        width={isMobile ? "100%" : 480}
+        height={isMobile ? "90vh" : "100%"}
         className="place-detail-drawer"
         styles={{ body: { padding: 0 } }}
       >
@@ -1344,8 +1362,8 @@ function HalalFinder({ onNavigate }) {
                         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                       }}
                     >
-                      <CheckCircleFilled style={{ fontSize: "14px" }} />{" "}
-                      Verified Halal
+                      <CheckCircleFilled style={{ fontSize: "14px" }} /> Verified
+                      Halal
                     </span>
                   )}
                 </div>
@@ -1465,8 +1483,9 @@ function HalalFinder({ onNavigate }) {
                 </div>
               </div>
 
-              {/* MODE SELECTOR */}
-              <div style={{ marginBottom: 16 }}>
+              {/* MODE SELECTOR (TRANSPORT SECTION) */}
+              {/* Tambahkan class transport-section yang sudah dibuat di CSS */}
+              <div className="transport-section">
                 <Text
                   type="secondary"
                   style={{
@@ -1536,11 +1555,11 @@ function HalalFinder({ onNavigate }) {
                 </Radio.Group>
               </div>
 
-              <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+              {/* TOMBOL NAVIGASI UTAMA (FIX TABRAKAN) */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 24, width: "100%", alignItems: "center" }}>
                 <Button
                   type="primary"
                   size="large"
-                  block
                   icon={<CompassFilled />}
                   style={{
                     height: 50,
@@ -1548,6 +1567,8 @@ function HalalFinder({ onNavigate }) {
                     fontWeight: 700,
                     fontSize: 16,
                     background: THEME_COLOR,
+                    flex: 1,       // Agar lebar otomatis mengisi
+                    minWidth: 0,   // Mencegah overflow
                   }}
                   onClick={handleStartNavigation}
                 >
@@ -1561,6 +1582,7 @@ function HalalFinder({ onNavigate }) {
                     width: 50,
                     borderRadius: 14,
                     borderColor: "#eee",
+                    flex: "none", 
                   }}
                   onClick={() => setReviewModalVisible(true)}
                 />
@@ -1572,10 +1594,12 @@ function HalalFinder({ onNavigate }) {
                     width: 50,
                     borderRadius: 14,
                     borderColor: "#eee",
+                    flex: "none",
                   }}
                   onClick={handleGetDirections}
                 />
               </div>
+
               <Tabs
                 defaultActiveKey="1"
                 className="custom-tabs"
@@ -1586,7 +1610,11 @@ function HalalFinder({ onNavigate }) {
                     children: (
                       <div style={{ paddingTop: 12 }}>
                         <div
-                          style={{ display: "flex", gap: 16, marginBottom: 20 }}
+                          style={{
+                            display: "flex",
+                            gap: 16,
+                            marginBottom: 20,
+                          }}
                         >
                           <div
                             style={{
@@ -1614,6 +1642,8 @@ function HalalFinder({ onNavigate }) {
                             </Text>
                           </div>
                         </div>
+
+                        {/* --- FACILITIES SECTION (UPDATED GRID) --- */}
                         <Text
                           strong
                           style={{
@@ -1624,20 +1654,32 @@ function HalalFinder({ onNavigate }) {
                         >
                           {t("lbl_facilities")}
                         </Text>
-                        <div className="amenities-scroll">
-                          <div className="amenity-tag">
-                            <WifiOutlined /> {t("fac_wifi")}
-                          </div>
-                          <div className="amenity-tag">
-                            <CarOutlined /> {t("fac_parking")}
-                          </div>
-                          <div className="amenity-tag">
-                            <CompassFilled /> {t("fac_prayer")}
-                          </div>
-                          <div className="amenity-tag">
-                            <ClockCircleOutlined /> {t("fac_ac")}
-                          </div>
-                        </div>
+                         
+                        {(() => {
+                          const facilitiesData = [
+                            { icon: <WifiOutlined />, label: t("fac_wifi") || "Free Wifi" },
+                            { icon: <CarOutlined />, label: t("fac_parking") || "Parking" },
+                            { icon: <CompassFilled />, label: t("fac_prayer") || "Prayer Room" },
+                            { icon: <ClockCircleOutlined />, label: t("fac_ac") || "Full AC" },
+                            { icon: <CheckCircleFilled />, label: "Toilet" },
+                            { icon: <SafetyCertificateOutlined />, label: "Reservation" },
+                          ];
+
+                          return (
+                            <div className="facilities-grid">
+                              {facilitiesData.map((item, index) => (
+                                <div key={index} className="facility-box">
+                                  <div className="facility-icon-wrapper">
+                                    {item.icon}
+                                  </div>
+                                  <span className="facility-label">{item.label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                        {/* ------------------------------------- */}
+
                         <Divider style={{ margin: "20px 0" }} />
                         <div
                           style={{
