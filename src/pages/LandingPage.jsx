@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// src/pages/LandingPage.jsx
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Input,
@@ -13,6 +14,10 @@ import {
   message,
   Grid,
   Divider,
+  Dropdown,
+  Space,
+  Form, // 👈 Import Form
+  Upload, // 👈 Import Upload
 } from "antd";
 import {
   SearchOutlined,
@@ -36,18 +41,54 @@ import {
   FilterOutlined,
   ArrowRightOutlined,
   TranslationOutlined,
-  MenuOutlined, // <-- Icon Hamburger
-  CloseOutlined, // <-- Icon Close
+  MenuOutlined,
+  CloseOutlined,
+  UserOutlined,
+  LogoutOutlined,
+  SettingOutlined,
+  DownOutlined,
+  EditOutlined, // 👈 Icon Edit untuk Review
+  CameraOutlined, // 👈 Icon Kamera
 } from "@ant-design/icons";
 import "../App.css";
 import logoImage from "../assets/logo.png";
 
-// 👇 IMPORT BAHASA DARI FILE TERPISAH
+// 👇 IMPORT BAHASA
 import { en } from "../lang/en";
 import { cn } from "../lang/cn";
 
 const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input; // 👈 Destructure TextArea
 const { useBreakpoint } = Grid;
+
+// --- DATA COLLABORATION ---
+const COLLABORATORS = [
+  {
+    name: "PCIM Yogyakarta",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Muhammadiyah_Logo.svg/1200px-Muhammadiyah_Logo.svg.png",
+    url: "#",
+  },
+  {
+    name: "KBRI Beijing",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Emblem_of_Indonesia.svg/1200px-Emblem_of_Indonesia.svg.png",
+    url: "#",
+  },
+  {
+    name: "Halal China Trust",
+    logo: "https://cdn-icons-png.flaticon.com/512/5332/5332296.png",
+    url: "#",
+  },
+  {
+    name: "Muslim Student Assoc.",
+    logo: "https://cdn-icons-png.flaticon.com/512/3125/3125713.png",
+    url: "#",
+  },
+  {
+    name: "China Islamic Assoc.",
+    logo: "https://cdn-icons-png.flaticon.com/512/3206/3206896.png",
+    url: "#",
+  },
+];
 
 // --- Components Helper ---
 const FilterPill = ({ icon, text, active, onClick }) => (
@@ -71,23 +112,45 @@ const CheckListItem = ({ text }) => (
 function LandingPage({ onNavigate }) {
   // --- STATE MANAGEMENT ---
   const screens = useBreakpoint();
-  const isMobile = !screens.md; // Deteksi layar mobile
+  const isMobile = !screens.md;
 
-  const [lang, setLang] = useState("en"); // 'en' or 'cn'
+  const [lang, setLang] = useState("en");
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [activeFilters, setActiveFilters] = useState(["Verified Halal"]);
   const [activeStep, setActiveStep] = useState("search");
+
+  // Modals
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-  
-  // State untuk Mobile Menu
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false); // 👈 State Modal Review
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // 👇 LOGIC BAHASA (Gabungkan object)
+  const [form] = Form.useForm(); // 👈 Form Instance
+
+  // 👇 STATE USER (Cek Login)
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Failed to parse user data");
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    message.success("Logged out successfully");
+  };
+
   const TRANSLATIONS = { en, cn };
   const t = (key) => TRANSLATIONS[lang][key];
 
-  // --- HANDLERS ---
   const toggleLanguage = () => {
     setLang((prev) => (prev === "en" ? "cn" : "en"));
     message.success(
@@ -104,9 +167,18 @@ function LandingPage({ onNavigate }) {
     setTimeout(() => {
       setIsSearching(false);
       message.success(`Found 12 halal places for "${searchText}"`);
-      // Optional: Navigate to finder with query
-      // onNavigate("finder"); 
     }, 1500);
+  };
+
+  // 👇 HANDLER SUBMIT REVIEW
+  const handleReviewSubmit = (values) => {
+    // Simulasi kirim ke API
+    console.log("Review Submitted:", values);
+
+    setIsReviewModalOpen(false);
+    form.resetFields();
+
+    message.success("Thanks for sharing! Your review is under moderation.");
   };
 
   const toggleFilter = (filterName) => {
@@ -117,7 +189,31 @@ function LandingPage({ onNavigate }) {
     }
   };
 
-  // --- RENDER CONTENT FOR "HOW IT WORKS" ---
+  const userMenuItems = [
+    {
+      key: "profile",
+      label: "My Profile",
+      icon: <UserOutlined />,
+      onClick: () => message.info("Go to Profile Page"),
+    },
+    {
+      key: "settings",
+      label: "Settings",
+      icon: <SettingOutlined />,
+      onClick: () => message.info("Go to Settings"),
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "logout",
+      label: "Log Out",
+      icon: <LogoutOutlined />,
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
+
   const renderStepContent = () => {
     switch (activeStep) {
       case "search":
@@ -265,7 +361,6 @@ function LandingPage({ onNavigate }) {
       {/* HEADER / NAVBAR */}
       <header className="navbar-container">
         <div className="container navbar">
-          {/* Logo */}
           <div className="brand-logo">
             <div className="logo-icon-wrapper">
               <img src={logoImage} alt="Logo Brand" className="logo-icon" />
@@ -273,37 +368,78 @@ function LandingPage({ onNavigate }) {
             <span>QingzhenMu</span>
           </div>
 
-          {/* Desktop Links + Mobile Dropdown Menu */}
           <div className={`nav-links ${isMobileMenuOpen ? "mobile-open" : ""}`}>
             <Button type="link" onClick={() => onNavigate("finder")}>
               {t("nav_finder")}
             </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_mosque")}</Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_prayer")}</Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_community")}</Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_blog")}</Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+              {t("nav_mosque")}
+            </Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+              {t("nav_prayer")}
+            </Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+              {t("nav_community")}
+            </Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+              {t("nav_blog")}
+            </Button>
 
-            {/* Item tambahan di dropdown Mobile */}
             {isMobile && (
               <>
                 <Divider style={{ margin: "8px 0" }} />
-                <Button 
-                  type="text" 
-                  onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }} 
+                {user ? (
+                  <div style={{ padding: "0 16px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 12,
+                      }}
+                    >
+                      <Avatar src={user.avatar_url} icon={<UserOutlined />} />
+                      <Text strong>{user.username || user.name}</Text>
+                    </div>
+                    <Button
+                      block
+                      icon={<UserOutlined />}
+                      style={{ marginBottom: 8 }}
+                      onClick={() => message.info("Profile")}
+                    >
+                      My Profile
+                    </Button>
+                    <Button
+                      block
+                      icon={<LogoutOutlined />}
+                      danger
+                      onClick={handleLogout}
+                    >
+                      Log Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Button type="text" onClick={() => onNavigate("auth")}>
+                    {t("nav_signin")}
+                  </Button>
+                )}
+
+                <Divider style={{ margin: "8px 0" }} />
+                <Button
+                  type="text"
+                  onClick={() => {
+                    toggleLanguage();
+                    setIsMobileMenuOpen(false);
+                  }}
                   icon={<TranslationOutlined />}
                 >
-                   {lang === "en" ? "Switch to Chinese" : "Switch to English"}
-                </Button>
-                <Button type="text" onClick={() => onNavigate("auth")}>
-                  {t("nav_signin")}
+                  {lang === "en" ? "Switch to Chinese" : "Switch to English"}
                 </Button>
               </>
             )}
           </div>
 
-          {/* Navbar Actions (Right Side) */}
           <div className="nav-actions">
-            {/* LANGUAGE TOGGLE (Hidden on Mobile Header) */}
             <Button
               type="text"
               icon={<TranslationOutlined />}
@@ -314,14 +450,35 @@ function LandingPage({ onNavigate }) {
               {lang === "en" ? "CN" : "EN"}
             </Button>
 
-            {/* SIGN IN (Hidden on Mobile Header) */}
-            <Button 
-              type="text" 
-              onClick={() => onNavigate("auth")}
-              className="hide-mobile"
-            >
-              {t("nav_signin")}
-            </Button>
+            <div className="hide-mobile">
+              {user ? (
+                <Dropdown
+                  menu={{ items: userMenuItems }}
+                  placement="bottomRight"
+                >
+                  <Button
+                    type="text"
+                    style={{ height: "auto", padding: "4px 8px" }}
+                  >
+                    <Space>
+                      <Avatar
+                        src={user.avatar_url}
+                        icon={<UserOutlined />}
+                        style={{ backgroundColor: "var(--primary-green)" }}
+                      />
+                      <Text strong style={{ color: "var(--text-dark)" }}>
+                        {user.username || user.name || "User"}
+                      </Text>
+                      <DownOutlined style={{ fontSize: 10, color: "#999" }} />
+                    </Space>
+                  </Button>
+                </Dropdown>
+              ) : (
+                <Button type="text" onClick={() => onNavigate("auth")}>
+                  {t("nav_signin")}
+                </Button>
+              )}
+            </div>
 
             <Button
               type="primary"
@@ -332,9 +489,8 @@ function LandingPage({ onNavigate }) {
               {t("nav_download")}
             </Button>
 
-            {/* HAMBURGER MENU BUTTON */}
-            <button 
-              className="mobile-menu-toggle" 
+            <button
+              className="mobile-menu-toggle"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
@@ -351,7 +507,7 @@ function LandingPage({ onNavigate }) {
               <Title
                 style={{
                   color: "white",
-                  fontSize: isMobile ? "2.5rem" : "3.5rem", // Responsive Font
+                  fontSize: isMobile ? "2.5rem" : "3.5rem",
                   marginBottom: 16,
                   lineHeight: 1.2,
                   fontWeight: 800,
@@ -397,7 +553,6 @@ function LandingPage({ onNavigate }) {
                 />
               </div>
 
-              {/* Interactive Filters */}
               <div className="hero-filters">
                 <FilterPill
                   icon={<SafetyCertificateFilled />}
@@ -468,7 +623,6 @@ function LandingPage({ onNavigate }) {
                 bodyStyle={{ padding: 0 }}
               >
                 <Row>
-                  {/* Left Side: Halal Finder */}
                   <Col
                     xs={24}
                     md={12}
@@ -541,18 +695,7 @@ function LandingPage({ onNavigate }) {
                     </div>
                   </Col>
 
-                  {/* Right Side: Mosque */}
-                  <Col
-                    xs={24}
-                    md={12}
-                    style={{
-                      padding: "24px 24px 0 24px",
-                      display: "flex",
-                      flexDirection: "column",
-                      borderLeft: isMobile ? "none" : "1px solid #f0f0f0",
-                      borderTop: isMobile ? "1px solid #f0f0f0" : "none",
-                    }}
-                  >
+                  <Col xs={24} md={12} className="feature-split-col">
                     <div
                       style={{
                         display: "flex",
@@ -619,7 +762,6 @@ function LandingPage({ onNavigate }) {
               </Card>
             </Col>
 
-            {/* RIGHT COLUMN: TOP CATEGORIES (SIDEBAR) */}
             <Col xs={24} lg={9}>
               <Card
                 className="feature-card"
@@ -954,36 +1096,102 @@ function LandingPage({ onNavigate }) {
               </Col>
             ))}
           </Row>
+
+          {/* 👇 TOMBOL WRITE REVIEW BARU */}
+          <div style={{ textAlign: "center", marginTop: 40 }}>
+            <Button
+              type="default"
+              shape="round"
+              size="large"
+              icon={<EditOutlined />}
+              onClick={() => setIsReviewModalOpen(true)}
+              style={{
+                borderColor: "var(--primary-green)",
+                color: "var(--primary-green)",
+                fontWeight: 600,
+                padding: "0 32px",
+                height: 48,
+              }}
+            >
+              Have a story to share? Write a review!
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* CTA SECTION */}
+      {/* --- STRATEGIC COLLABORATIONS --- */}
       <section
-        className="section-container bg-gray text-center"
-        style={{ padding: "80px 0" }}
+        className="collab-section"
+        style={{
+          padding: "60px 0",
+          background: "#f8f9fa",
+          borderTop: "1px solid #f0f0f0",
+          borderBottom: "1px solid #f0f0f0",
+        }}
       >
         <div className="container">
-          <Title level={2}>{t("cta_title")}</Title>
-          <Paragraph
-            type="secondary"
+          <Card
+            className="collab-card"
+            bordered={false}
             style={{
-              fontSize: "1.2rem",
-              maxWidth: 600,
-              margin: "0 auto 32px auto",
+              borderRadius: 24,
+              boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
+              padding: isMobile ? "20px" : "40px",
+              textAlign: "center",
             }}
           >
-            {t("cta_desc")}
-          </Paragraph>
-          <Button
-            type="primary"
-            shape="round"
-            className="btn-gold-large"
-            onClick={() =>
-              message.success("Thank you! We will contact you soon.")
-            }
-          >
-            {t("cta_btn")}
-          </Button>
+            <Title
+              level={3}
+              style={{ marginBottom: 40, color: "var(--primary-green)" }}
+            >
+              Our Strategic Collaborations
+            </Title>
+
+            <div
+              className="partners-logos"
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: isMobile ? 32 : 64,
+                flexWrap: "wrap",
+              }}
+            >
+              {COLLABORATORS.map((partner, index) => (
+                <a
+                  href={partner.url}
+                  key={index}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: "inline-block" }}
+                >
+                  <img
+                    src={partner.logo}
+                    alt={partner.name}
+                    style={{
+                      height: isMobile ? 40 : 60,
+                      filter: "grayscale(100%)",
+                      transition: "all 0.3s ease",
+                      cursor: "pointer",
+                      objectFit: "contain",
+                      opacity: 0.7,
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.filter = "grayscale(0%)";
+                      e.target.style.opacity = "1";
+                      e.target.style.transform = "scale(1.1)";
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.filter = "grayscale(100%)";
+                      e.target.style.opacity = "0.7";
+                      e.target.style.transform = "scale(1)";
+                    }}
+                    title={partner.name}
+                  />
+                </a>
+              ))}
+            </div>
+          </Card>
         </div>
       </section>
 
@@ -1080,6 +1288,95 @@ function LandingPage({ onNavigate }) {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* 👇 MODAL REVIEW BARU */}
+      <Modal
+        title={
+          <div style={{ textAlign: "center" }}>
+            <Title level={4} style={{ margin: 0 }}>
+              Share Your Experience
+            </Title>
+            <Text type="secondary">Help others find great halal places!</Text>
+          </div>
+        }
+        open={isReviewModalOpen}
+        onCancel={() => setIsReviewModalOpen(false)}
+        footer={null}
+        centered
+        width={500}
+        styles={{ body: { padding: "24px 32px" } }}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleReviewSubmit}
+          size="large"
+          style={{ marginTop: 24 }}
+        >
+          {/* Jika User Belum Login, Tampilkan Input Nama */}
+          {!user && (
+            <Form.Item
+              name="name"
+              label="Your Name"
+              rules={[{ required: true, message: "Please tell us your name" }]}
+            >
+              <Input placeholder="John Doe" prefix={<UserOutlined />} />
+            </Form.Item>
+          )}
+
+          <Form.Item
+            name="rating"
+            label="How was your experience?"
+            initialValue={5}
+            style={{ textAlign: "center" }}
+          >
+            <Rate style={{ fontSize: 36, color: "var(--accent-gold)" }} />
+          </Form.Item>
+
+          <Form.Item
+            name="review"
+            label="Write your review"
+            rules={[
+              {
+                required: true,
+                message: "Please write something about your experience",
+              },
+            ]}
+          >
+            <TextArea
+              rows={4}
+              placeholder="Tell us about the food, atmosphere, or service..."
+              style={{ borderRadius: 12 }}
+            />
+          </Form.Item>
+
+          <Form.Item label="Upload Photos (Optional)">
+            <Upload
+              listType="picture-card"
+              maxCount={3}
+              beforeUpload={() => false}
+            >
+              <div>
+                <CameraOutlined />
+                <div style={{ marginTop: 8 }}>Upload</div>
+              </div>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0 }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              className="btn-green"
+              size="large"
+              style={{ height: 48, borderRadius: 24, fontWeight: 600 }}
+            >
+              Submit Review
+            </Button>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

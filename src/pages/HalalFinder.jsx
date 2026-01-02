@@ -21,6 +21,7 @@ import {
   Dropdown,
   Radio,
   Grid,
+  Space,
 } from "antd";
 import {
   SearchOutlined,
@@ -52,7 +53,10 @@ import {
   AppstoreOutlined,
   TranslationOutlined,
   UnorderedListOutlined,
-  MenuOutlined, 
+  MenuOutlined,
+  UserOutlined,
+  LogoutOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 import { FaWalking, FaBicycle, FaMotorcycle, FaCar } from "react-icons/fa";
 
@@ -69,7 +73,7 @@ import "leaflet-routing-machine";
 // Import CSS
 import "../App.css";
 
-// 👇 IMPORT BAHASA (Pastikan file ini ada, atau hapus jika tidak pakai)
+// 👇 IMPORT BAHASA
 import { en } from "../lang/en";
 import { cn } from "../lang/cn";
 
@@ -394,6 +398,55 @@ function HalalFinder({ onNavigate }) {
   // STATE MOBILE MENU
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // USER STATE
+  const [user, setUser] = useState(null);
+
+  // EFFECT: Load User
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Failed to parse user");
+      }
+    }
+  }, []);
+
+  // LOGOUT
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    message.success("Logged out");
+  };
+
+  // MENU ITEMS (DESKTOP)
+  const userMenuItems = [
+    {
+      key: "profile",
+      label: "My Profile",
+      icon: <UserOutlined />,
+      onClick: () => message.info("Profile Page"),
+    },
+    {
+      key: "settings",
+      label: "Settings",
+      icon: <SettingOutlined />,
+      onClick: () => message.info("Settings"),
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "logout",
+      label: "Log Out",
+      icon: <LogoutOutlined />,
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
+
   // Navigation States
   const [isNavigating, setIsNavigating] = useState(false);
   const [destinationCoords, setDestinationCoords] = useState(null);
@@ -633,42 +686,91 @@ function HalalFinder({ onNavigate }) {
       );
   }, [userLocation]);
 
-  const handleLocateMe = () => {
-    if (isValidCoordinate(userLocation[0], userLocation[1])) {
-      setMapCenter({ lat: userLocation[0], lng: userLocation[1] });
-      message.success("Centered on you");
+  // --- GPS & LOCATION LOGIC (IMPROVED: FALLBACK TO IP) ---
+
+  // Fungsi Fallback: Cari lokasi via IP Address (Kurang akurat tapi jalan)
+  const fallbackToIpLocation = async () => {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      const data = await res.json();
+      if (data.latitude && data.longitude) {
+        const lat = parseFloat(data.latitude);
+        const lng = parseFloat(data.longitude);
+        console.log("Using IP Location:", lat, lng);
+        setUserLocation([lat, lng]);
+        setMapCenter({ lat, lng });
+        fetchPlaces(lat, lng);
+        message.warning("GPS failed. Using approximate location from IP.");
+      }
+    } catch (error) {
+      console.error("IP Location failed:", error);
+      message.error("Could not determine location. Using default.");
+      // Default ke Beijing atau Jakarta jika semua gagal
+      const defaultLoc = [39.9042, 116.4074];
+      setUserLocation(defaultLoc);
+      setMapCenter({ lat: defaultLoc[0], lng: defaultLoc[1] });
+      fetchPlaces(defaultLoc[0], defaultLoc[1]);
     }
   };
 
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    const geoOptions = {
-      enableHighAccuracy: true,
-      timeout: 30000,
-      maximumAge: 5000,
-    };
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      message.error("Geolocation not supported");
+      fallbackToIpLocation();
+      return;
+    }
+
+    message.loading("Locating...", 1);
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setUserLocation([latitude, longitude]);
         setMapCenter({ lat: latitude, lng: longitude });
         fetchPlaces(latitude, longitude);
+        message.success("Location found!");
       },
-      (err) => console.warn("GPS error", err),
+      (err) => {
+        console.warn("Locate me error:", err);
+        message.error("Check GPS settings / Allow Location Access");
+        fallbackToIpLocation(); // Coba fallback
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  // Auto-locate on Mount (Dengan Fallback)
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      fallbackToIpLocation();
+      return;
+    }
+
+    const geoOptions = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    };
+
+    // Coba ambil lokasi sekali saat load
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        console.log("GPS Success:", latitude, longitude);
+        setUserLocation([latitude, longitude]);
+        setMapCenter({ lat: latitude, lng: longitude });
+        fetchPlaces(latitude, longitude);
+      },
+      (err) => {
+        console.warn("GPS Initial Error:", err.message);
+        // Jika error (User deny / Timeout / Unavailable), pakai IP
+        fallbackToIpLocation();
+      },
       geoOptions
     );
 
-    const watcherId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setUserLocation([latitude, longitude]);
-        if (isNavigating) setMapCenter({ lat: latitude, lng: longitude });
-      },
-      (err) => console.warn("Track error", err),
-      geoOptions
-    );
-    return () => navigator.geolocation.clearWatch(watcherId);
-  }, [isNavigating]);
+    // NOTE: watchPosition dihapus untuk mencegah spam error
+  }, []);
 
   const handleMapMoveEnd = (center) => setMapCenter(center);
   const handleSearchArea = () => {
@@ -817,33 +919,86 @@ function HalalFinder({ onNavigate }) {
           >
             <GlobalOutlined className="logo-icon" /> <span>QingzhenMu</span>
           </div>
-           
+
           {/* MENU LINKS (DESKTOP + MOBILE DROPDOWN) */}
           <div className={`nav-links ${isMobileMenuOpen ? "mobile-open" : ""}`}>
             <Button
               type="link"
               className="active text-green"
               onClick={() => {
-                 onNavigate("finder");
-                 setIsMobileMenuOpen(false);
+                onNavigate("finder");
+                setIsMobileMenuOpen(false);
               }}
             >
               {t("nav_finder")}
             </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_mosque")}</Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_prayer")}</Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_community")}</Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>{t("nav_blog")}</Button>
-            
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+              {t("nav_mosque")}
+            </Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+              {t("nav_prayer")}
+            </Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+              {t("nav_community")}
+            </Button>
+            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+              {t("nav_blog")}
+            </Button>
+
             {/* ITEM KHUSUS MOBILE DALAM DROPDOWN */}
             {isMobile && (
               <>
                 <Divider style={{ margin: "8px 0" }} />
-                <Button type="text" onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }} icon={<TranslationOutlined />}>
-                   {lang === "en" ? "Switch to Chinese" : "Switch to English"}
-                </Button>
-                <Button type="text" onClick={() => onNavigate("auth")}>
-                  {t("nav_signin")}
+
+                {/* Mobile: Tampilan User jika Login */}
+                {user ? (
+                  <div style={{ padding: "0 16px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 12,
+                      }}
+                    >
+                      <Avatar src={user.avatar_url} icon={<UserOutlined />} />
+                      {/* 👇 FIX: Utamakan 'name', lalu 'username' */}
+                      <Text strong>{user.name || user.username}</Text>
+                    </div>
+                    <Button
+                      block
+                      icon={<UserOutlined />}
+                      style={{ marginBottom: 8 }}
+                      onClick={() => message.info("Profile")}
+                    >
+                      My Profile
+                    </Button>
+                    <Button
+                      block
+                      icon={<LogoutOutlined />}
+                      danger
+                      onClick={handleLogout}
+                    >
+                      Log Out
+                    </Button>
+                  </div>
+                ) : (
+                  /* Mobile: Tampilan Sign In jika Belum Login */
+                  <Button type="text" onClick={() => onNavigate("auth")}>
+                    {t("nav_signin")}
+                  </Button>
+                )}
+
+                <Divider style={{ margin: "8px 0" }} />
+                <Button
+                  type="text"
+                  onClick={() => {
+                    toggleLanguage();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  icon={<TranslationOutlined />}
+                >
+                  {lang === "en" ? "Switch to Chinese" : "Switch to English"}
                 </Button>
               </>
             )}
@@ -860,21 +1015,48 @@ function HalalFinder({ onNavigate }) {
             >
               {lang === "en" ? "CN" : "EN"}
             </Button>
-            <Button 
-              type="text" 
-              className="hide-mobile"
-              onClick={() => onNavigate("auth")}
-            >
-              {t("nav_signin")}
-            </Button>
-            
+
+            {/* 👇 LOGIC TOMBOL LOGIN / PROFILE (Desktop) */}
+            <div className="hide-mobile">
+              {user ? (
+                // Jika User Login: Tampilkan Dropdown Profile
+                <Dropdown
+                  menu={{ items: userMenuItems }}
+                  placement="bottomRight"
+                >
+                  <Button
+                    type="text"
+                    style={{ height: "auto", padding: "4px 8px" }}
+                  >
+                    <Space>
+                      <Avatar
+                        src={user.avatar_url}
+                        icon={<UserOutlined />}
+                        style={{ backgroundColor: "var(--primary-green)" }}
+                      />
+                      <Text strong style={{ color: "var(--text-dark)" }}>
+                        {/* 👇 FIX: Utamakan 'name', lalu 'username' */}
+                        {user.name || user.username || "User"}
+                      </Text>
+                      <DownOutlined style={{ fontSize: 10, color: "#999" }} />
+                    </Space>
+                  </Button>
+                </Dropdown>
+              ) : (
+                // Jika Belum Login: Tampilkan Tombol Sign In
+                <Button type="text" onClick={() => onNavigate("auth")}>
+                  {t("nav_signin")}
+                </Button>
+              )}
+            </div>
+
             <Button className="btn-gold" shape="round">
               {t("nav_download")}
             </Button>
-            
+
             {/* TOMBOL HAMBURGER */}
-            <button 
-              className="mobile-menu-toggle" 
+            <button
+              className="mobile-menu-toggle"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
@@ -904,13 +1086,11 @@ function HalalFinder({ onNavigate }) {
                 position: "absolute",
                 top: isMobile ? 16 : 24,
                 left: isMobile ? 16 : 24,
-                right: isMobile ? 120 : "auto", 
+                right: isMobile ? 120 : "auto",
                 // zIndex: 900, sudah ada di CSS
               }}
             >
-              <div 
-                className="main-overlay-bar" 
-              >
+              <div className="main-overlay-bar">
                 <div
                   className="overlay-search-btn"
                   onClick={() =>
@@ -919,12 +1099,10 @@ function HalalFinder({ onNavigate }) {
                       : document.getElementById("sidebar-search").focus()
                   }
                 >
-                  <SearchOutlined style={{ flexShrink: 0 }} /> 
-                  <span>
-                    {t("map_btn_search")}
-                  </span>
+                  <SearchOutlined style={{ flexShrink: 0 }} />
+                  <span>{t("map_btn_search")}</span>
                 </div>
-                
+
                 {!isMobile && (
                   <>
                     <div className="overlay-divider"></div>
@@ -977,8 +1155,8 @@ function HalalFinder({ onNavigate }) {
             <div
               className="qibla-widget-container"
               style={{
-                 top: isMobile ? 16 : 24,
-                 right: isMobile ? 16 : 24,
+                top: isMobile ? 16 : 24,
+                right: isMobile ? 16 : 24,
               }}
             >
               <div
@@ -1362,8 +1540,8 @@ function HalalFinder({ onNavigate }) {
                         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                       }}
                     >
-                      <CheckCircleFilled style={{ fontSize: "14px" }} /> Verified
-                      Halal
+                      <CheckCircleFilled style={{ fontSize: "14px" }} />{" "}
+                      Verified Halal
                     </span>
                   )}
                 </div>
@@ -1556,7 +1734,15 @@ function HalalFinder({ onNavigate }) {
               </div>
 
               {/* TOMBOL NAVIGASI UTAMA (FIX TABRAKAN) */}
-              <div style={{ display: "flex", gap: 12, marginBottom: 24, width: "100%", alignItems: "center" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  marginBottom: 24,
+                  width: "100%",
+                  alignItems: "center",
+                }}
+              >
                 <Button
                   type="primary"
                   size="large"
@@ -1567,8 +1753,8 @@ function HalalFinder({ onNavigate }) {
                     fontWeight: 700,
                     fontSize: 16,
                     background: THEME_COLOR,
-                    flex: 1,       // Agar lebar otomatis mengisi
-                    minWidth: 0,   // Mencegah overflow
+                    flex: 1, // Agar lebar otomatis mengisi
+                    minWidth: 0, // Mencegah overflow
                   }}
                   onClick={handleStartNavigation}
                 >
@@ -1582,7 +1768,7 @@ function HalalFinder({ onNavigate }) {
                     width: 50,
                     borderRadius: 14,
                     borderColor: "#eee",
-                    flex: "none", 
+                    flex: "none",
                   }}
                   onClick={() => setReviewModalVisible(true)}
                 />
@@ -1654,15 +1840,30 @@ function HalalFinder({ onNavigate }) {
                         >
                           {t("lbl_facilities")}
                         </Text>
-                         
+
                         {(() => {
                           const facilitiesData = [
-                            { icon: <WifiOutlined />, label: t("fac_wifi") || "Free Wifi" },
-                            { icon: <CarOutlined />, label: t("fac_parking") || "Parking" },
-                            { icon: <CompassFilled />, label: t("fac_prayer") || "Prayer Room" },
-                            { icon: <ClockCircleOutlined />, label: t("fac_ac") || "Full AC" },
+                            {
+                              icon: <WifiOutlined />,
+                              label: t("fac_wifi") || "Free Wifi",
+                            },
+                            {
+                              icon: <CarOutlined />,
+                              label: t("fac_parking") || "Parking",
+                            },
+                            {
+                              icon: <CompassFilled />,
+                              label: t("fac_prayer") || "Prayer Room",
+                            },
+                            {
+                              icon: <ClockCircleOutlined />,
+                              label: t("fac_ac") || "Full AC",
+                            },
                             { icon: <CheckCircleFilled />, label: "Toilet" },
-                            { icon: <SafetyCertificateOutlined />, label: "Reservation" },
+                            {
+                              icon: <SafetyCertificateOutlined />,
+                              label: "Reservation",
+                            },
                           ];
 
                           return (
@@ -1672,7 +1873,9 @@ function HalalFinder({ onNavigate }) {
                                   <div className="facility-icon-wrapper">
                                     {item.icon}
                                   </div>
-                                  <span className="facility-label">{item.label}</span>
+                                  <span className="facility-label">
+                                    {item.label}
+                                  </span>
                                 </div>
                               ))}
                             </div>

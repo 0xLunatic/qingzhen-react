@@ -23,15 +23,20 @@ import {
   MailOutlined,
   QqOutlined,
   GlobalOutlined,
-  TranslationOutlined, // Icon Bahasa
+  TranslationOutlined,
+  IdcardOutlined, // Icon untuk Nama Asli
 } from "@ant-design/icons";
 import "../App.css";
 import logoImage from "../assets/logo.png";
+
+// 👇 Import API Helper
+import api from "../utils/api";
 
 // 👇 Import Kamus Bahasa
 import { en } from "../lang/en";
 import { cn } from "../lang/cn";
 
+// 👇 FIX: Tambahkan Paragraph di sini
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
@@ -40,10 +45,8 @@ function AuthenticationPage({ onNavigate }) {
   const [loginMethod, setLoginMethod] = useState("password");
   const [loading, setLoading] = useState(false);
 
-  // 👇 State Bahasa (Default Inggris)
+  // 👇 State Bahasa
   const [lang, setLang] = useState("en");
-
-  // 👇 Helper Bahasa
   const TRANSLATIONS = { en, cn };
   const t = (key) => TRANSLATIONS[lang][key];
 
@@ -53,7 +56,7 @@ function AuthenticationPage({ onNavigate }) {
   };
 
   const prefixSelector = (
-    <Form.Item name="prefix" noStyle initialValue="86">
+    <Form.Item name="prefix" noStyle>
       <Select style={{ width: 80 }}>
         <Option value="86">🇨🇳 +86</Option>
         <Option value="62">🇮🇩 +62</Option>
@@ -61,28 +64,69 @@ function AuthenticationPage({ onNavigate }) {
     </Form.Item>
   );
 
-  const onFinishLogin = (values) => {
+  // --- REAL LOGIN LOGIC ---
+  const onFinishLogin = async (values) => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (values.login_identifier) {
-        message.success(
-          `Welcome back! Logged in via ${values.login_identifier}`
-        );
-      } else if (values.phone) {
-        message.success("Welcome back! Logged in via SMS Code");
+    try {
+      let identifier = values.login_identifier;
+
+      // Jika login pakai Tab SMS atau input phone
+      if (loginMethod === "otp" || values.phone) {
+        const prefix = values.prefix || "86";
+        identifier = `+${prefix}${values.phone}`;
       }
+
+      const response = await api.post("/auth/login", {
+        identifier: identifier,
+        password: values.password,
+      });
+
+      // Simpan Token & User
+      localStorage.setItem("token", response.data.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.data.user));
+
+      message.success("Welcome back!");
       onNavigate("landing");
-    }, 1500);
+    } catch (error) {
+      console.error("Login Error:", error);
+      const msg =
+        error.response?.data?.message ||
+        "Login failed. Check your credentials.";
+      message.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const onFinishRegister = (values) => {
+  // --- REAL REGISTER LOGIC (UPDATED) ---
+  const onFinishRegister = async (values) => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      message.success("Account created! Please login.");
+    try {
+      // Format nomor HP (+86/+62)
+      const prefix = values.prefix || "86";
+      const formattedPhone = `+${prefix}${values.phone}`;
+
+      console.log("Registering:", values);
+
+      // Panggil API Backend (Sesuai update backend terbaru: ada field 'name')
+      await api.post("/auth/register", {
+        name: values.name, // 👈 Kirim nama asli (opsional di backend, tapi baik dikirim)
+        username: values.username,
+        email: values.email,
+        phone_number: formattedPhone,
+        password: values.password,
+      });
+
+      message.success("Account created successfully! Please login.");
       setAuthMode("login");
-    }, 1500);
+    } catch (error) {
+      console.error("Register Error:", error);
+      const msg =
+        error.response?.data?.message || "Registration failed. Try again.";
+      message.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const SocialButtons = () => (
@@ -92,6 +136,7 @@ function AuthenticationPage({ onNavigate }) {
         block
         size="large"
         style={{ color: "#07C160", borderColor: "#07C160" }}
+        onClick={() => message.info("WeChat Login coming soon!")}
       >
         WeChat
       </Button>
@@ -100,6 +145,7 @@ function AuthenticationPage({ onNavigate }) {
         block
         size="large"
         style={{ color: "#12B7F5", borderColor: "#12B7F5" }}
+        onClick={() => message.info("QQ Login coming soon!")}
       >
         QQ
       </Button>
@@ -108,6 +154,7 @@ function AuthenticationPage({ onNavigate }) {
         block
         size="large"
         style={{ background: "black", color: "white", borderColor: "black" }}
+        onClick={() => message.info("Apple Login coming soon!")}
       >
         Apple
       </Button>
@@ -130,10 +177,21 @@ function AuthenticationPage({ onNavigate }) {
               size="large"
               requiredMark={false}
             >
-              <Form.Item name="login_identifier" rules={[{ required: true }]}>
+              <Form.Item
+                name="login_identifier"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter username/email/phone",
+                  },
+                ]}
+              >
                 <Input prefix={<UserOutlined />} placeholder={t("input_id")} />
               </Form.Item>
-              <Form.Item name="password" rules={[{ required: true }]}>
+              <Form.Item
+                name="password"
+                rules={[{ required: true, message: "Please enter password" }]}
+              >
                 <Input.Password
                   prefix={<LockOutlined />}
                   placeholder={t("input_pass")}
@@ -173,31 +231,30 @@ function AuthenticationPage({ onNavigate }) {
               requiredMark={false}
               initialValues={{ prefix: "86" }}
             >
-              <Form.Item name="phone" rules={[{ required: true }]}>
+              <Form.Item
+                name="phone"
+                rules={[
+                  { required: true, message: "Please enter phone number" },
+                ]}
+              >
                 <Input
                   prefix={<MobileOutlined />}
                   addonBefore={prefixSelector}
                   placeholder={t("input_phone")}
+                  style={{ width: "100%" }}
                 />
               </Form.Item>
-              <div style={{ display: "flex", gap: 8 }}>
-                <Form.Item
-                  name="otp"
-                  style={{ flex: 1 }}
-                  rules={[{ required: true }]}
-                >
-                  <Input
-                    prefix={<SafetyOutlined />}
-                    placeholder={t("input_code")}
-                  />
-                </Form.Item>
-                <Button
-                  size="large"
-                  onClick={() => message.success("Code sent: 1234")}
-                >
-                  {t("btn_get_code")}
-                </Button>
-              </div>
+
+              <Form.Item
+                name="password"
+                rules={[{ required: true, message: "Please enter password" }]}
+              >
+                <Input.Password
+                  prefix={<LockOutlined />}
+                  placeholder="Password (SMS logic pending)"
+                />
+              </Form.Item>
+
               <Button
                 type="primary"
                 htmlType="submit"
@@ -220,27 +277,60 @@ function AuthenticationPage({ onNavigate }) {
       onFinish={onFinishRegister}
       size="large"
       requiredMark={false}
-      initialValues={{ prefix: "86" }}
+      initialValues={{ prefix: "62" }} // Default ID (+62) agar user Indo mudah
     >
-      <Form.Item name="username" rules={[{ required: true }]}>
+      {/* Field Nama Asli (Baru) */}
+      <Form.Item
+        name="name"
+        rules={[
+          { required: true, min: 2, message: "Name must be at least 2 chars" },
+        ]}
+      >
+        <Input prefix={<IdcardOutlined />} placeholder="Full Name" />
+      </Form.Item>
+
+      <Form.Item
+        name="username"
+        rules={[
+          {
+            required: true,
+            min: 3,
+            message: "Username must be at least 3 chars",
+          },
+        ]}
+      >
         <Input prefix={<UserOutlined />} placeholder={t("input_username")} />
       </Form.Item>
-      <Form.Item name="email" rules={[{ type: "email" }, { required: true }]}>
+
+      <Form.Item
+        name="email"
+        rules={[{ type: "email", message: "Invalid email address" }]}
+      >
         <Input prefix={<MailOutlined />} placeholder={t("input_email")} />
       </Form.Item>
-      <Form.Item name="phone" rules={[{ required: true }]}>
+
+      <Form.Item
+        name="phone"
+        rules={[{ required: true, message: "Phone number is required" }]}
+      >
         <Input
           prefix={<MobileOutlined />}
           addonBefore={prefixSelector}
-          placeholder={t("input_phone")}
+          placeholder="81234567890" // Contoh tanpa 0
+          style={{ width: "100%" }}
         />
       </Form.Item>
-      <Form.Item name="password" rules={[{ required: true }]}>
+
+      <Form.Item
+        name="password"
+        rules={[{ required: true, min: 8, message: "Password min 8 chars" }]}
+      >
         <Input.Password
           prefix={<LockOutlined />}
           placeholder={t("input_pass")}
         />
       </Form.Item>
+
       <Button
         type="primary"
         htmlType="submit"
