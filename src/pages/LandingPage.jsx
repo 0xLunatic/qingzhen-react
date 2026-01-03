@@ -16,8 +16,9 @@ import {
   Divider,
   Dropdown,
   Space,
-  Form, // 👈 Import Form
-  Upload, // 👈 Import Upload
+  Form,
+  Upload,
+  Spin,
 } from "antd";
 import {
   SearchOutlined,
@@ -47,18 +48,22 @@ import {
   LogoutOutlined,
   SettingOutlined,
   DownOutlined,
-  EditOutlined, // 👈 Icon Edit untuk Review
-  CameraOutlined, // 👈 Icon Kamera
+  EditOutlined,
+  CameraOutlined,
+  CompassFilled,
 } from "@ant-design/icons";
 import "../App.css";
 import logoImage from "../assets/logo.png";
+
+// 👇 IMPORT API HELPER
+import api from "../utils/api";
 
 // 👇 IMPORT BAHASA
 import { en } from "../lang/en";
 import { cn } from "../lang/cn";
 
 const { Title, Text, Paragraph } = Typography;
-const { TextArea } = Input; // 👈 Destructure TextArea
+const { TextArea } = Input;
 const { useBreakpoint } = Grid;
 
 // --- DATA COLLABORATION ---
@@ -122,15 +127,22 @@ function LandingPage({ onNavigate }) {
 
   // Modals
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false); // 👈 State Modal Review
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const [form] = Form.useForm(); // 👈 Form Instance
+  // Data States
+  const [testimonials, setTestimonials] = useState([]);
+  const [loadingTesti, setLoadingTesti] = useState(true);
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const [form] = Form.useForm();
 
   // 👇 STATE USER (Cek Login)
   const [user, setUser] = useState(null);
 
+  // --- EFFECT: Load User & Testimonials ---
   useEffect(() => {
+    // 1. Cek LocalStorage
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
@@ -139,6 +151,23 @@ function LandingPage({ onNavigate }) {
         console.error("Failed to parse user data");
       }
     }
+
+    // 2. Fetch Reviews dari Backend
+    const fetchReviews = async () => {
+      try {
+        const response = await api.get("/app-reviews/featured");
+        if (response.data.success) {
+          // Backend sekarang sudah handle logic: Featured -> Fallback Latest
+          setTestimonials(response.data.data);
+        }
+      } catch (error) {
+        console.error("Failed fetching reviews:", error);
+      } finally {
+        setLoadingTesti(false);
+      }
+    };
+
+    fetchReviews();
   }, []);
 
   const handleLogout = () => {
@@ -170,15 +199,40 @@ function LandingPage({ onNavigate }) {
     }, 1500);
   };
 
-  // 👇 HANDLER SUBMIT REVIEW
-  const handleReviewSubmit = (values) => {
-    // Simulasi kirim ke API
-    console.log("Review Submitted:", values);
+  // 👇 HANDLER TOMBOL "Write a Review"
+  const onOpenReviewModal = () => {
+    if (!user) {
+      message.warning("Please sign in to write a review.");
+      onNavigate("auth");
+    } else {
+      setIsReviewModalOpen(true);
+    }
+  };
 
-    setIsReviewModalOpen(false);
-    form.resetFields();
+  // 👇 REAL BACKEND SUBMIT REVIEW
+  const handleReviewSubmit = async (values) => {
+    setSubmittingReview(true);
+    try {
+      await api.post("/app-reviews", {
+        rating: values.rating,
+        comment: values.review,
+      });
 
-    message.success("Thanks for sharing! Your review is under moderation.");
+      message.success("Thanks for sharing! Your review is posted.");
+
+      // Refresh list review agar yang baru (jika masuk kriteria latest) langsung muncul
+      // Opsional: Anda bisa buat state reloadTrigger jika mau auto-refresh
+
+      setIsReviewModalOpen(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("Submit review error:", error);
+      message.error(
+        error.response?.data?.message || "Failed to submit review."
+      );
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   const toggleFilter = (filterName) => {
@@ -399,7 +453,7 @@ function LandingPage({ onNavigate }) {
                       }}
                     >
                       <Avatar src={user.avatar_url} icon={<UserOutlined />} />
-                      <Text strong>{user.username || user.name}</Text>
+                      <Text strong>{user.name || user.username}</Text>
                     </div>
                     <Button
                       block
@@ -467,7 +521,7 @@ function LandingPage({ onNavigate }) {
                         style={{ backgroundColor: "var(--primary-green)" }}
                       />
                       <Text strong style={{ color: "var(--text-dark)" }}>
-                        {user.username || user.name || "User"}
+                        {user.name || user.username || "User"}
                       </Text>
                       <DownOutlined style={{ fontSize: 10, color: "#999" }} />
                     </Space>
@@ -604,7 +658,7 @@ function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* FEATURES SECTION */}
+      {/* FEATURES SECTION (FIXED ALIGNMENT) */}
       <section className="section-container">
         <div className="container">
           <Title
@@ -615,54 +669,59 @@ function LandingPage({ onNavigate }) {
             {t("discover_title")}
           </Title>
 
-          <Row gutter={[24, 24]}>
-            <Col xs={24} lg={15}>
+          <Row gutter={[24, 24]} align="stretch">
+            <Col xs={24} lg={15} style={{ display: "flex" }}>
               <Card
                 className="feature-card"
                 bordered={false}
-                bodyStyle={{ padding: 0 }}
+                bodyStyle={{ padding: 0, height: "100%" }}
+                style={{ width: "100%" }}
               >
-                <Row>
+                <Row style={{ height: "100%", margin: 0 }}>
                   <Col
                     xs={24}
                     md={12}
                     style={{
-                      padding: "24px 24px 0 24px",
                       display: "flex",
                       flexDirection: "column",
+                      height: "100%",
+                      borderRight: !isMobile ? "1px solid #f0f0f0" : "none",
+                      borderBottom: isMobile ? "1px solid #f0f0f0" : "none",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        marginBottom: 12,
-                      }}
-                    >
-                      <ShopOutlined
-                        style={{ fontSize: 24, color: "var(--primary-green)" }}
-                      />
-                      <Title
-                        level={4}
-                        style={{ margin: 0, color: "var(--text-dark)" }}
+                    <div style={{ padding: 24, flex: 1 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          marginBottom: 12,
+                        }}
                       >
-                        {t("card_finder_title")}
-                      </Title>
+                        <ShopOutlined
+                          style={{
+                            fontSize: 24,
+                            color: "var(--primary-green)",
+                          }}
+                        />
+                        <Title
+                          level={4}
+                          style={{ margin: 0, color: "var(--text-dark)" }}
+                        >
+                          {t("card_finder_title")}
+                        </Title>
+                      </div>
+                      <Paragraph type="secondary">
+                        {t("card_finder_desc")}
+                      </Paragraph>
                     </div>
-                    <Paragraph
-                      type="secondary"
-                      style={{ marginBottom: 24, flex: 1 }}
-                    >
-                      {t("card_finder_desc")}
-                    </Paragraph>
+
                     <div
                       style={{
                         position: "relative",
-                        marginTop: "auto",
                         overflow: "hidden",
-                        borderTopRightRadius: 16,
-                        borderTopLeftRadius: 16,
+                        borderBottomLeftRadius: isMobile ? 0 : 16,
+                        borderTopRightRadius: isMobile ? 0 : 0,
                       }}
                     >
                       <img
@@ -678,7 +737,7 @@ function LandingPage({ onNavigate }) {
                       <div
                         style={{
                           position: "absolute",
-                          top: "40%",
+                          top: "50%",
                           left: "50%",
                           transform: "translate(-50%, -50%)",
                           background: "var(--primary-green)",
@@ -695,38 +754,47 @@ function LandingPage({ onNavigate }) {
                     </div>
                   </Col>
 
-                  <Col xs={24} md={12} className="feature-split-col">
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        marginBottom: 12,
-                      }}
-                    >
-                      <CompassOutlined
-                        style={{ fontSize: 24, color: "var(--primary-green)" }}
-                      />
-                      <Title
-                        level={4}
-                        style={{ margin: 0, color: "var(--text-dark)" }}
+                  <Col
+                    xs={24}
+                    md={12}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "100%",
+                    }}
+                  >
+                    <div style={{ padding: 24, flex: 1 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          marginBottom: 12,
+                        }}
                       >
-                        {t("card_mosque_title")}
-                      </Title>
+                        <CompassOutlined
+                          style={{
+                            fontSize: 24,
+                            color: "var(--primary-green)",
+                          }}
+                        />
+                        <Title
+                          level={4}
+                          style={{ margin: 0, color: "var(--text-dark)" }}
+                        >
+                          {t("card_mosque_title")}
+                        </Title>
+                      </div>
+                      <Paragraph type="secondary">
+                        {t("card_mosque_desc")}
+                      </Paragraph>
                     </div>
-                    <Paragraph
-                      type="secondary"
-                      style={{ marginBottom: 24, flex: 1 }}
-                    >
-                      {t("card_mosque_desc")}
-                    </Paragraph>
+
                     <div
                       style={{
                         position: "relative",
-                        marginTop: "auto",
                         overflow: "hidden",
-                        borderTopRightRadius: 16,
-                        borderTopLeftRadius: 16,
+                        borderBottomRightRadius: 16,
                       }}
                     >
                       <img
@@ -742,7 +810,7 @@ function LandingPage({ onNavigate }) {
                       <div
                         style={{
                           position: "absolute",
-                          top: "40%",
+                          top: "50%",
                           left: "50%",
                           transform: "translate(-50%, -50%)",
                           background: "var(--primary-green)",
@@ -762,7 +830,7 @@ function LandingPage({ onNavigate }) {
               </Card>
             </Col>
 
-            <Col xs={24} lg={9}>
+            <Col xs={24} lg={9} style={{ display: "flex" }}>
               <Card
                 className="feature-card"
                 bordered={false}
@@ -772,6 +840,7 @@ function LandingPage({ onNavigate }) {
                   display: "flex",
                   flexDirection: "column",
                 }}
+                style={{ width: "100%" }}
               >
                 <div
                   style={{
@@ -1044,58 +1113,56 @@ function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* TESTIMONIALS (DYNAMIC) */}
       <section className="section-container">
         <div className="container">
           <Title level={2} className="text-center mb-large">
             {t("testi_title")}
           </Title>
-          <Row gutter={[24, 24]}>
-            {[
-              {
-                name: "Aisyah Rahman",
-                img: "https://i.pravatar.cc/150?img=5",
-                text: t("testi_1"),
-              },
-              {
-                name: "Hassan Abdullah",
-                img: "https://i.pravatar.cc/150?img=11",
-                text: t("testi_2"),
-              },
-              {
-                name: "Nurul Wahyuni",
-                img: "https://i.pravatar.cc/150?img=9",
-                text: t("testi_3"),
-              },
-            ].map((item, idx) => (
-              <Col xs={24} md={8} key={idx}>
-                <Card
-                  bordered={false}
-                  className="feature-card testimonial-card"
-                >
-                  <div className="testimonial-user">
-                    <Avatar src={item.img} size={56} />
-                    <div>
-                      <Title level={5} style={{ margin: 0 }}>
-                        {item.name}
-                      </Title>
-                      <Rate
-                        disabled
-                        defaultValue={5}
-                        style={{ fontSize: 14, color: "var(--accent-gold)" }}
-                      />
-                    </div>
-                  </div>
-                  <Paragraph
-                    type="secondary"
-                    style={{ fontStyle: "italic", fontSize: 16 }}
+
+          {loadingTesti ? (
+            <div style={{ textAlign: "center", padding: "40px" }}>
+              <Spin size="large" />
+            </div>
+          ) : (
+            <Row gutter={[24, 24]}>
+              {testimonials.map((item, idx) => (
+                <Col xs={24} md={8} key={idx}>
+                  <Card
+                    bordered={false}
+                    className="feature-card testimonial-card"
                   >
-                    "{item.text}"
-                  </Paragraph>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+                    <div className="testimonial-user">
+                      <Avatar
+                        src={
+                          item.avatar ||
+                          `https://api.dicebear.com/7.x/initials/svg?seed=${item.name}`
+                        }
+                        size={56}
+                      />
+                      <div>
+                        <Title level={5} style={{ margin: 0 }}>
+                          {item.name}
+                        </Title>
+                        <Rate
+                          disabled
+                          defaultValue={item.rating}
+                          style={{ fontSize: 14, color: "var(--accent-gold)" }}
+                        />
+                      </div>
+                    </div>
+                    <Paragraph
+                      type="secondary"
+                      style={{ fontStyle: "italic", fontSize: 16 }}
+                      ellipsis={{ rows: 4, expandable: true, symbol: "more" }}
+                    >
+                      "{item.text}"
+                    </Paragraph>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          )}
 
           {/* 👇 TOMBOL WRITE REVIEW BARU */}
           <div style={{ textAlign: "center", marginTop: 40 }}>
@@ -1104,7 +1171,7 @@ function LandingPage({ onNavigate }) {
               shape="round"
               size="large"
               icon={<EditOutlined />}
-              onClick={() => setIsReviewModalOpen(true)}
+              onClick={onOpenReviewModal} // 👈 Panggil fungsi proteksi
               style={{
                 borderColor: "var(--primary-green)",
                 color: "var(--primary-green)",
@@ -1290,7 +1357,7 @@ function LandingPage({ onNavigate }) {
         </div>
       </Modal>
 
-      {/* 👇 MODAL REVIEW BARU */}
+      {/* 👇 MODAL REVIEW BARU (PROTECTED) */}
       <Modal
         title={
           <div style={{ textAlign: "center" }}>
@@ -1314,15 +1381,17 @@ function LandingPage({ onNavigate }) {
           size="large"
           style={{ marginTop: 24 }}
         >
-          {/* Jika User Belum Login, Tampilkan Input Nama */}
-          {!user && (
-            <Form.Item
-              name="name"
-              label="Your Name"
-              rules={[{ required: true, message: "Please tell us your name" }]}
-            >
-              <Input placeholder="John Doe" prefix={<UserOutlined />} />
-            </Form.Item>
+          {/* INFO POSTING SEBAGAI SIAPA */}
+          {user && (
+            <div style={{ marginBottom: 24, textAlign: "center" }}>
+              <Space align="center">
+                <Avatar src={user.avatar_url} icon={<UserOutlined />} />
+                <Text>
+                  Posting publicly as{" "}
+                  <strong>{user.name || user.username}</strong>
+                </Text>
+              </Space>
+            </div>
           )}
 
           <Form.Item
@@ -1371,9 +1440,10 @@ function LandingPage({ onNavigate }) {
               block
               className="btn-green"
               size="large"
+              loading={submittingReview}
               style={{ height: 48, borderRadius: 24, fontWeight: 600 }}
             >
-              Submit Review
+              {submittingReview ? "Submitting..." : "Submit Review"}
             </Button>
           </Form.Item>
         </Form>
