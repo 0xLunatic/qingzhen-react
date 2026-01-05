@@ -2,11 +2,7 @@
 import React, { useState, useEffect } from "react";
 import LandingPage from "./pages/LandingPage.jsx";
 import HalalFinder from "./pages/HalalFinder.jsx";
-<<<<<<< HEAD
 import MosqueFinder from "./pages/MosqueFinder.jsx";
-=======
-import MosqueFinder from "./pages/MosqueFinder.jsx"; // 👈 1. Import Component Mosque
->>>>>>> 955c6d9c729ed2d392af86f00e2bea8092976dab
 import AuthenticationPage from "./pages/AuthenticationPage.jsx";
 import "./App.css";
 
@@ -34,11 +30,7 @@ function App() {
         return <LandingPage onNavigate={setCurrentPage} />;
       case "finder":
         return <HalalFinder onNavigate={setCurrentPage} />;
-<<<<<<< HEAD
-      case "mosque": 
-=======
-      case "mosque": // 👈 2. Tambahkan Route 'mosque' di sini
->>>>>>> 955c6d9c729ed2d392af86f00e2bea8092976dab
+      case "mosque":
         return <MosqueFinder onNavigate={setCurrentPage} />;
       case "auth":
         return <AuthenticationPage onNavigate={setCurrentPage} />;

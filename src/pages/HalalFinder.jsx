@@ -1011,7 +1011,10 @@ function HalalFinder({ onNavigate }) {
           </div>
         </div>
       </div>
-      <div className="list-scroll-area">
+      <div
+        className="list-scroll-area"
+        style={{ flex: 1, overflowY: "auto" }} // 👇 PASTIKAN BISA DI-SCROLL
+      >
         {isLoading ? (
           <div style={{ textAlign: "center", padding: 50 }}>
             <Spin
@@ -1218,6 +1221,7 @@ function HalalFinder({ onNavigate }) {
             height: "100%",
           }}
         >
+          {/* ... (Peta, Overlay, dll sama seperti sebelumnya) ... */}
           {/* OVERLAY: PICKING LOCATION */}
           {isPickingLocation ? (
             <div
@@ -1637,9 +1641,15 @@ function HalalFinder({ onNavigate }) {
           className="mobile-list-drawer"
           styles={{ body: { padding: 0 } }}
         >
+          {/* 👇 PERBAIKAN: Gunakan display flex untuk mengatasi masalah blank screen */}
           <div
-            className="finder-list-container"
-            style={{ width: "100%", height: "100%" }}
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              background: "white",
+            }}
           >
             {renderListContent()}
           </div>
@@ -1828,8 +1838,6 @@ function HalalFinder({ onNavigate }) {
                   <span className="stat-label">Type</span>
                 </div>
               </div>
-
-              <div className="qibla-widget">{/* ... Qibla content ... */}</div>
 
               {/* Mode Selector */}
               <div className="transport-section">
@@ -2208,7 +2216,7 @@ function HalalFinder({ onNavigate }) {
         )}
       </Drawer>
 
-      {/* MODAL REVIEWS */}
+      {/* MODAL REVIEWS & MODAL CONTRIBUTE ... (Kode Modal tidak perlu diubah karena sudah benar) */}
       <Modal
         title={
           <Title level={4} style={{ margin: 0, textAlign: "center" }}>
@@ -2281,7 +2289,6 @@ function HalalFinder({ onNavigate }) {
         </Form>
       </Modal>
 
-      {/* --- MODAL CONTRIBUTE PLACE (NEW & IMPROVED) --- */}
       <Modal
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2365,7 +2372,6 @@ function HalalFinder({ onNavigate }) {
             />
           </Form.Item>
 
-          {/* New Field: Menu / Description */}
           <Form.Item
             name="promo_details"
             label={
@@ -2380,7 +2386,6 @@ function HalalFinder({ onNavigate }) {
             />
           </Form.Item>
 
-          {/* New Field: Photo Upload */}
           <Form.Item
             label={
               <span>
