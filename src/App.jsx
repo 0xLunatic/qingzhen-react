@@ -2,16 +2,16 @@
 import React, { useState, useEffect } from "react";
 import LandingPage from "./pages/LandingPage.jsx";
 import HalalFinder from "./pages/HalalFinder.jsx";
+import MosqueFinder from "./pages/MosqueFinder.jsx"; // 👈 1. Import Component Mosque
 import AuthenticationPage from "./pages/AuthenticationPage.jsx";
 import "./App.css";
 
 function App() {
-  // 1. Modifikasi Logic Inisialisasi State
+  // Logic Inisialisasi State
   const [currentPage, setCurrentPage] = useState(() => {
     const savedPage = localStorage.getItem("last_visited_page");
 
-    // LOGIC: Jika yang tersimpan adalah 'auth', paksa balik ke 'landing'
-    // Jika tidak, pakai halaman yang tersimpan (misal 'finder')
+    // Jika yang tersimpan 'auth', paksa balik ke 'landing'
     if (savedPage === "auth") {
       return "landing";
     }
@@ -19,7 +19,7 @@ function App() {
     return savedPage || "landing";
   });
 
-  // 2. useEffect tetap menyimpan halaman apapun yang dibuka
+  // Simpan halaman terakhir yang dibuka
   useEffect(() => {
     localStorage.setItem("last_visited_page", currentPage);
   }, [currentPage]);
@@ -30,6 +30,8 @@ function App() {
         return <LandingPage onNavigate={setCurrentPage} />;
       case "finder":
         return <HalalFinder onNavigate={setCurrentPage} />;
+      case "mosque": // 👈 2. Tambahkan Route 'mosque' di sini
+        return <MosqueFinder onNavigate={setCurrentPage} />;
       case "auth":
         return <AuthenticationPage onNavigate={setCurrentPage} />;
       default:
