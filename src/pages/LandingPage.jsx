@@ -426,7 +426,7 @@ function LandingPage({ onNavigate }) {
             <Button type="link" onClick={() => onNavigate("finder")}>
               {t("nav_finder")}
             </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+            <Button type="link" onClick={() => onNavigate("mosque")}>
               {t("nav_mosque")}
             </Button>
             <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>

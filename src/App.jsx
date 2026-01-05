@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import LandingPage from "./pages/LandingPage.jsx";
 import HalalFinder from "./pages/HalalFinder.jsx";
+import MosqueFinder from "./pages/MosqueFinder.jsx";
 import AuthenticationPage from "./pages/AuthenticationPage.jsx";
 import "./App.css";
 
@@ -30,6 +31,8 @@ function App() {
         return <LandingPage onNavigate={setCurrentPage} />;
       case "finder":
         return <HalalFinder onNavigate={setCurrentPage} />;
+      case "mosque": 
+        return <MosqueFinder onNavigate={setCurrentPage} />;
       case "auth":
         return <AuthenticationPage onNavigate={setCurrentPage} />;
       default:

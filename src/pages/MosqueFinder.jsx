@@ -1,4 +1,4 @@
-// src/pages/HalalFinder.jsx
+// src/pages/MosqueFinder.jsx
 import React, { useState, useEffect, useRef } from "react";
 import {
   Button,
@@ -38,17 +38,17 @@ import {
   ArrowRightOutlined,
   FilterOutlined,
   SafetyCertificateOutlined,
-  ShopOutlined,
-  CoffeeOutlined,
+  BankOutlined,
+  ReadFilled,
   ClockCircleOutlined,
   WifiOutlined,
   CarOutlined,
   CheckCircleFilled,
   InfoCircleOutlined,
-  FireFilled,
+  TeamOutlined,
   CheckOutlined,
   EyeFilled,
-  ThunderboltFilled,
+  WomanOutlined,
   DownOutlined,
   AppstoreOutlined,
   TranslationOutlined,
@@ -58,7 +58,7 @@ import {
   LogoutOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { FaWalking, FaBicycle, FaMotorcycle, FaCar } from "react-icons/fa";
+import { FaWalking, FaBicycle, FaMotorcycle, FaCar, FaMosque } from "react-icons/fa";
 
 import {
   MapContainer,
@@ -69,6 +69,9 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet-routing-machine";
+
+// 👇 IMPORT LIBRARY ADHAN
+import { Coordinates, CalculationMethod, PrayerTimes, Prayer } from 'adhan';
 
 // Import CSS
 import "../App.css";
@@ -84,10 +87,9 @@ const { TextArea } = Input;
 const THEME_COLOR = "#1B4D3E";
 const ACCENT_COLOR = "#C6A87C";
 const MECCA_COORDS = { lat: 21.4225, lng: 39.8262 };
-const MAX_RADIUS_METERS = 3000;
-const MAX_RESULTS = 30;
+const MAX_RADIUS_METERS = 5000;
+const MAX_RESULTS = 40;
 
-// --- SPEED CONSTANTS (km/h) ---
 const SPEEDS = {
   walk: 5,
   bike: 15,
@@ -95,37 +97,38 @@ const SPEEDS = {
   car: 30,
 };
 
-// --- ASSETS & DATA ---
-const FOOD_IMAGES = [
-  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=60",
-  "https://images.unsplash.com/photo-1555126634-323283e090fa?w=600&q=60",
-  "https://images.unsplash.com/photo-1541544744-5e3a01993108?w=600&q=60",
-  "https://images.unsplash.com/photo-1606756790138-7c4864384077?w=600&q=60",
+// --- ASSETS & DATA MASJID ---
+const MOSQUE_IMAGES = [
+  "https://images.unsplash.com/photo-1564121211835-e88c852648ab?w=600&q=60",
+  "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=600&q=60",
+  "https://images.unsplash.com/photo-1596401057633-565652b8ddbe?w=600&q=60",
+  "https://images.unsplash.com/photo-1537242194686-259160a229ba?w=600&q=60",
 ];
 
 const POSSIBLE_TAGS = [
-  "Verified Halal",
-  "Muslim Owned",
-  "No Alcohol",
-  "Prayer Room",
-  "Family Friendly",
+  "Jumu'ah Available",
+  "Women Area",
+  "Wudu Facility",
+  "Quran Class",
+  "Parking",
+  "Air Conditioned"
 ];
-const CATEGORIES = ["Vegan Option", "Real Food", "Non-Vegan", "Fast Food"];
+const CATEGORIES = ["Grand Mosque", "Musalla", "Community Center", "Historic"];
 
 const INITIAL_REVIEWS = [
   {
-    user: "Ahmed",
+    user: "Abdullah",
     rating: 5,
-    text: "Alhamdulillah, very authentic taste.",
-    date: "2 days ago",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed",
+    text: "MashaAllah, very peaceful and clean.",
+    date: "1 day ago",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Abdullah",
   },
   {
-    user: "Siti",
-    rating: 4,
-    text: "Good food, specifically the beef noodles.",
-    date: "1 week ago",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Siti",
+    user: "Fatima",
+    rating: 5,
+    text: "Spacious women's area and clean wudu facility.",
+    date: "3 days ago",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima",
   },
 ];
 
@@ -167,19 +170,78 @@ const calculateQiblaDirection = (userLat, userLng) => {
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
 };
 
-const getOpenStatus = (openHour, closeHour, t) => {
-  const currentHour = new Date().getHours();
-  const isOpen = currentHour >= openHour && currentHour < closeHour;
+// ============================================
+// 👇 PRAYER STATUS CALCULATION (USING ADHAN)
+// ============================================
+const getFormattedTime = (date) => {
+  if (!date) return "";
+  return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+};
+
+const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+
+const getMosqueStatus = (lat, lng, t) => {
+  // 1. Validasi Koordinat
+  if (!isValidCoordinate(lat, lng)) {
+    return {
+      isOpen: true,
+      text: t ? t("status_open_prayer") || "Open for Prayer" : "Open for Prayer",
+      color: "#2e7d32",
+    };
+  }
+
+  // 2. Setup Adhan
+  const coordinates = new Coordinates(lat, lng);
+  const date = new Date();
+  const params = CalculationMethod.MuslimWorldLeague();
+  params.madhab = params.madhab; 
+  
+  let prayerTimes;
+  try {
+    prayerTimes = new PrayerTimes(coordinates, date, params);
+  } catch (e) {
+    return { isOpen: true, text: "Open", color: "#2e7d32" };
+  }
+
+  const currentPrayer = prayerTimes.currentPrayer();
+  const nextPrayer = prayerTimes.nextPrayer();
+  const nextPrayerTime = prayerTimes.timeForPrayer(nextPrayer);
+
+  // 3. Logika Status
+  // Case A: Sedang waktu sholat (Selain Sunrise/None)
+  if (currentPrayer !== Prayer.None && currentPrayer !== Prayer.Sunrise) {
+    return {
+      isOpen: true,
+      text: `Now: ${capitalize(currentPrayer)}`, // e.g., "Now: Asr"
+      color: "#2e7d32", // Hijau
+    };
+  }
+  
+  // Case B: Di antara Isya dan Subuh (Biasanya masjid tutup)
+  // 'None' di Adhan.js biasanya berarti setelah Isya sebelum Subuh (atau sebelum Fajr)
+  if (currentPrayer === Prayer.None && nextPrayer === Prayer.Fajr) {
+     const timeStr = nextPrayerTime ? getFormattedTime(nextPrayerTime) : "";
+     return {
+       isOpen: false,
+       text: `Closed (Fajr ${timeStr})`, 
+       color: "#cf1322", // Merah
+     };
+  }
+
+  // Case C: Menunggu waktu sholat berikutnya (misal setelah Sunrise sebelum Dhuhr, atau setelah Dhuhr sebelum Asr)
+  if (nextPrayer !== Prayer.None && nextPrayerTime) {
+    return {
+      isOpen: true,
+      text: `Next: ${capitalize(nextPrayer)} ${getFormattedTime(nextPrayerTime)}`,
+      color: "#d48806", // Oranye/Kuning
+    };
+  }
+
+  // Default Fallback
   return {
-    isOpen,
-    text: isOpen
-      ? `${t ? t("status_open") : "Open"} • ${
-          t ? t("status_closes") : "Closes"
-        } ${closeHour}:00`
-      : `${t ? t("status_closed") : "Closed"} • ${
-          t ? t("status_opens") : "Opens"
-        } ${openHour}:00`,
-    color: isOpen ? "#2e7d32" : "#d32f2f",
+    isOpen: true,
+    text: "Open for Prayer",
+    color: "#2e7d32",
   };
 };
 
@@ -197,14 +259,18 @@ const createCustomIcon = (price, isActive) => {
     className: "custom-div-icon",
     html: `<div class="custom-icon-pin ${
       isActive ? "active" : ""
-    }"><i><svg width="14" height="14" fill="white" viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg></i></div>`,
+    }"><i>
+      <svg width="14" height="14" fill="white" viewBox="0 0 512 512">
+        <path d="M256 0c-24.8 0-48.2 4.6-69.7 13 41.5 24 69.7 68.8 69.7 119.9 0 76.5-62 138.5-138.5 138.5-20.9 0-40.8-4.4-58.8-12.2C76 295.4 163.6 384 271.5 384c97.6 0 178.5-70.1 196.2-162.9-20.3 5.9-41.8 9.1-64.2 9.1-123.7 0-224-100.3-224-224 0-2.3.1-4.6.2-6.9C205.8 4.6 230.4 0 256 0z"/>
+      </svg>
+    </i></div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 40],
     popupAnchor: [0, -40],
   });
 };
 
-// --- ROUTING MACHINE (VISUAL ONLY) ---
+// --- ROUTING MACHINE ---
 const RoutingMachine = ({ userLocation, destination, transportMode }) => {
   const map = useMap();
   const routingControlRef = useRef(null);
@@ -219,9 +285,7 @@ const RoutingMachine = ({ userLocation, destination, transportMode }) => {
     if (routingControlRef.current) {
       try {
         map.removeControl(routingControlRef.current);
-      } catch (e) {
-        console.warn("Cleanup warning", e);
-      }
+      } catch (e) {}
       routingControlRef.current = null;
     }
 
@@ -250,9 +314,7 @@ const RoutingMachine = ({ userLocation, destination, transportMode }) => {
     try {
       routingControl.addTo(map);
       routingControlRef.current = routingControl;
-    } catch (e) {
-      console.error("Routing add error", e);
-    }
+    } catch (e) {}
 
     return () => {
       if (map && routingControlRef.current) {
@@ -299,13 +361,19 @@ const MapEvents = ({ onMoveEnd }) => {
 
 // --- SIDEBAR CARD ---
 const SidebarCard = ({ data, active, onClick, isVisited, t }) => {
-  const status = getOpenStatus(data.openTime, data.closeTime, t);
+  // 👇 GUNAKAN FUNGSI ADHAN BARU DI SINI
+  const status = getMosqueStatus(data.lat, data.lng, t);
+
   return (
     <div
       className={`sidebar-card ${active ? "active" : ""}`}
       onClick={() => onClick(data)}
     >
-      {data.isPromo && <div className="promo-ribbon">PROMO</div>}
+      {data.tags.includes("Jumu'ah Available") && (
+        <div className="promo-ribbon" style={{ background: "#1B4D3E" }}>
+          JUMUAH
+        </div>
+      )}
       {isVisited && (
         <Tooltip title="Visited">
           <div className="visited-badge">
@@ -335,7 +403,7 @@ const SidebarCard = ({ data, active, onClick, isVisited, t }) => {
           </span>
         </div>
         <span className="card-meta">
-          {data.type} • {data.price}
+          <FaMosque style={{ marginRight: 4, color: THEME_COLOR }} /> {data.type}
         </span>
         <div
           style={{
@@ -345,8 +413,7 @@ const SidebarCard = ({ data, active, onClick, isVisited, t }) => {
             marginBottom: 6,
           }}
         >
-          {status.isOpen ? <ClockCircleOutlined /> : <StopOutlined />}{" "}
-          {status.text}
+          <ClockCircleOutlined /> {status.text}
         </div>
         <div className="card-pills-row">
           {data.categoryTag && (
@@ -358,12 +425,12 @@ const SidebarCard = ({ data, active, onClick, isVisited, t }) => {
                 background: "#f6ffed",
               }}
             >
-              <ThunderboltFilled /> {data.categoryTag}
+              <BankOutlined /> {data.categoryTag}
             </span>
           )}
-          {data.tags.includes("Verified Halal") && (
+          {data.tags.includes("Women Area") && (
             <span className="card-pill">
-              <SafetyCertificateOutlined /> Halal
+              <WomanOutlined /> Women Area
             </span>
           )}
         </div>
@@ -373,7 +440,7 @@ const SidebarCard = ({ data, active, onClick, isVisited, t }) => {
 };
 
 // --- MAIN PAGE ---
-function HalalFinder({ onNavigate }) {
+function MosqueFinder({ onNavigate }) {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
@@ -394,26 +461,18 @@ function HalalFinder({ onNavigate }) {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [mobileListVisible, setMobileListVisible] = useState(false);
-
-  // STATE MOBILE MENU
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // USER STATE
   const [user, setUser] = useState(null);
 
-  // EFFECT: Load User
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Failed to parse user");
-      }
+      } catch (error) {}
     }
   }, []);
 
-  // LOGOUT
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -421,23 +480,10 @@ function HalalFinder({ onNavigate }) {
     message.success("Logged out");
   };
 
-  // MENU ITEMS (DESKTOP)
   const userMenuItems = [
-    {
-      key: "profile",
-      label: "My Profile",
-      icon: <UserOutlined />,
-      onClick: () => message.info("Profile Page"),
-    },
-    {
-      key: "settings",
-      label: "Settings",
-      icon: <SettingOutlined />,
-      onClick: () => message.info("Settings"),
-    },
-    {
-      type: "divider",
-    },
+    { key: "profile", label: "My Profile", icon: <UserOutlined /> },
+    { key: "settings", label: "Settings", icon: <SettingOutlined /> },
+    { type: "divider" },
     {
       key: "logout",
       label: "Log Out",
@@ -447,7 +493,6 @@ function HalalFinder({ onNavigate }) {
     },
   ];
 
-  // Navigation States
   const [isNavigating, setIsNavigating] = useState(false);
   const [destinationCoords, setDestinationCoords] = useState(null);
   const [transportMode, setTransportMode] = useState("car");
@@ -464,13 +509,12 @@ function HalalFinder({ onNavigate }) {
   const [qiblaDirection, setQiblaDirection] = useState(0);
   const [form] = Form.useForm();
 
-  const foodTypeItems = CATEGORIES.map((cat) => ({
+  const mosqueTypeItems = CATEGORIES.map((cat) => ({
     key: cat,
     label: cat,
     onClick: () => setActiveFilter(cat),
   }));
 
-  // --- LOCAL ROUTE CALCULATION ---
   const calculateRouteData = (mode, start, end) => {
     if (!start || !end) return;
     const distKm = calculateDistance(start[0], start[1], end[0], end[1]);
@@ -498,42 +542,36 @@ function HalalFinder({ onNavigate }) {
     setTransportMode(e.target.value);
   };
 
-  // --- API FETCH LOGIC ---
   const fetchPlaces = async (lat, lng, retryCount = 0) => {
     setIsLoading(true);
     const generateNearbyMockData = (cLat, cLng) => {
       return Array.from({ length: 15 }).map((_, i) => {
-        const isPromo = Math.random() > 0.6;
         const cat = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
-        let myTags = ["Verified Halal"];
-        const pool = POSSIBLE_TAGS.filter((t) => t !== "Verified Halal").sort(
+        let myTags = ["Jumu'ah Available", "Wudu Facility"];
+        const pool = POSSIBLE_TAGS.filter((t) => !myTags.includes(t)).sort(
           () => 0.5 - Math.random()
         );
         myTags.push(...pool.slice(0, 3));
-        if (i % 2 === 0 || Math.random() > 0.5) myTags.push("Family Friendly");
+
         return {
-          id: `mock-${i}`,
-          fullName: `Halal Kitchen ${i + 1}`,
-          lat: cLat + (Math.random() - 0.5) * 0.02,
-          lng: cLng + (Math.random() - 0.5) * 0.02,
-          type: "Restaurant",
-          rating: (4 + Math.random()).toFixed(1),
-          reviews: 120,
-          img: FOOD_IMAGES[i % FOOD_IMAGES.length],
+          id: `mock-mosque-${i}`,
+          fullName: `Masjid Al-Nur ${i + 1}`,
+          lat: cLat + (Math.random() - 0.5) * 0.04,
+          lng: cLng + (Math.random() - 0.5) * 0.04,
+          type: "Mosque",
+          rating: (4.5 + Math.random() * 0.5).toFixed(1),
+          reviews: Math.floor(Math.random() * 500) + 20,
+          img: MOSQUE_IMAGES[i % MOSQUE_IMAGES.length],
           tags: [...new Set(myTags)],
           categoryTag: cat,
-          isPromo: isPromo,
-          promoText: isPromo ? "20% Off for Lunch" : null,
-          openTime: 10,
-          closeTime: 22,
-          address: "Nearby location",
-          price: "🍴🍴",
+          address: "Nearby Islamic Center",
+          price: "Free",
         };
       });
     };
 
     try {
-      const query = `[out:json][timeout:15];(node["amenity"~"restaurant|cafe|fast_food"](around:${MAX_RADIUS_METERS}, ${lat}, ${lng}););out ${MAX_RESULTS};`;
+      const query = `[out:json][timeout:15];(node["amenity"="place_of_worship"]["religion"="muslim"](around:${MAX_RADIUS_METERS}, ${lat}, ${lng}););out ${MAX_RESULTS};`;
       const response = await fetch(
         "https://overpass.kumi.systems/api/interpreter",
         { method: "POST", body: query }
@@ -553,42 +591,35 @@ function HalalFinder({ onNavigate }) {
         return;
       }
       const mapped = data.elements.map((item, i) => {
-        let tags = ["Verified Halal"];
-        const pool = POSSIBLE_TAGS.filter((t) => t !== "Verified Halal").sort(
-          () => 0.5 - Math.random()
-        );
+        let tags = ["Wudu Facility"];
+        const pool = POSSIBLE_TAGS.sort(() => 0.5 - Math.random());
         tags.push(...pool.slice(0, 3));
-        if (i % 2 === 0 || Math.random() > 0.5) tags.push("Family Friendly");
+        const name =
+          item.tags.name ||
+          item.tags["name:en"] ||
+          item.tags["name:ar"] ||
+          "Masjid Nearby";
         return {
           id: item.id,
-          fullName: item.tags.name || item.tags["name:en"] || "Halal Spot",
+          fullName: name,
           lat: item.lat,
           lng: item.lon,
-          type: item.tags.cuisine
-            ? item.tags.cuisine.charAt(0).toUpperCase() +
-              item.tags.cuisine.slice(1)
-            : "Restaurant",
-          rating: (3.8 + Math.random() * 1.2).toFixed(1),
-          reviews: Math.floor(Math.random() * 200) + 10,
-          price: ["🍴", "🍴🍴", "🍴🍴🍴"][Math.floor(Math.random() * 3)],
-          img: FOOD_IMAGES[i % FOOD_IMAGES.length],
+          type: "Mosque",
+          rating: (4.0 + Math.random()).toFixed(1),
+          reviews: Math.floor(Math.random() * 100) + 10,
+          img: MOSQUE_IMAGES[i % MOSQUE_IMAGES.length],
           tags: [...new Set(tags)],
           categoryTag:
             CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)],
-          isPromo: Math.random() > 0.8,
-          promoText: "Special Deal",
-          openTime: 9,
-          closeTime: 21,
           address: getAddressFromTags(item.tags),
+          price: "Free",
         };
       });
-      const validPlaces = mapped.filter((p) => p.fullName !== "Halal Spot");
-      const withDistance = recalculateDistances(validPlaces, lat, lng);
+      const withDistance = recalculateDistances(mapped, lat, lng);
       setAllPlaces(
         withDistance.filter((p) => p.rawDistance * 1000 <= MAX_RADIUS_METERS)
       );
     } catch (err) {
-      console.warn("Using fallback");
       const mocks = generateNearbyMockData(lat, lng);
       setAllPlaces(recalculateDistances(mocks, lat, lng));
     } finally {
@@ -609,7 +640,6 @@ function HalalFinder({ onNavigate }) {
     });
   };
 
-  // --- EVENT HANDLERS ---
   const handleToggleVisited = (id) => {
     const newSet = new Set(visitedIds);
     if (newSet.has(id)) newSet.delete(id);
@@ -626,7 +656,7 @@ function HalalFinder({ onNavigate }) {
     setIsNavigating(true);
     setDrawerVisible(false);
     setMobileListVisible(false);
-    message.loading("Calculating route...", 1.0);
+    message.loading("Calculating route to Mosque...", 1.0);
   };
 
   const handleStopNavigation = () => {
@@ -657,12 +687,10 @@ function HalalFinder({ onNavigate }) {
     form.resetFields();
   };
 
-  // --- EFFECTS ---
   useEffect(() => {
     let result = [...allPlaces];
     if (activeFilter !== "All") {
-      if (activeFilter === "Promo") result = result.filter((p) => p.isPromo);
-      else if (CATEGORIES.includes(activeFilter))
+      if (CATEGORIES.includes(activeFilter))
         result = result.filter((p) => p.categoryTag === activeFilter);
       else result = result.filter((p) => p.tags.includes(activeFilter));
     }
@@ -686,9 +714,6 @@ function HalalFinder({ onNavigate }) {
       );
   }, [userLocation]);
 
-  // --- GPS & LOCATION LOGIC (IMPROVED: FALLBACK TO IP) ---
-
-  // Fungsi Fallback: Cari lokasi via IP Address (Kurang akurat tapi jalan)
   const fallbackToIpLocation = async () => {
     try {
       const res = await fetch("https://ipapi.co/json/");
@@ -696,17 +721,13 @@ function HalalFinder({ onNavigate }) {
       if (data.latitude && data.longitude) {
         const lat = parseFloat(data.latitude);
         const lng = parseFloat(data.longitude);
-        console.log("Using IP Location:", lat, lng);
         setUserLocation([lat, lng]);
         setMapCenter({ lat, lng });
         fetchPlaces(lat, lng);
-        message.warning("GPS failed. Using approximate location from IP.");
+        message.warning("Using approximate location (IP).");
       }
     } catch (error) {
-      console.error("IP Location failed:", error);
-      message.error("Could not determine location. Using default.");
-      // Default ke Beijing atau Jakarta jika semua gagal
-      const defaultLoc = [39.9042, 116.4074];
+      const defaultLoc = [-6.1702, 106.8314];
       setUserLocation(defaultLoc);
       setMapCenter({ lat: defaultLoc[0], lng: defaultLoc[1] });
       fetchPlaces(defaultLoc[0], defaultLoc[1]);
@@ -715,13 +736,10 @@ function HalalFinder({ onNavigate }) {
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
-      message.error("Geolocation not supported");
       fallbackToIpLocation();
       return;
     }
-
     message.loading("Locating...", 1);
-
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
@@ -730,46 +748,16 @@ function HalalFinder({ onNavigate }) {
         fetchPlaces(latitude, longitude);
         message.success("Location found!");
       },
-      (err) => {
-        console.warn("Locate me error:", err);
-        message.error("Check GPS settings / Allow Location Access");
-        fallbackToIpLocation(); // Coba fallback
+      () => {
+        message.error("Check GPS settings");
+        fallbackToIpLocation();
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
-  // Auto-locate on Mount (Dengan Fallback)
   useEffect(() => {
-    if (!navigator.geolocation) {
-      fallbackToIpLocation();
-      return;
-    }
-
-    const geoOptions = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
-    };
-
-    // Coba ambil lokasi sekali saat load
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        console.log("GPS Success:", latitude, longitude);
-        setUserLocation([latitude, longitude]);
-        setMapCenter({ lat: latitude, lng: longitude });
-        fetchPlaces(latitude, longitude);
-      },
-      (err) => {
-        console.warn("GPS Initial Error:", err.message);
-        // Jika error (User deny / Timeout / Unavailable), pakai IP
-        fallbackToIpLocation();
-      },
-      geoOptions
-    );
-
-    // NOTE: watchPosition dihapus untuk mencegah spam error
+    handleLocateMe();
   }, []);
 
   const handleMapMoveEnd = (center) => setMapCenter(center);
@@ -784,19 +772,18 @@ function HalalFinder({ onNavigate }) {
     userLocation?.[1]
   )
     ? userLocation
-    : [39.9042, 116.4074];
+    : [-6.1702, 106.8314];
   const getCurrentReviews = () => {
     if (!selectedPlace) return [];
     return [...(userReviews[selectedPlace.id] || []), ...INITIAL_REVIEWS];
   };
 
-  // --- RENDER CONTENT HELPER ---
   const renderListContent = () => (
     <>
       <div className="sidebar-header">
         <Input
           id="sidebar-search"
-          placeholder={t("finder_placeholder")}
+          placeholder="Search mosques..."
           className="sidebar-search-input"
           prefix={<SearchOutlined style={{ color: "#999" }} />}
           onChange={(e) => setSearchText(e.target.value)}
@@ -807,48 +794,42 @@ function HalalFinder({ onNavigate }) {
             className={`tab-item ${activeFilter === "All" ? "active" : ""}`}
             onClick={() => setActiveFilter("All")}
           >
-            <ShopOutlined /> {t("pill_all")}
+            <BankOutlined /> All
           </div>
-          <Dropdown menu={{ items: foodTypeItems }} trigger={["click"]}>
+          <Dropdown menu={{ items: mosqueTypeItems }} trigger={["click"]}>
             <div
               className={`tab-item ${
                 CATEGORIES.includes(activeFilter) ? "active" : ""
               }`}
               style={{ cursor: "pointer" }}
             >
-              <AppstoreOutlined /> {t("pill_food_type")}{" "}
+              <AppstoreOutlined /> Type{" "}
               <DownOutlined style={{ fontSize: 10, marginLeft: 4 }} />
             </div>
           </Dropdown>
           <div
-            className={`tab-item ${activeFilter === "Promo" ? "active" : ""}`}
-            onClick={() => setActiveFilter("Promo")}
+            className={`tab-item ${
+              activeFilter === "Jumu'ah Available" ? "active" : ""
+            }`}
+            onClick={() => setActiveFilter("Jumu'ah Available")}
           >
-            <FireFilled style={{ color: "#f5222d" }} /> {t("pill_promo")}
+            <TeamOutlined /> Jumu'ah
           </div>
           <div
             className={`tab-item ${
-              activeFilter === "Verified Halal" ? "active" : ""
+              activeFilter === "Women Area" ? "active" : ""
             }`}
-            onClick={() => setActiveFilter("Verified Halal")}
+            onClick={() => setActiveFilter("Women Area")}
           >
-            <SafetyCertificateOutlined /> {t("filter_verified")}
+            <WomanOutlined /> Women Area
           </div>
           <div
             className={`tab-item ${
-              activeFilter === "Prayer Room" ? "active" : ""
+              activeFilter === "Quran Class" ? "active" : ""
             }`}
-            onClick={() => setActiveFilter("Prayer Room")}
+            onClick={() => setActiveFilter("Quran Class")}
           >
-            <CompassFilled /> {t("filter_prayer")}
-          </div>
-          <div
-            className={`tab-item ${
-              activeFilter === "Family Friendly" ? "active" : ""
-            }`}
-            onClick={() => setActiveFilter("Family Friendly")}
-          >
-            <CoffeeOutlined /> {t("filter_family")}
+            <ReadFilled /> Quran Class
           </div>
         </div>
       </div>
@@ -868,8 +849,8 @@ function HalalFinder({ onNavigate }) {
           <>
             <div className="list-section-header">
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <SafetyCertificateOutlined style={{ fontSize: 18 }} />
-                <span>{t("list_title")}</span>
+                <FaMosque style={{ fontSize: 16 }} />
+                <span>Mosques Nearby</span>
               </div>
               <span
                 style={{
@@ -879,7 +860,7 @@ function HalalFinder({ onNavigate }) {
                   opacity: 0.8,
                 }}
               >
-                {t("list_view_all")}
+                {safeFilteredPlaces.length} found
               </span>
             </div>
             {safeFilteredPlaces.map((place) => (
@@ -900,7 +881,7 @@ function HalalFinder({ onNavigate }) {
         ) : (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={t("list_empty")}
+            description="No mosques found nearby"
           />
         )}
       </div>
@@ -911,166 +892,165 @@ function HalalFinder({ onNavigate }) {
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       {/* NAVBAR */}
       <header className="navbar-container">
-        <div className="container navbar">
-          <div
-            className="brand-logo"
-            onClick={() => onNavigate("landing")}
-            style={{ cursor: "pointer" }}
-          >
-            <GlobalOutlined className="logo-icon" /> <span>QingzhenMu</span>
-          </div>
-
-          {/* MENU LINKS (DESKTOP + MOBILE DROPDOWN) */}
-          <div className={`nav-links ${isMobileMenuOpen ? "mobile-open" : ""}`}>
-            <Button
-              type="link"
-              className="active text-green"
-              onClick={() => {
-                onNavigate("finder");
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              {t("nav_finder")}
-            </Button>
-            <Button type="link" onClick={() => onNavigate("mosque")}>
-              {t("nav_mosque")}
-            </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
-              {t("nav_prayer")}
-            </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
-              {t("nav_community")}
-            </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
-              {t("nav_blog")}
-            </Button>
-
-            {/* ITEM KHUSUS MOBILE DALAM DROPDOWN */}
-            {isMobile && (
-              <>
-                <Divider style={{ margin: "8px 0" }} />
-
-                {/* Mobile: Tampilan User jika Login */}
-                {user ? (
-                  <div style={{ padding: "0 16px" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        marginBottom: 12,
-                      }}
-                    >
-                      <Avatar src={user.avatar_url} icon={<UserOutlined />} />
-                      {/* 👇 FIX: Utamakan 'name', lalu 'username' */}
-                      <Text strong>{user.name || user.username}</Text>
-                    </div>
-                    <Button
-                      block
-                      icon={<UserOutlined />}
-                      style={{ marginBottom: 8 }}
-                      onClick={() => message.info("Profile")}
-                    >
-                      My Profile
-                    </Button>
-                    <Button
-                      block
-                      icon={<LogoutOutlined />}
-                      danger
-                      onClick={handleLogout}
-                    >
-                      Log Out
-                    </Button>
-                  </div>
-                ) : (
-                  /* Mobile: Tampilan Sign In jika Belum Login */
-                  <Button type="text" onClick={() => onNavigate("auth")}>
-                    {t("nav_signin")}
+              <div className="container navbar">
+                <div
+                  className="brand-logo"
+                  onClick={() => onNavigate("landing")}
+                  style={{ cursor: "pointer" }}
+                >
+                  <GlobalOutlined className="logo-icon" /> <span>QingzhenMu</span>
+                </div>
+      
+                {/* MENU LINKS (DESKTOP + MOBILE DROPDOWN) */}
+                <div className={`nav-links ${isMobileMenuOpen ? "mobile-open" : ""}`}>
+                  <Button
+                    type="link"
+                    className="active text-green"
+                    onClick={() => {
+                      onNavigate("finder");
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    {t("nav_finder")}
                   </Button>
-                )}
-
-                <Divider style={{ margin: "8px 0" }} />
-                <Button
-                  type="text"
-                  onClick={() => {
-                    toggleLanguage();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  icon={<TranslationOutlined />}
-                >
-                  {lang === "en" ? "Switch to Chinese" : "Switch to English"}
-                </Button>
-              </>
-            )}
-          </div>
-
-          <div className="nav-actions">
-            {/* Tombol Bahasa & Sign In: Tambahkan class 'hide-mobile' */}
-            <Button
-              type="text"
-              className="hide-mobile"
-              icon={<TranslationOutlined />}
-              onClick={toggleLanguage}
-              style={{ fontWeight: "bold", marginRight: 8 }}
-            >
-              {lang === "en" ? "CN" : "EN"}
-            </Button>
-
-            {/* 👇 LOGIC TOMBOL LOGIN / PROFILE (Desktop) */}
-            <div className="hide-mobile">
-              {user ? (
-                // Jika User Login: Tampilkan Dropdown Profile
-                <Dropdown
-                  menu={{ items: userMenuItems }}
-                  placement="bottomRight"
-                >
+                  <Button type="link" onClick={() => onNavigate("mosque")}>
+                                {t("nav_mosque")}
+                    </Button>
+                  <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+                    {t("nav_prayer")}
+                  </Button>
+                  <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+                    {t("nav_community")}
+                  </Button>
+                  <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+                    {t("nav_blog")}
+                  </Button>
+      
+                  {/* ITEM KHUSUS MOBILE DALAM DROPDOWN */}
+                  {isMobile && (
+                    <>
+                      <Divider style={{ margin: "8px 0" }} />
+      
+                      {/* Mobile: Tampilan User jika Login */}
+                      {user ? (
+                        <div style={{ padding: "0 16px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              marginBottom: 12,
+                            }}
+                          >
+                            <Avatar src={user.avatar_url} icon={<UserOutlined />} />
+                            {/* 👇 FIX: Utamakan 'name', lalu 'username' */}
+                            <Text strong>{user.name || user.username}</Text>
+                          </div>
+                          <Button
+                            block
+                            icon={<UserOutlined />}
+                            style={{ marginBottom: 8 }}
+                            onClick={() => message.info("Profile")}
+                          >
+                            My Profile
+                          </Button>
+                          <Button
+                            block
+                            icon={<LogoutOutlined />}
+                            danger
+                            onClick={handleLogout}
+                          >
+                            Log Out
+                          </Button>
+                        </div>
+                      ) : (
+                        /* Mobile: Tampilan Sign In jika Belum Login */
+                        <Button type="text" onClick={() => onNavigate("auth")}>
+                          {t("nav_signin")}
+                        </Button>
+                      )}
+      
+                      <Divider style={{ margin: "8px 0" }} />
+                      <Button
+                        type="text"
+                        onClick={() => {
+                          toggleLanguage();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        icon={<TranslationOutlined />}
+                      >
+                        {lang === "en" ? "Switch to Chinese" : "Switch to English"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+      
+                <div className="nav-actions">
+                  {/* Tombol Bahasa & Sign In: Tambahkan class 'hide-mobile' */}
                   <Button
                     type="text"
-                    style={{ height: "auto", padding: "4px 8px" }}
+                    className="hide-mobile"
+                    icon={<TranslationOutlined />}
+                    onClick={toggleLanguage}
+                    style={{ fontWeight: "bold", marginRight: 8 }}
                   >
-                    <Space>
-                      <Avatar
-                        src={user.avatar_url}
-                        icon={<UserOutlined />}
-                        style={{ backgroundColor: "var(--primary-green)" }}
-                      />
-                      <Text strong style={{ color: "var(--text-dark)" }}>
-                        {/* 👇 FIX: Utamakan 'name', lalu 'username' */}
-                        {user.name || user.username || "User"}
-                      </Text>
-                      <DownOutlined style={{ fontSize: 10, color: "#999" }} />
-                    </Space>
+                    {lang === "en" ? "CN" : "EN"}
                   </Button>
-                </Dropdown>
-              ) : (
-                // Jika Belum Login: Tampilkan Tombol Sign In
-                <Button type="text" onClick={() => onNavigate("auth")}>
-                  {t("nav_signin")}
-                </Button>
-              )}
-            </div>
-
-            <Button className="btn-gold" shape="round">
-              {t("nav_download")}
-            </Button>
-
-            {/* TOMBOL HAMBURGER */}
-            <button
-              className="mobile-menu-toggle"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* MAIN CONTENT - MOBILE ADJUSTMENT */}
+      
+                  {/* 👇 LOGIC TOMBOL LOGIN / PROFILE (Desktop) */}
+                  <div className="hide-mobile">
+                    {user ? (
+                      // Jika User Login: Tampilkan Dropdown Profile
+                      <Dropdown
+                        menu={{ items: userMenuItems }}
+                        placement="bottomRight"
+                      >
+                        <Button
+                          type="text"
+                          style={{ height: "auto", padding: "4px 8px" }}
+                        >
+                          <Space>
+                            <Avatar
+                              src={user.avatar_url}
+                              icon={<UserOutlined />}
+                              style={{ backgroundColor: "var(--primary-green)" }}
+                            />
+                            <Text strong style={{ color: "var(--text-dark)" }}>
+                              {/* 👇 FIX: Utamakan 'name', lalu 'username' */}
+                              {user.name || user.username || "User"}
+                            </Text>
+                            <DownOutlined style={{ fontSize: 10, color: "#999" }} />
+                          </Space>
+                        </Button>
+                      </Dropdown>
+                    ) : (
+                      // Jika Belum Login: Tampilkan Tombol Sign In
+                      <Button type="text" onClick={() => onNavigate("auth")}>
+                        {t("nav_signin")}
+                      </Button>
+                    )}
+                  </div>
+      
+                  <Button className="btn-gold" shape="round">
+                    {t("nav_download")}
+                  </Button>
+      
+                  {/* TOMBOL HAMBURGER */}
+                  <button
+                    className="mobile-menu-toggle"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  >
+                    {isMobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
+                  </button>
+                </div>
+              </div>
+            </header>
+            
+      {/* MAIN CONTENT */}
       <div
         className="finder-layout"
         style={{ flexDirection: isMobile ? "column" : "row" }}
       >
-        {/* MAP CONTAINER - Full Height on Mobile */}
         <div
           className="finder-map-container"
           style={{
@@ -1078,7 +1058,7 @@ function HalalFinder({ onNavigate }) {
             height: "100%",
           }}
         >
-          {/* MAP OVERLAY - Mobile Optimization */}
+          {/* MAP OVERLAY (SEARCH BAR & PILLS) */}
           {!isNavigating && (
             <div
               className="map-overlay-top-left"
@@ -1086,8 +1066,8 @@ function HalalFinder({ onNavigate }) {
                 position: "absolute",
                 top: isMobile ? 16 : 24,
                 left: isMobile ? 16 : 24,
-                right: isMobile ? 120 : "auto",
-                // zIndex: 900, sudah ada di CSS
+                right: isMobile ? 120 : "auto", // Gunakan logika HalalFinder asli agar tidak menabrak
+                zIndex: 900,
               }}
             >
               <div className="main-overlay-bar">
@@ -1100,15 +1080,14 @@ function HalalFinder({ onNavigate }) {
                   }
                 >
                   <SearchOutlined style={{ flexShrink: 0 }} />
-                  <span>{t("map_btn_search")}</span>
+                  <span>Search Mosques...</span>
                 </div>
-
                 {!isMobile && (
                   <>
                     <div className="overlay-divider"></div>
                     <button
                       className="overlay-text-btn"
-                      onClick={() => setActiveFilter("Verified Halal")}
+                      onClick={() => setActiveFilter("Jumu'ah Available")}
                     >
                       <FilterOutlined /> {t("map_btn_filter")}
                     </button>
@@ -1119,8 +1098,6 @@ function HalalFinder({ onNavigate }) {
                   </>
                 )}
               </div>
-
-              {/* PILLS: Tampilan ini akan diatur CSS jadi Vertical di Mobile */}
               <div className="overlay-pills">
                 <div
                   className={`overlay-pill ${
@@ -1128,35 +1105,36 @@ function HalalFinder({ onNavigate }) {
                   }`}
                   onClick={() => setActiveFilter("All")}
                 >
-                  <ShopOutlined /> {t("lbl_restaurants")}
+                  <BankOutlined /> All
                 </div>
                 <div
                   className={`overlay-pill ${
-                    activeFilter === "Prayer Room" ? "active" : ""
+                    activeFilter === "Jumu'ah Available" ? "active" : ""
                   }`}
-                  onClick={() => setActiveFilter("Prayer Room")}
+                  onClick={() => setActiveFilter("Jumu'ah Available")}
                 >
-                  <CompassFilled /> {t("filter_prayer")}
+                  <TeamOutlined /> Jumu'ah
                 </div>
                 <div
                   className={`overlay-pill ${
-                    activeFilter === "Family Friendly" ? "active" : ""
+                    activeFilter === "Women Area" ? "active" : ""
                   }`}
-                  onClick={() => setActiveFilter("Family Friendly")}
+                  onClick={() => setActiveFilter("Women Area")}
                 >
-                  <CoffeeOutlined /> {t("filter_family")}
+                  <WomanOutlined /> Women
                 </div>
               </div>
             </div>
           )}
 
-          {/* QIBLA WIDGET */}
+          {/* QIBLA WIDGET (ICON BULAT) */}
           {userLocation && (
             <div
               className="qibla-widget-container"
               style={{
                 top: isMobile ? 16 : 24,
                 right: isMobile ? 16 : 24,
+                zIndex: 1001,
               }}
             >
               <div
@@ -1217,63 +1195,37 @@ function HalalFinder({ onNavigate }) {
             </div>
           )}
 
-          {/* NEW NAVIGATION HUD (DYNAMIC ISLAND) */}
+          {/* NAV HUD */}
           {isNavigating && (
             <div
               style={{
                 position: "absolute",
-                top: isMobile ? 20 : 24,
+                top: 24,
                 left: "50%",
                 transform: "translateX(-50%)",
                 zIndex: 1000,
                 background: "rgba(255, 255, 255, 0.95)",
-                backdropFilter: "blur(5px)",
                 padding: "8px 20px",
                 borderRadius: "30px",
                 boxShadow: "0 4px 15px rgba(0,0,0,0.15)",
                 display: "flex",
-                alignItems: "center",
                 gap: 16,
-                border: "1px solid rgba(0,0,0,0.05)",
-                minWidth: 200,
-                justifyContent: "center",
               }}
             >
-              <div
-                style={{
-                  fontSize: 20,
-                  color: THEME_COLOR,
-                  background: "#e6f7ff",
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {transportMode === "walk" ? (
-                  <FaWalking />
-                ) : transportMode === "bike" ? (
-                  <FaBicycle />
-                ) : transportMode === "moto" ? (
-                  <FaMotorcycle />
-                ) : (
-                  <FaCar />
-                )}
+              <div style={{ fontSize: 20, color: THEME_COLOR }}>
+                <FaMosque />
               </div>
               <div
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  alignItems: "flex-start",
                   lineHeight: 1.1,
                 }}
               >
-                <span style={{ fontSize: 18, fontWeight: 800, color: "#333" }}>
+                <span style={{ fontSize: 18, fontWeight: 800 }}>
                   {formatDuration(routeInfo.totalTime)}
                 </span>
-                <span style={{ fontSize: 12, color: "#888", fontWeight: 500 }}>
+                <span style={{ fontSize: 12, color: "#888" }}>
                   {(routeInfo.totalDistance / 1000).toFixed(1)} km
                 </span>
               </div>
@@ -1292,7 +1244,6 @@ function HalalFinder({ onNavigate }) {
             />
             <MapEvents onMoveEnd={handleMapMoveEnd} />
             {!isNavigating && <AutoFitBounds places={safeFilteredPlaces} />}
-
             {isNavigating && safeUserLocation && destinationCoords && (
               <RoutingMachine
                 userLocation={safeUserLocation}
@@ -1300,27 +1251,20 @@ function HalalFinder({ onNavigate }) {
                 transportMode={transportMode}
               />
             )}
-
             {userLocation && (
               <Marker
                 position={userLocation}
                 icon={L.divIcon({
                   className: "user-marker",
-                  html: `<div style="width: 20px; height: 20px; background: #1890ff; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.4);"></div>`,
-                  iconSize: [20, 20],
-                  iconAnchor: [10, 10],
+                  html: `<div style="width: 20px; height: 20px; background: #1890ff; border: 3px solid white; border-radius: 50%;"></div>`,
                 })}
-                zIndexOffset={100}
               />
             )}
             {safeFilteredPlaces.map((place) => (
               <Marker
                 key={place.id}
                 position={[place.lat, place.lng]}
-                icon={createCustomIcon(
-                  place.price,
-                  selectedPlace?.id === place.id
-                )}
+                icon={createCustomIcon(selectedPlace?.id === place.id)}
                 eventHandlers={{
                   click: () => {
                     setSelectedPlace(place);
@@ -1331,7 +1275,6 @@ function HalalFinder({ onNavigate }) {
             ))}
           </MapContainer>
 
-          {/* BOTTOM CONTROLS */}
           <div
             style={{
               position: "absolute",
@@ -1346,34 +1289,19 @@ function HalalFinder({ onNavigate }) {
             <Button
               icon={<AimOutlined style={{ fontSize: 20 }} />}
               onClick={handleLocateMe}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 8,
-                border: "none",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              }}
+              style={{ width: 44, height: 44, borderRadius: 8 }}
             />
             {!isNavigating && (
               <Button
                 icon={<SearchOutlined />}
                 onClick={handleSearchArea}
                 loading={isLoading}
-                style={{
-                  height: 44,
-                  padding: "0 16px",
-                  borderRadius: 8,
-                  border: "none",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                  fontWeight: 600,
-                }}
+                style={{ height: 44, borderRadius: 8 }}
               >
                 {isMobile ? "Redo" : t("btn_redo")}
               </Button>
             )}
           </div>
-
-          {/* MOBILE "VIEW LIST" BUTTON */}
           {isMobile && !isNavigating && !drawerVisible && (
             <div
               style={{
@@ -1390,18 +1318,12 @@ function HalalFinder({ onNavigate }) {
                 icon={<UnorderedListOutlined />}
                 size="large"
                 className="btn-green"
-                style={{
-                  padding: "0 32px",
-                  height: 48,
-                  boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
-                }}
                 onClick={() => setMobileListVisible(true)}
               >
                 View List
               </Button>
             </div>
           )}
-
           {isNavigating && (
             <Button
               shape="round"
@@ -1416,30 +1338,24 @@ function HalalFinder({ onNavigate }) {
                 left: "50%",
                 transform: "translateX(-50%)",
                 zIndex: 1000,
-                height: 48,
-                fontWeight: 600,
               }}
             >
-              {t("btn_exit_nav")}
+              Exit Navigation
             </Button>
           )}
         </div>
-
-        {/* SIDEBAR LIST (DESKTOP) */}
         {!isMobile && (
           <div className="finder-list-container">{renderListContent()}</div>
         )}
       </div>
 
-      {/* MOBILE LIST DRAWER */}
       {isMobile && (
         <Drawer
-          title="Halal Places"
+          title="Mosques Nearby"
           placement="bottom"
           onClose={() => setMobileListVisible(false)}
           open={mobileListVisible}
           height="85vh"
-          className="mobile-list-drawer"
           styles={{ body: { padding: 0 } }}
         >
           <div
@@ -1451,7 +1367,6 @@ function HalalFinder({ onNavigate }) {
         </Drawer>
       )}
 
-      {/* DRAWER DETAILS MODERN */}
       <Drawer
         title={null}
         placement={isMobile ? "bottom" : "right"}
@@ -1469,82 +1384,27 @@ function HalalFinder({ onNavigate }) {
               <img
                 src={selectedPlace.img}
                 className="detail-hero-img"
-                alt="Cover"
+                alt="Mosque"
               />
               <div className="detail-hero-overlay">
-                {selectedPlace.isPromo && (
-                  <div
-                    style={{
-                      background: "#D32F2F",
-                      color: "white",
-                      padding: "4px 12px",
-                      borderRadius: 4,
-                      fontWeight: "bold",
-                      display: "inline-block",
-                      marginBottom: 8,
-                      width: "fit-content",
-                    }}
-                  >
-                    <FireFilled /> {selectedPlace.promoText}
-                  </div>
-                )}
                 <Tag
                   color="gold"
                   style={{
                     width: "fit-content",
-                    border: "none",
-                    color: "#333",
-                    fontWeight: "800",
                     marginBottom: 8,
+                    fontWeight: 800,
                   }}
                 >
-                  {selectedPlace.rating} ★ Superb
+                  {selectedPlace.rating} ★ Rated
                 </Tag>
-                <Title
-                  level={2}
-                  style={{
-                    color: "white",
-                    margin: 0,
-                    fontSize: 28,
-                    textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                  }}
-                >
+                <Title level={2} style={{ color: "white", margin: 0 }}>
                   {selectedPlace.fullName}
                 </Title>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    marginTop: 4,
-                  }}
+                <Text
+                  style={{ color: "rgba(255,255,255,0.9)", fontSize: 15 }}
                 >
-                  <Text
-                    style={{ color: "rgba(255,255,255,0.9)", fontSize: 15 }}
-                  >
-                    {selectedPlace.type} • {selectedPlace.price}
-                  </Text>
-                  {selectedPlace.tags.includes("Verified Halal") && (
-                    <span
-                      style={{
-                        backgroundColor: "#1B4D3E",
-                        color: "white",
-                        padding: "4px 12px",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        border: "1px solid #45a049",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      <CheckCircleFilled style={{ fontSize: "14px" }} />{" "}
-                      Verified Halal
-                    </span>
-                  )}
-                </div>
+                  {selectedPlace.type} • {selectedPlace.categoryTag}
+                </Text>
               </div>
               <Button
                 shape="circle"
@@ -1554,9 +1414,8 @@ function HalalFinder({ onNavigate }) {
                   top: 24,
                   right: 24,
                   background: "rgba(255,255,255,0.2)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255,255,255,0.3)",
                   color: "white",
+                  border: "none",
                 }}
                 onClick={() => setDrawerVisible(false)}
               />
@@ -1598,33 +1457,31 @@ function HalalFinder({ onNavigate }) {
                 </div>
                 <div className="stat-box">
                   <span className="stat-value">
-                    {selectedPlace.distanceFormatted || "Nearby"}
+                    {selectedPlace.distanceFormatted}
                   </span>
                   <span className="stat-label">Distance</span>
                 </div>
-                <div className="stat-box">
-                  <span
-                    className="stat-value"
-                    style={{
-                      color: getOpenStatus(
-                        selectedPlace.openTime,
-                        selectedPlace.closeTime,
-                        t
-                      ).color,
-                    }}
-                  >
-                    {getOpenStatus(
-                      selectedPlace.openTime,
-                      selectedPlace.closeTime,
-                      t
-                    ).isOpen
-                      ? t("status_open").toUpperCase()
-                      : t("status_closed").toUpperCase()}
-                  </span>
-                  <span className="stat-label">
-                    {selectedPlace.openTime}:00 - {selectedPlace.closeTime}:00
-                  </span>
-                </div>
+                
+                {/* 👇 UPDATE TAMPILAN STATUS DRAWER MENGGUNAKAN ADHAN */}
+                {(() => {
+                    const detailStatus = getMosqueStatus(selectedPlace.lat, selectedPlace.lng, t);
+                    return (
+                        <div className="stat-box">
+                          <span 
+                            className="stat-value" 
+                            style={{ 
+                                color: detailStatus.color, 
+                                fontSize: 13, 
+                                lineHeight: '1.2' 
+                            }}
+                          >
+                            {detailStatus.text}
+                          </span>
+                          <span className="stat-label">Prayer Time</span>
+                        </div>
+                    );
+                })()}
+
                 <div className="stat-box">
                   <span className="stat-value">
                     {selectedPlace.categoryTag}
@@ -1632,37 +1489,6 @@ function HalalFinder({ onNavigate }) {
                   <span className="stat-label">Type</span>
                 </div>
               </div>
-              <div className="qibla-widget">
-                <div>
-                  <Text
-                    strong
-                    style={{ color: "white", fontSize: 16, display: "block" }}
-                  >
-                    {t("qibla_title")}
-                  </Text>
-                  <Text
-                    style={{ color: "rgba(255,255,255,0.8)", fontSize: 12 }}
-                  >
-                    {t("qibla_desc")}
-                  </Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ fontWeight: "bold", fontSize: 20 }}>
-                    {Math.round(qiblaDirection)}°
-                  </span>
-                  <div className="compass-circle">
-                    <CompassFilled
-                      style={{
-                        transform: `rotate(${qiblaDirection}deg)`,
-                        transition: "transform 1s",
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* MODE SELECTOR (TRANSPORT SECTION) */}
-              {/* Tambahkan class transport-section yang sudah dibuat di CSS */}
               <div className="transport-section">
                 <Text
                   type="secondary"
@@ -1673,7 +1499,7 @@ function HalalFinder({ onNavigate }) {
                     display: "block",
                   }}
                 >
-                  ESTIMATED TRIP ({t("nav_est_time")})
+                  ESTIMATED TIME
                 </Text>
                 <div
                   style={{
@@ -1699,7 +1525,6 @@ function HalalFinder({ onNavigate }) {
                     {(routeInfo.totalDistance / 1000).toFixed(1)} km
                   </span>
                 </div>
-
                 <Radio.Group
                   value={transportMode}
                   onChange={handleTransportChange}
@@ -1710,51 +1535,32 @@ function HalalFinder({ onNavigate }) {
                     value="walk"
                     style={{ flex: 1, textAlign: "center" }}
                   >
-                    <FaWalking style={{ marginRight: 6 }} /> Walk
-                  </Radio.Button>
-                  <Radio.Button
-                    value="bike"
-                    style={{ flex: 1, textAlign: "center" }}
-                  >
-                    <FaBicycle style={{ marginRight: 6 }} /> Bike
+                    <FaWalking /> Walk
                   </Radio.Button>
                   <Radio.Button
                     value="moto"
                     style={{ flex: 1, textAlign: "center" }}
                   >
-                    <FaMotorcycle style={{ marginRight: 6 }} /> Moto
+                    <FaMotorcycle /> Moto
                   </Radio.Button>
                   <Radio.Button
                     value="car"
                     style={{ flex: 1, textAlign: "center" }}
                   >
-                    <FaCar style={{ marginRight: 6 }} /> Car
+                    <FaCar /> Car
                   </Radio.Button>
                 </Radio.Group>
               </div>
-
-              {/* TOMBOL NAVIGASI UTAMA (FIX TABRAKAN) */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  marginBottom: 24,
-                  width: "100%",
-                  alignItems: "center",
-                }}
-              >
+              <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
                 <Button
                   type="primary"
                   size="large"
                   icon={<CompassFilled />}
                   style={{
+                    flex: 1,
+                    background: THEME_COLOR,
                     height: 50,
                     borderRadius: 14,
-                    fontWeight: 700,
-                    fontSize: 16,
-                    background: THEME_COLOR,
-                    flex: 1, // Agar lebar otomatis mengisi
-                    minWidth: 0, // Mencegah overflow
                   }}
                   onClick={handleStartNavigation}
                 >
@@ -1762,33 +1568,18 @@ function HalalFinder({ onNavigate }) {
                 </Button>
                 <Button
                   size="large"
-                  icon={<PlusOutlined />}
-                  style={{
-                    height: 50,
-                    width: 50,
-                    borderRadius: 14,
-                    borderColor: "#eee",
-                    flex: "none",
-                  }}
-                  onClick={() => setReviewModalVisible(true)}
-                />
-                <Button
-                  size="large"
                   icon={<ArrowRightOutlined rotate={-45} />}
                   style={{
+                    flex: "none",
                     height: 50,
                     width: 50,
                     borderRadius: 14,
-                    borderColor: "#eee",
-                    flex: "none",
                   }}
                   onClick={handleGetDirections}
                 />
               </div>
-
               <Tabs
                 defaultActiveKey="1"
-                className="custom-tabs"
                 items={[
                   {
                     key: "1",
@@ -1817,19 +1608,12 @@ function HalalFinder({ onNavigate }) {
                             <EnvironmentOutlined style={{ fontSize: 20 }} />
                           </div>
                           <div>
-                            <Text
-                              strong
-                              style={{ fontSize: 15, display: "block" }}
-                            >
-                              {t("lbl_location")}
-                            </Text>
-                            <Text type="secondary">
+                            <Text strong>{t("lbl_location")}</Text>
+                            <Text type="secondary" style={{ display: "block" }}>
                               {selectedPlace.address}
                             </Text>
                           </div>
                         </div>
-
-                        {/* --- FACILITIES SECTION (UPDATED GRID) --- */}
                         <Text
                           strong
                           style={{
@@ -1838,145 +1622,67 @@ function HalalFinder({ onNavigate }) {
                             marginBottom: 12,
                           }}
                         >
-                          {t("lbl_facilities")}
+                          Facilities
                         </Text>
-
-                        {(() => {
-                          const facilitiesData = [
-                            {
-                              icon: <WifiOutlined />,
-                              label: t("fac_wifi") || "Free Wifi",
-                            },
-                            {
-                              icon: <CarOutlined />,
-                              label: t("fac_parking") || "Parking",
-                            },
-                            {
-                              icon: <CompassFilled />,
-                              label: t("fac_prayer") || "Prayer Room",
-                            },
-                            {
-                              icon: <ClockCircleOutlined />,
-                              label: t("fac_ac") || "Full AC",
-                            },
-                            { icon: <CheckCircleFilled />, label: "Toilet" },
-                            {
-                              icon: <SafetyCertificateOutlined />,
-                              label: "Reservation",
-                            },
-                          ];
-
-                          return (
-                            <div className="facilities-grid">
-                              {facilitiesData.map((item, index) => (
-                                <div key={index} className="facility-box">
-                                  <div className="facility-icon-wrapper">
-                                    {item.icon}
-                                  </div>
-                                  <span className="facility-label">
-                                    {item.label}
-                                  </span>
-                                </div>
-                              ))}
+                        <div className="facilities-grid">
+                          {[
+                            { icon: <TeamOutlined />, label: "Jumu'ah" },
+                            { icon: <WomanOutlined />, label: "Women Area" },
+                            { icon: <FaMosque />, label: "Wudu Area" },
+                            { icon: <CarOutlined />, label: "Parking" },
+                            { icon: <ClockCircleOutlined />, label: "AC" },
+                            { icon: <ReadFilled />, label: "Quran Class" },
+                          ].map((f, i) => (
+                            <div key={i} className="facility-box">
+                              <div className="facility-icon-wrapper">
+                                {f.icon}
+                              </div>
+                              <span className="facility-label">{f.label}</span>
                             </div>
-                          );
-                        })()}
-                        {/* ------------------------------------- */}
-
-                        <Divider style={{ margin: "20px 0" }} />
-                        <div
-                          style={{
-                            background: "#FFF8E6",
-                            padding: 16,
-                            borderRadius: 12,
-                            display: "flex",
-                            gap: 12,
-                          }}
-                        >
-                          <InfoCircleOutlined
-                            style={{
-                              color: "#faad14",
-                              fontSize: 18,
-                              marginTop: 2,
-                            }}
-                          />
-                          <div>
-                            <Text strong style={{ color: "#d48806" }}>
-                              {t("lbl_halal_note")}
-                            </Text>
-                            <p
-                              style={{
-                                margin: 0,
-                                fontSize: 13,
-                                color: "#d48806",
-                                opacity: 0.9,
-                              }}
-                            >
-                              {t("txt_halal_note")}
-                            </p>
-                          </div>
+                          ))}
                         </div>
                       </div>
                     ),
                   },
                   {
                     key: "2",
-                    label: `${t("lbl_reviews")} (${selectedPlace.reviews})`,
+                    label: "Reviews",
                     children: (
                       <div style={{ paddingTop: 12 }}>
                         <div
                           style={{
                             display: "flex",
-                            alignItems: "center",
                             justifyContent: "space-between",
                             marginBottom: 16,
                           }}
                         >
                           <Title level={5} style={{ margin: 0 }}>
-                            {t("lbl_reviews")}
+                            Recent Reviews
                           </Title>
                           <Button
                             type="link"
-                            size="small"
                             onClick={() => setReviewModalVisible(true)}
                           >
-                            {t("btn_write_review")}
+                            Write Review
                           </Button>
                         </div>
                         <List
                           dataSource={getCurrentReviews()}
-                          split={false}
                           renderItem={(item) => (
                             <div className="review-card-modern">
                               <div
                                 style={{
                                   display: "flex",
                                   justifyContent: "space-between",
-                                  marginBottom: 8,
                                 }}
                               >
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    gap: 10,
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <Avatar src={item.avatar} size={36} />
+                                <div style={{ display: "flex", gap: 10 }}>
+                                  <Avatar src={item.avatar} />
                                   <div>
-                                    <Text
-                                      strong
-                                      style={{
-                                        fontSize: 14,
-                                        display: "block",
-                                        lineHeight: 1.2,
-                                      }}
-                                    >
-                                      {item.user}
-                                    </Text>
+                                    <Text strong>{item.user}</Text>
                                     <Text
                                       type="secondary"
-                                      style={{ fontSize: 11 }}
+                                      style={{ display: "block", fontSize: 11 }}
                                     >
                                       {item.date}
                                     </Text>
@@ -1990,9 +1696,9 @@ function HalalFinder({ onNavigate }) {
                               </div>
                               <Text
                                 style={{
+                                  display: "block",
+                                  marginTop: 8,
                                   color: "#555",
-                                  fontSize: 14,
-                                  lineHeight: 1.6,
                                 }}
                               >
                                 {item.text}
@@ -2009,29 +1715,17 @@ function HalalFinder({ onNavigate }) {
           </>
         )}
       </Drawer>
-
       <Modal
-        title={
-          <Title level={4} style={{ margin: 0, textAlign: "center" }}>
-            {t("review_title")}
-          </Title>
-        }
+        title="Write Review"
         open={reviewModalVisible}
         onCancel={() => setReviewModalVisible(false)}
         footer={null}
         centered
-        width={500}
-        styles={{ body: { padding: "24px 32px" } }}
       >
-        <Form
-          form={form}
-          onFinish={handleReviewSubmit}
-          layout="vertical"
-          size="large"
-        >
+        <Form form={form} onFinish={handleReviewSubmit} layout="vertical">
           <Form.Item
             name="rating"
-            label={t("review_label_rating")}
+            label="Rating"
             initialValue={5}
             style={{ textAlign: "center" }}
           >
@@ -2039,47 +1733,23 @@ function HalalFinder({ onNavigate }) {
           </Form.Item>
           <Form.Item
             name="review"
-            label={t("review_label_exp")}
-            rules={[{ required: true, message: "Please write something!" }]}
+            label="Review"
+            rules={[{ required: true }]}
           >
-            <TextArea
-              rows={5}
-              placeholder={t("review_ph_exp")}
-              style={{ borderRadius: 12, resize: "none" }}
-            />
+            <TextArea rows={4} />
           </Form.Item>
-          <Form.Item label={t("review_label_photo")}>
-            <Upload
-              listType="picture-card"
-              beforeUpload={() => false}
-              maxCount={3}
-            >
-              <div>
-                <CameraOutlined style={{ fontSize: 24, color: "#999" }} />
-                <div style={{ marginTop: 8, color: "#999" }}>Upload</div>
-              </div>
-            </Upload>
-          </Form.Item>
-          <Form.Item style={{ marginBottom: 0 }}>
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-              size="large"
-              style={{
-                height: 50,
-                borderRadius: 25,
-                fontWeight: 600,
-                fontSize: 16,
-              }}
-            >
-              {t("review_btn_post")}
-            </Button>
-          </Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            block
+            style={{ background: THEME_COLOR }}
+          >
+            Post Review
+          </Button>
         </Form>
       </Modal>
     </div>
   );
 }
 
-export default HalalFinder;
+export default MosqueFinder;
