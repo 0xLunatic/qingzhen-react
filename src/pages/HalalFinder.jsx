@@ -27,6 +27,7 @@ import {
   Radio,
   Tabs,
   FloatButton,
+  Image, // 👈 IMPORT IMAGE UNTUK FITUR ZOOM
 } from "antd";
 import {
   SearchOutlined,
@@ -79,13 +80,10 @@ import {
 import L from "leaflet";
 import "leaflet-routing-machine";
 
-// Import CSS
 import "../App.css";
 import logoImage from "../assets/logo.png"; // <--- TAMBAHKAN INI
 // 👇 IMPORT API HELPER
 import api from "../utils/api";
-
-// 👇 IMPORT BAHASA
 import { en } from "../lang/en";
 import { cn } from "../lang/cn";
 
@@ -101,10 +99,9 @@ const MECCA_COORDS = { lat: 21.4225, lng: 39.8262 };
 const MAX_RADIUS_METERS = 5000;
 const MAX_RESULTS = 30;
 
-// 👇 Ganti sesuai port backend Anda (default 5000)
+// 👇 SESUAIKAN PORT BACKEND
 const BACKEND_URL = "http://localhost:5000";
 
-// --- SPEED CONSTANTS (km/h) ---
 const SPEEDS = { walk: 5, bike: 15, moto: 40, car: 30 };
 
 // --- ASSETS & DATA ---
@@ -114,6 +111,8 @@ const FOOD_IMAGES = [
   "https://images.unsplash.com/photo-1541544744-5e3a01993108?w=600&q=60",
   "https://images.unsplash.com/photo-1606756790138-7c4864384077?w=600&q=60",
 ];
+
+const DEFAULT_IMAGE = "";
 
 const POSSIBLE_TAGS = [
   "Verified Halal",
@@ -125,6 +124,31 @@ const POSSIBLE_TAGS = [
 const CATEGORIES = ["Vegan Option", "Real Food", "Non-Vegan", "Fast Food"];
 
 // --- UTILS ---
+
+// 👇 FUNGSI PENTING: MEMBERSIHKAN URL GAMBAR DARI DB
+const getPhotoUrl = (path) => {
+  if (!path) return DEFAULT_IMAGE;
+  if (path.startsWith("http")) return path; // Jika sudah URL lengkap (misal dari Google/Unsplash)
+
+  // 1. Ubah Backslash Windows (\) menjadi Slash (/)
+  let cleanPath = path.replace(/\\/g, "/");
+
+  // 2. Hapus "public/" jika ada di awal string
+  if (cleanPath.startsWith("public/")) {
+    cleanPath = cleanPath.replace("public/", "");
+  } else if (cleanPath.startsWith("/public/")) {
+    cleanPath = cleanPath.replace("/public/", "");
+  }
+
+  // 3. Pastikan diawali dengan slash
+  if (!cleanPath.startsWith("/")) {
+    cleanPath = "/" + cleanPath;
+  }
+
+  // 4. Gabungkan dengan URL Backend
+  return `${BACKEND_URL}${cleanPath}`;
+};
+
 const isValidCoordinate = (lat, lng) =>
   lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng);
 
@@ -356,7 +380,17 @@ const SidebarCard = ({ data, active, onClick, isVisited, t }) => {
           </div>
         </Tooltip>
       )}
-      <img src={data.img} alt="" className="card-bg-faded" />
+
+      {/* 👇 GUNAKAN URL YANG SUDAH DIPROSES OLEH getPhotoUrl */}
+      <img
+        src={data.img}
+        alt=""
+        className="card-bg-faded"
+        onError={(e) => {
+          e.target.src = DEFAULT_IMAGE;
+        }}
+      />
+
       <div className="card-content-wrapper">
         <div className="card-title">
           {data.fullName}
@@ -634,9 +668,9 @@ function HalalFinder({ onNavigate }) {
           let tags = [p.halal_status];
           if (p.food_type) tags.push(p.food_type);
 
-          // Logic foto: Jika ada di DB, gunakan.
+          // Logic foto: Parse JSON string/array dan pakai getPhotoUrl
           let placeImage = FOOD_IMAGES[0];
-          if (p.photos && p.photos.length > 0) {
+          if (p.photos) {
             let parsedPhotos = p.photos;
             if (typeof p.photos === "string") {
               try {
@@ -644,12 +678,8 @@ function HalalFinder({ onNavigate }) {
               } catch (e) {}
             }
             if (Array.isArray(parsedPhotos) && parsedPhotos.length > 0) {
-              let photoPath = parsedPhotos[0];
-              if (photoPath.startsWith("http")) {
-                placeImage = photoPath;
-              } else {
-                placeImage = `${BACKEND_URL}${photoPath}`;
-              }
+              // 👇 GUNAKAN HELPER getPhotoUrl
+              placeImage = getPhotoUrl(parsedPhotos[0]);
             }
           }
 
@@ -744,15 +774,12 @@ function HalalFinder({ onNavigate }) {
           return {
             user: r.user ? r.user.name || r.user.username : "Anonymous",
             avatar: r.user?.avatar_url
-              ? `${BACKEND_URL}${r.user.avatar_url}`
+              ? getPhotoUrl(r.user.avatar_url) // 👇 GUNAKAN HELPER
               : null,
             rating: r.rating,
             text: r.comment,
             date: new Date(r.created_at).toLocaleDateString(),
-            photos: reviewPhotos.map((p) => {
-              if (p.startsWith("http")) return p;
-              return `${BACKEND_URL}${p}`;
-            }),
+            photos: reviewPhotos.map((p) => getPhotoUrl(p)), // 👇 GUNAKAN HELPER
           };
         });
         setPlaceReviews(mappedReviews);
@@ -977,6 +1004,8 @@ function HalalFinder({ onNavigate }) {
         message.success("Location found!");
       },
       (err) => {
+        console.warn("Locate me error:", err);
+        message.error("Check GPS settings / Allow Location Access");
         fallbackToIpLocation();
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -1153,7 +1182,13 @@ function HalalFinder({ onNavigate }) {
             >
               {t("nav_finder")}
             </Button>
-            <Button type="link" onClick={() => onNavigate("mosque")}>
+            <Button
+              type="link"
+              onClick={() => {
+                onNavigate("mosque");
+                setIsMobileMenuOpen(false);
+              }}
+            >
               {t("nav_mosque")}
             </Button>
             <Button type="link" onClick={() => {}}>
@@ -1358,7 +1393,10 @@ function HalalFinder({ onNavigate }) {
           {userLocation && !isPickingLocation && (
             <div
               className="qibla-widget-container"
-              style={{ top: isMobile ? 16 : 24, right: isMobile ? 16 : 24 }}
+              style={{
+                top: isMobile ? 16 : 24,
+                right: isMobile ? 16 : 24,
+              }}
             >
               <div
                 style={{
@@ -1551,12 +1589,13 @@ function HalalFinder({ onNavigate }) {
               display: "flex",
               flexDirection: "column",
               gap: 12,
-              alignItems: "flex-end",
+              alignItems: "flex-end", // 👈 Agar tombol + rata kanan
             }}
           >
-            {/* FAB - ADD PLACE BUTTON (CONTRIBUTOR) */}
+            {/* 1. Add Place Button (Contributor) */}
             {!isPickingLocation && !isNavigating && user && (
               <Tooltip title="Add New Place" placement="left">
+                {/* 👇 TOMBOL FIXED: PAKE BUTTON BIASA + STYLE LINGKARAN */}
                 <Button
                   type="primary"
                   shape="circle"
@@ -1567,7 +1606,7 @@ function HalalFinder({ onNavigate }) {
                     height: 44,
                     backgroundColor: "#D4AF37",
                     borderColor: "#D4AF37",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.2)", // Shadow biar pop-up
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
@@ -1675,15 +1714,9 @@ function HalalFinder({ onNavigate }) {
           className="mobile-list-drawer"
           styles={{ body: { padding: 0 } }}
         >
-          {/* 👇 PERBAIKAN: Gunakan display flex untuk mengatasi masalah blank screen */}
           <div
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              background: "white",
-            }}
+            className="finder-list-container"
+            style={{ width: "100%", height: "100%" }}
           >
             {renderListContent()}
           </div>
@@ -1872,6 +1905,8 @@ function HalalFinder({ onNavigate }) {
                   <span className="stat-label">Type</span>
                 </div>
               </div>
+
+              <div className="qibla-widget">{/* ... Qibla content ... */}</div>
 
               {/* Mode Selector */}
               <div className="transport-section">
@@ -2215,26 +2250,22 @@ function HalalFinder({ onNavigate }) {
                                     flexWrap: "wrap",
                                   }}
                                 >
-                                  {item.photos.map((photo, idx) => (
-                                    <img
-                                      key={idx}
-                                      src={photo}
-                                      alt="review"
-                                      style={{
-                                        width: 80,
-                                        height: 80,
-                                        objectFit: "cover",
-                                        borderRadius: 8,
-                                        border: "1px solid #eee",
-                                        cursor: "pointer",
-                                      }}
-                                      onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src =
-                                          "https://via.placeholder.com/80?text=Error";
-                                      }}
-                                    />
-                                  ))}
+                                  {/* 👇 INI YANG PENTING: GUNAKAN COMPONENT IMAGE DARI ANTD */}
+                                  <Image.PreviewGroup>
+                                    {item.photos.map((photo, idx) => (
+                                      <Image
+                                        key={idx}
+                                        src={photo}
+                                        width={80}
+                                        height={80}
+                                        style={{
+                                          objectFit: "cover",
+                                          borderRadius: 8,
+                                        }}
+                                        fallback={DEFAULT_IMAGE}
+                                      />
+                                    ))}
+                                  </Image.PreviewGroup>
                                 </div>
                               )}
                             </div>
@@ -2323,6 +2354,7 @@ function HalalFinder({ onNavigate }) {
         </Form>
       </Modal>
 
+      {/* --- MODAL CONTRIBUTE PLACE (NEW & IMPROVED) --- */}
       <Modal
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2406,6 +2438,7 @@ function HalalFinder({ onNavigate }) {
             />
           </Form.Item>
 
+          {/* New Field: Menu / Description */}
           <Form.Item
             name="promo_details"
             label={
@@ -2420,6 +2453,7 @@ function HalalFinder({ onNavigate }) {
             />
           </Form.Item>
 
+          {/* New Field: Photo Upload */}
           <Form.Item
             label={
               <span>
