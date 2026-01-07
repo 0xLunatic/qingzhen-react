@@ -294,9 +294,7 @@ function LandingPage({ onNavigate }) {
             </Col>
             <Col xs={24} md={6} style={{ textAlign: "center" }}>
               <div className="halal-slider-visual">
-                <div style={{ padding: "0 8px", fontWeight: "bold" }}>
-                  Haram
-                </div>
+                <div style={{ padding: "0 8px", fontWeight: "bold" }}></div>
                 <div className="slider-track">
                   <div className="slider-fill"></div>
                   <div className="slider-knob"></div>
@@ -429,7 +427,13 @@ function LandingPage({ onNavigate }) {
             <Button type="link" onClick={() => onNavigate("mosque")}>
               {t("nav_mosque")}
             </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+            <Button
+              type="link"
+              onClick={() => {
+                onNavigate("prayer"); // 👈 Arahkan ke halaman prayer
+                setIsMobileMenuOpen(false);
+              }}
+            >
               {t("nav_prayer")}
             </Button>
             <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
@@ -438,7 +442,6 @@ function LandingPage({ onNavigate }) {
             <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
               {t("nav_blog")}
             </Button>
-
             {isMobile && (
               <>
                 <Divider style={{ margin: "8px 0" }} />

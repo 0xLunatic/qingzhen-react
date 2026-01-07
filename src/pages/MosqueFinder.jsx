@@ -27,6 +27,8 @@ import {
   Radio,
   Tabs,
   FloatButton,
+  Image,
+  Badge,
 } from "antd";
 import {
   SearchOutlined,
@@ -66,8 +68,16 @@ import {
   FileTextOutlined,
   PictureOutlined,
   WomanOutlined,
+  EditOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
-import { FaWalking, FaBicycle, FaMotorcycle, FaCar, FaMosque } from "react-icons/fa";
+import {
+  FaWalking,
+  FaBicycle,
+  FaMotorcycle,
+  FaCar,
+  FaMosque,
+} from "react-icons/fa";
 
 import {
   MapContainer,
@@ -81,15 +91,10 @@ import L from "leaflet";
 import "leaflet-routing-machine";
 
 // 👇 IMPORT LIBRARY ADHAN
-import { Coordinates, CalculationMethod, PrayerTimes, Prayer } from 'adhan';
+import { Coordinates, CalculationMethod, PrayerTimes, Prayer } from "adhan";
 
-// Import CSS
 import "../App.css";
-
-// 👇 IMPORT API HELPER
 import api from "../utils/api";
-
-// 👇 IMPORT BAHASA
 import { en } from "../lang/en";
 import { cn } from "../lang/cn";
 
@@ -105,10 +110,9 @@ const MECCA_COORDS = { lat: 21.4225, lng: 39.8262 };
 const MAX_RADIUS_METERS = 5000;
 const MAX_RESULTS = 30;
 
-// 👇 Ganti sesuai port backend Anda
+// 👇 SESUAIKAN PORT BACKEND
 const BACKEND_URL = "http://localhost:5000";
 
-// --- SPEED CONSTANTS (km/h) ---
 const SPEEDS = { walk: 5, bike: 15, moto: 40, car: 30 };
 
 // --- ASSETS & DATA MOSQUE ---
@@ -129,9 +133,38 @@ const POSSIBLE_TAGS = [
   "Ladies Section",
 ];
 
-const CATEGORIES = ["Grand Mosque", "Musalla", "Islamic Center", "Prayer Room", "Historic"];
+const CATEGORIES = [
+  "Grand Mosque",
+  "Musalla",
+  "Islamic Center",
+  "Prayer Room",
+  "Historic",
+];
 
 // --- UTILS ---
+
+// 👇 FUNGSI PENTING: MEMBERSIHKAN URL GAMBAR DARI DB
+const getPhotoUrl = (path) => {
+  if (!path) return DEFAULT_IMAGE;
+  if (path.startsWith("http")) return path;
+
+  let cleanPath = path.replace(/\\/g, "/");
+
+  if (cleanPath.startsWith("public/")) {
+    cleanPath = cleanPath.replace("public/", "");
+  } else if (cleanPath.startsWith("/public/")) {
+    cleanPath = cleanPath.replace("/public/", "");
+  }
+
+  if (!cleanPath.startsWith("/")) {
+    cleanPath = "/" + cleanPath;
+  }
+
+  return `${BACKEND_URL}${cleanPath}`;
+};
+
+const DEFAULT_IMAGE = "";
+
 const isValidCoordinate = (lat, lng) =>
   lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng);
 
@@ -172,16 +205,18 @@ const calculateQiblaDirection = (userLat, userLng) => {
 // 👇 ADHAN LOGIC UNTUK STATUS MASJID
 const getFormattedTime = (date) => {
   if (!date) return "";
-  return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+  return `${date.getHours()}:${date.getMinutes().toString().padStart(2, "0")}`;
 };
 
-const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
 
 const getMosqueStatus = (lat, lng, t) => {
   if (!isValidCoordinate(lat, lng)) {
     return {
       isOpen: true,
-      text: t ? t("status_open_prayer") || "Open for Prayer" : "Open for Prayer",
+      text: t
+        ? t("status_open_prayer") || "Open for Prayer"
+        : "Open for Prayer",
       color: "#2e7d32",
     };
   }
@@ -189,8 +224,8 @@ const getMosqueStatus = (lat, lng, t) => {
   const coordinates = new Coordinates(lat, lng);
   const date = new Date();
   const params = CalculationMethod.MuslimWorldLeague();
-  params.madhab = params.madhab; 
-  
+  params.madhab = params.madhab;
+
   let prayerTimes;
   try {
     prayerTimes = new PrayerTimes(coordinates, date, params);
@@ -205,25 +240,27 @@ const getMosqueStatus = (lat, lng, t) => {
   if (currentPrayer !== Prayer.None && currentPrayer !== Prayer.Sunrise) {
     return {
       isOpen: true,
-      text: `Now: ${capitalize(currentPrayer)}`, 
-      color: "#2e7d32", 
+      text: `Now: ${capitalize(currentPrayer)}`,
+      color: "#2e7d32",
     };
   }
-  
+
   if (currentPrayer === Prayer.None && nextPrayer === Prayer.Fajr) {
-     const timeStr = nextPrayerTime ? getFormattedTime(nextPrayerTime) : "";
-     return {
-       isOpen: false,
-       text: `Closed (Fajr ${timeStr})`, 
-       color: "#cf1322", 
-     };
+    const timeStr = nextPrayerTime ? getFormattedTime(nextPrayerTime) : "";
+    return {
+      isOpen: false,
+      text: `Closed (Fajr ${timeStr})`,
+      color: "#cf1322",
+    };
   }
 
   if (nextPrayer !== Prayer.None && nextPrayerTime) {
     return {
       isOpen: true,
-      text: `Next: ${capitalize(nextPrayer)} ${getFormattedTime(nextPrayerTime)}`,
-      color: "#d48806", 
+      text: `Next: ${capitalize(nextPrayer)} ${getFormattedTime(
+        nextPrayerTime
+      )}`,
+      color: "#d48806",
     };
   }
 
@@ -240,8 +277,6 @@ const formatDuration = (seconds) => {
   if (h > 0) return `${h}h ${m}m`;
   return `${m} min`;
 };
-
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // --- CUSTOM MARKER ICON (MOSQUE) ---
 const createCustomIcon = (source, isActive) => {
@@ -416,7 +451,12 @@ const SidebarCard = ({ data, active, onClick, isVisited, t }) => {
           </div>
         </Tooltip>
       )}
-      <img src={data.img} alt="" className="card-bg-faded" />
+      <img
+        src={data.img}
+        alt=""
+        className="card-bg-faded"
+        onError={(e) => (e.target.src = DEFAULT_IMAGE)}
+      />
       <div className="card-content-wrapper">
         <div className="card-title">
           {data.fullName}
@@ -447,7 +487,8 @@ const SidebarCard = ({ data, active, onClick, isVisited, t }) => {
           </span>
         </div>
         <span className="card-meta">
-          <FaMosque style={{ marginRight: 4, color: THEME_COLOR }} /> {data.type}
+          <FaMosque style={{ marginRight: 4, color: THEME_COLOR }} />{" "}
+          {data.type}
         </span>
         <div
           style={{
@@ -472,7 +513,8 @@ const SidebarCard = ({ data, active, onClick, isVisited, t }) => {
               <BankOutlined /> {data.categoryTag}
             </span>
           )}
-          {(data.tags.includes("Women Area") || data.tags.includes("Ladies Section")) && (
+          {(data.tags.includes("Women Area") ||
+            data.tags.includes("Ladies Section")) && (
             <span className="card-pill">
               <WomanOutlined /> Women Area
             </span>
@@ -503,6 +545,7 @@ function MosqueFinder({ onNavigate }) {
   const [visitedIds, setVisitedIds] = useState(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [userVisits, setUserVisits] = useState({});
 
   // UI States
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -517,9 +560,15 @@ function MosqueFinder({ onNavigate }) {
   const [isSubmittingPlace, setIsSubmittingPlace] = useState(false);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
+  // --- STATE UNTUK EDIT PLACE (NEW) ---
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editForm] = Form.useForm();
+  const [editFileList, setEditFileList] = useState([]);
+
   // 👇 STATE FILE UPLOAD
-  const [fileList, setFileList] = useState([]); 
-  const [reviewFileList, setReviewFileList] = useState([]); 
+  const [fileList, setFileList] = useState([]);
+  const [reviewFileList, setReviewFileList] = useState([]);
 
   // Navigation States
   const [isNavigating, setIsNavigating] = useState(false);
@@ -568,12 +617,6 @@ function MosqueFinder({ onNavigate }) {
       icon: <UserOutlined />,
       onClick: () => message.info("Profile Page"),
     },
-    {
-      key: "settings",
-      label: "Settings",
-      icon: <SettingOutlined />,
-      onClick: () => message.info("Settings"),
-    },
     { type: "divider" },
     {
       key: "logout",
@@ -615,7 +658,9 @@ function MosqueFinder({ onNavigate }) {
     setTransportMode(e.target.value);
   };
 
-  // --- API FETCH LOGIC (HYBRID) ---
+  // ==========================================
+  // 👇 API FETCH LOGIC (UPDATED WITH IMAGE & COORDS)
+  // ==========================================
   const fetchPlaces = async (lat, lng, retryCount = 0) => {
     setIsLoading(true);
     try {
@@ -630,15 +675,25 @@ function MosqueFinder({ onNavigate }) {
 
       let combined = [];
 
+      // --- 1. PROSES DB PLACES ---
       if (dbRes.status === "fulfilled" && dbRes.value.data.success) {
         const dbPlaces = dbRes.value.data.data
-          .filter(p => p.category === 'Mosque') // Filter hanya masjid dari DB
+          .filter((p) => p.category === "Mosque") // Filter hanya masjid dari DB
           .map((p) => {
             let tags = ["Verified"];
-            if (p.promo_details && p.promo_details.toLowerCase().includes("jumuah")) tags.push("Jumu'ah Prayer");
+            if (
+              p.promo_details &&
+              p.promo_details.toLowerCase().includes("jumuah")
+            )
+              tags.push("Jumu'ah Available");
 
-            let placeImage = MOSQUE_IMAGES[0];
-            if (p.photos && p.photos.length > 0) {
+            // Logic Prioritas Gambar
+            let placeImage =
+              MOSQUE_IMAGES[Math.floor(Math.random() * MOSQUE_IMAGES.length)];
+
+            if (p.image_url) {
+              placeImage = getPhotoUrl(p.image_url);
+            } else if (p.photos) {
               let parsedPhotos = p.photos;
               if (typeof p.photos === "string") {
                 try {
@@ -646,42 +701,47 @@ function MosqueFinder({ onNavigate }) {
                 } catch (e) {}
               }
               if (Array.isArray(parsedPhotos) && parsedPhotos.length > 0) {
-                let photoPath = parsedPhotos[0];
-                if (photoPath.startsWith("http")) {
-                  placeImage = photoPath;
-                } else {
-                  placeImage = `${BACKEND_URL}${photoPath}`;
-                }
+                placeImage = getPhotoUrl(parsedPhotos[0]);
               }
             }
+
+            // Ambil Rating Asli
+            const avgRating = p.avgRating
+              ? parseFloat(p.avgRating).toFixed(1)
+              : "New";
+            const reviewCount = p.reviewCount ? parseInt(p.reviewCount) : 0;
 
             return {
               id: `db-${p.id}`,
               originalId: p.id,
+              contributor_id: p.contributor_id,
               fullName: p.name_en,
               name_cn: p.name_cn,
               lat: parseFloat(p.latitude),
               lng: parseFloat(p.longitude),
               type: "Mosque",
-              rating: 5.0,
-              reviews: 1,
+              rating: avgRating,
+              reviews: reviewCount,
               img: placeImage,
               source: "contributor",
               tags: tags,
               categoryTag: "Grand Mosque",
+              isPromo: p.is_promo,
+              promoText: p.promo_details, // Info fasilitas
               address: p.address,
             };
           });
         combined = [...combined, ...dbPlaces];
       }
 
+      // --- 2. PROSES OSM PLACES ---
       if (osmRes.status === "fulfilled" && osmRes.value.ok) {
         const osmData = await osmRes.value.json();
         const osmPlaces = osmData.elements.map((item, i) => {
           let tags = ["Jumu'ah Available"];
           const pool = POSSIBLE_TAGS.sort(() => 0.5 - Math.random());
           tags.push(...pool.slice(0, 3));
-          
+
           return {
             id: `osm-${item.id}`,
             originalId: item.id,
@@ -694,7 +754,8 @@ function MosqueFinder({ onNavigate }) {
             reviews: Math.floor(Math.random() * 100) + 10,
             img: MOSQUE_IMAGES[i % MOSQUE_IMAGES.length],
             tags: [...new Set(tags)],
-            categoryTag: CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)],
+            categoryTag:
+              CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)],
             address: getAddressFromTags(item.tags),
             source: "osm",
           };
@@ -712,12 +773,15 @@ function MosqueFinder({ onNavigate }) {
 
   // --- FETCH REVIEWS ---
   const fetchReviews = async (placeId) => {
-    // Skip if it's strictly OSM (no numeric ID in backend) unless sync logic exists
-    if (!placeId.startsWith("db-")) {
-        setPlaceReviews([]);
-        return;
+    if (!placeId) return;
+    const placeIdStr = placeId.toString();
+
+    // Skip if it's strictly OSM unless handled by hybrid logic
+    if (placeIdStr.startsWith("osm-")) {
+      setPlaceReviews([]);
+      return;
     }
-    const realId = placeId.replace("db-", "");
+    const realId = placeIdStr.replace("db-", "");
 
     try {
       const response = await api.get(`/reviews/${realId}`);
@@ -726,23 +790,19 @@ function MosqueFinder({ onNavigate }) {
           let reviewPhotos = [];
           if (r.photos) {
             try {
-              reviewPhotos = typeof r.photos === "string" ? JSON.parse(r.photos) : r.photos;
+              reviewPhotos =
+                typeof r.photos === "string" ? JSON.parse(r.photos) : r.photos;
             } catch (e) {}
           }
           if (!Array.isArray(reviewPhotos)) reviewPhotos = [];
 
           return {
             user: r.user ? r.user.name || r.user.username : "Anonymous",
-            avatar: r.user?.avatar_url
-              ? `${BACKEND_URL}${r.user.avatar_url}`
-              : null,
+            avatar: r.user?.avatar_url ? getPhotoUrl(r.user.avatar_url) : null,
             rating: r.rating,
             text: r.comment,
             date: new Date(r.created_at).toLocaleDateString(),
-            photos: reviewPhotos.map((p) => {
-              if (p.startsWith("http")) return p;
-              return `${BACKEND_URL}${p}`;
-            }),
+            photos: reviewPhotos.map((p) => getPhotoUrl(p)),
           };
         });
         setPlaceReviews(mappedReviews);
@@ -801,10 +861,10 @@ function MosqueFinder({ onNavigate }) {
       const formData = new FormData();
       formData.append("name_en", values.name_en);
       if (values.name_cn) formData.append("name_cn", values.name_cn);
-      
-      // Force category Mosque
+
+      // Force category Mosque & Verified
       formData.append("category", "Mosque");
-      formData.append("halal_status", "Verified"); // Default for mosque
+      formData.append("halal_status", "Verified");
 
       formData.append("address", values.address);
       if (values.promo_details)
@@ -838,25 +898,101 @@ function MosqueFinder({ onNavigate }) {
     }
   };
 
+  // --- EDIT HANDLER (Contributor/Admin) ---
+  const handleOpenEdit = () => {
+    if (!selectedPlace) return;
+    editForm.setFieldsValue({
+      name_en: selectedPlace.fullName,
+      name_cn: selectedPlace.name_cn,
+      category: "Mosque",
+      halal_status: "Verified",
+      address: selectedPlace.address,
+      promo_details: selectedPlace.promoText,
+    });
+    setEditFileList([]);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateSubmit = async (values) => {
+    setIsUpdating(true);
+    try {
+      const formData = new FormData();
+      formData.append("name_en", values.name_en);
+      if (values.name_cn) formData.append("name_cn", values.name_cn);
+      formData.append("category", "Mosque");
+      formData.append("halal_status", "Verified");
+      formData.append("address", values.address);
+      if (values.promo_details)
+        formData.append("promo_details", values.promo_details);
+
+      if (editFileList && editFileList.length > 0) {
+        editFileList.forEach((file) => {
+          if (file.originFileObj) {
+            formData.append("photos", file.originFileObj);
+          }
+        });
+      }
+
+      if (!selectedPlace.id.toString().startsWith("db-")) {
+        message.error("Cannot edit OSM data directly.");
+        return;
+      }
+
+      const placeId = selectedPlace.originalId;
+      const endpoint =
+        user.role === "admin"
+          ? `/admin/places/${placeId}`
+          : `/places/${placeId}`;
+
+      await api.put(endpoint, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      message.success("Mosque info updated!");
+      setIsEditModalOpen(false);
+      fetchPlaces(mapCenter.lat, mapCenter.lng);
+
+      setSelectedPlace((prev) => ({
+        ...prev,
+        fullName: values.name_en,
+        name_cn: values.name_cn,
+        address: values.address,
+        promoText: values.promo_details,
+      }));
+    } catch (error) {
+      message.error(
+        "Update failed: " + (error.response?.data?.message || "Error")
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // --- REVIEW HANDLER (Hybrid Support) ---
   const handleReviewSubmit = async (values) => {
     if (!user) {
       message.warning("Please login to review");
       return onNavigate("auth");
     }
-    
-    // Only allow review if it's a DB place
-    if (!selectedPlace.id.startsWith("db-")) {
-        message.info("Review posted locally (not saved to DB for OSM places yet).");
-        setReviewModalVisible(false);
-        form.resetFields();
-        return;
-    }
 
     setIsSubmittingReview(true);
     try {
       const formData = new FormData();
-      const realId = selectedPlace.id.replace("db-", "");
-      formData.append("place_id", realId);
+
+      // LOGIC HYBRID OSM/DB
+      if (selectedPlace.source === "osm") {
+        formData.append("is_osm", "true");
+        formData.append("osm_id", selectedPlace.originalId);
+        formData.append("name", selectedPlace.fullName);
+        formData.append("lat", selectedPlace.lat);
+        formData.append("lng", selectedPlace.lng);
+        formData.append("address", selectedPlace.address);
+        formData.append("category", "Mosque");
+      } else {
+        formData.append("is_osm", "false");
+        formData.append("place_id", selectedPlace.originalId);
+      }
+
       formData.append("rating", values.rating);
       formData.append("comment", values.review);
 
@@ -876,7 +1012,10 @@ function MosqueFinder({ onNavigate }) {
       setReviewModalVisible(false);
       form.resetFields();
       setReviewFileList([]);
+
+      // Refresh Data
       fetchReviews(selectedPlace.id);
+      fetchPlaces(mapCenter.lat, mapCenter.lng);
     } catch (error) {
       message.error("Failed to post review");
     } finally {
@@ -885,14 +1024,44 @@ function MosqueFinder({ onNavigate }) {
   };
 
   // --- EVENT HANDLERS ---
-  const handleToggleVisited = (id) => {
-    const newSet = new Set(visitedIds);
-    if (newSet.has(id)) newSet.delete(id);
-    else newSet.add(id);
-    setVisitedIds(newSet);
-    message.success(
-      newSet.has(id) ? "Marked as visited" : "Removed from history"
-    );
+  const handleToggleVisited = async (id) => {
+    if (!user) return onNavigate("auth");
+    const statusType = "Visited";
+    const oldStatus = userVisits[id];
+    const newVisits = { ...userVisits };
+
+    if (oldStatus === statusType) delete newVisits[id];
+    else newVisits[id] = statusType;
+
+    setUserVisits(newVisits);
+
+    try {
+      const placeDataSnapshot = selectedPlace
+        ? {
+            name: selectedPlace.fullName,
+            address: selectedPlace.address,
+            lat: selectedPlace.lat,
+            lng: selectedPlace.lng,
+            rating: selectedPlace.rating,
+            img: selectedPlace.img,
+          }
+        : {};
+
+      // Gunakan originalId jika source db, jika osm kirim ID string
+      const placeIdToSend =
+        selectedPlace.source === "osm"
+          ? `osm-${selectedPlace.originalId}`
+          : selectedPlace.originalId;
+
+      await api.post("/user/visits", {
+        place_id: String(placeIdToSend),
+        status: statusType,
+        place_data: placeDataSnapshot,
+      });
+      message.success(oldStatus === statusType ? "Removed" : "Marked Visited");
+    } catch (e) {
+      setUserVisits(userVisits); // Rollback
+    }
   };
 
   const handleStartNavigation = () => {
@@ -1083,7 +1252,7 @@ function MosqueFinder({ onNavigate }) {
                 key={place.id}
                 data={place}
                 active={selectedPlace?.id === place.id}
-                isVisited={visitedIds.has(place.id)}
+                isVisited={userVisits[place.id]}
                 t={t}
                 onClick={() => {
                   setSelectedPlace(place);
@@ -1129,7 +1298,13 @@ function MosqueFinder({ onNavigate }) {
             >
               {t("nav_mosque")}
             </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+            <Button
+              type="link"
+              onClick={() => {
+                onNavigate("prayer"); // 👈 Arahkan ke halaman prayer
+                setIsMobileMenuOpen(false);
+              }}
+            >
               {t("nav_prayer")}
             </Button>
             <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
@@ -1560,6 +1735,7 @@ function MosqueFinder({ onNavigate }) {
                 <Button
                   type="primary"
                   shape="circle"
+                  size="large"
                   icon={<PlusOutlined style={{ fontSize: 20 }} />}
                   onClick={startAddPlace}
                   style={{
@@ -1678,7 +1854,13 @@ function MosqueFinder({ onNavigate }) {
           {/* 👇 PERBAIKAN: Gunakan display flex untuk mengatasi masalah blank screen */}
           <div
             className="finder-list-container"
-            style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", background: "white" }}
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              background: "white",
+            }}
           >
             {renderListContent()}
           </div>
@@ -1789,20 +1971,22 @@ function MosqueFinder({ onNavigate }) {
               >
                 <Button
                   type={
-                    visitedIds.has(selectedPlace.id) ? "primary" : "default"
+                    userVisits[selectedPlace.id] === "Visited"
+                      ? "primary"
+                      : "default"
                   }
-                  ghost={!visitedIds.has(selectedPlace.id)}
+                  ghost={!userVisits[selectedPlace.id]}
                   icon={
-                    visitedIds.has(selectedPlace.id) ? (
+                    userVisits[selectedPlace.id] === "Visited" ? (
                       <CheckCircleFilled />
                     ) : (
-                      <EyeFilled />
+                      <CheckCircleOutlined />
                     )
                   }
                   onClick={() => handleToggleVisited(selectedPlace.id)}
                   style={{ borderRadius: 20 }}
                 >
-                  {visitedIds.has(selectedPlace.id)
+                  {userVisits[selectedPlace.id] === "Visited"
                     ? "Visited"
                     : "Mark Visited"}
                 </Button>
@@ -1821,24 +2005,28 @@ function MosqueFinder({ onNavigate }) {
                   </span>
                   <span className="stat-label">Distance</span>
                 </div>
-                
+
                 {(() => {
-                    const detailStatus = getMosqueStatus(selectedPlace.lat, selectedPlace.lng, t);
-                    return (
-                        <div className="stat-box">
-                          <span 
-                            className="stat-value" 
-                            style={{ 
-                                color: detailStatus.color, 
-                                fontSize: 13, 
-                                lineHeight: '1.2' 
-                            }}
-                          >
-                            {detailStatus.text}
-                          </span>
-                          <span className="stat-label">Prayer Time</span>
-                        </div>
-                    );
+                  const detailStatus = getMosqueStatus(
+                    selectedPlace.lat,
+                    selectedPlace.lng,
+                    t
+                  );
+                  return (
+                    <div className="stat-box">
+                      <span
+                        className="stat-value"
+                        style={{
+                          color: detailStatus.color,
+                          fontSize: 13,
+                          lineHeight: "1.2",
+                        }}
+                      >
+                        {detailStatus.text}
+                      </span>
+                      <span className="stat-label">Prayer Time</span>
+                    </div>
+                  );
                 })()}
 
                 <div className="stat-box">
@@ -1992,6 +2180,28 @@ function MosqueFinder({ onNavigate }) {
                 >
                   {t("btn_navigate")}
                 </Button>
+
+                {/* 👇 TOMBOL EDIT (HANYA MUNCUL JIKA ADMIN ATAU PEMILIK) */}
+                {user &&
+                  (user.role === "admin" ||
+                    user.id === selectedPlace.contributor_id) && (
+                    <Tooltip title="Edit Place Info">
+                      <Button
+                        size="large"
+                        icon={<EditOutlined />}
+                        style={{
+                          height: 50,
+                          width: 50,
+                          borderRadius: 14,
+                          borderColor: "#D4AF37",
+                          color: "#D4AF37",
+                          flex: "none",
+                        }}
+                        onClick={handleOpenEdit}
+                      />
+                    </Tooltip>
+                  )}
+
                 <Button
                   size="large"
                   icon={<PlusOutlined />}
@@ -2065,27 +2275,62 @@ function MosqueFinder({ onNavigate }) {
                             marginBottom: 12,
                           }}
                         >
-                          Facilities
+                          {t("lbl_facilities")}
                         </Text>
                         <div className="facilities-grid">
-                            {selectedPlace.tags.map((tag, i) => {
-                                let icon = <CheckOutlined />;
-                                if(tag.includes("Jumu")) icon = <TeamOutlined />;
-                                if(tag.includes("Women") || tag.includes("Ladies")) icon = <WomanOutlined />;
-                                if(tag.includes("Wudu")) icon = <FaMosque />;
-                                if(tag.includes("Parking")) icon = <CarOutlined />;
-                                if(tag.includes("Air")) icon = <ClockCircleOutlined />;
-                                if(tag.includes("Quran")) icon = <ReadFilled />;
+                          {selectedPlace.tags.map((tag, i) => {
+                            let icon = <CheckOutlined />;
+                            if (tag.includes("Jumu")) icon = <TeamOutlined />;
+                            if (tag.includes("Women") || tag.includes("Ladies"))
+                              icon = <WomanOutlined />;
+                            if (tag.includes("Wudu")) icon = <FaMosque />;
+                            if (tag.includes("Parking")) icon = <CarOutlined />;
+                            if (tag.includes("Air"))
+                              icon = <ClockCircleOutlined />;
+                            if (tag.includes("Quran")) icon = <ReadFilled />;
 
-                                return (
-                                    <div key={i} className="facility-box">
-                                        <div className="facility-icon-wrapper">
-                                            {icon}
-                                        </div>
-                                        <span className="facility-label">{tag}</span>
-                                    </div>
-                                )
-                            })}
+                            return (
+                              <div key={i} className="facility-box">
+                                <div className="facility-icon-wrapper">
+                                  {icon}
+                                </div>
+                                <span className="facility-label">{tag}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <Divider style={{ margin: "20px 0" }} />
+                        <div
+                          style={{
+                            background: "#FFF8E6",
+                            padding: 16,
+                            borderRadius: 12,
+                            display: "flex",
+                            gap: 12,
+                          }}
+                        >
+                          <InfoCircleOutlined
+                            style={{
+                              color: "#faad14",
+                              fontSize: 18,
+                              marginTop: 2,
+                            }}
+                          />
+                          <div>
+                            <Text strong style={{ color: "#d48806" }}>
+                              {t("lbl_halal_note")}
+                            </Text>
+                            <p
+                              style={{
+                                margin: 0,
+                                fontSize: 13,
+                                color: "#d48806",
+                                opacity: 0.9,
+                              }}
+                            >
+                              {t("txt_halal_note")}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     ),
@@ -2186,26 +2431,21 @@ function MosqueFinder({ onNavigate }) {
                                     flexWrap: "wrap",
                                   }}
                                 >
-                                  {item.photos.map((photo, idx) => (
-                                    <img
-                                      key={idx}
-                                      src={photo}
-                                      alt="review"
-                                      style={{
-                                        width: 80,
-                                        height: 80,
-                                        objectFit: "cover",
-                                        borderRadius: 8,
-                                        border: "1px solid #eee",
-                                        cursor: "pointer",
-                                      }}
-                                      onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src =
-                                          "https://via.placeholder.com/80?text=Error";
-                                      }}
-                                    />
-                                  ))}
+                                  <Image.PreviewGroup>
+                                    {item.photos.map((photo, idx) => (
+                                      <Image
+                                        key={idx}
+                                        src={photo}
+                                        width={80}
+                                        height={80}
+                                        style={{
+                                          objectFit: "cover",
+                                          borderRadius: 8,
+                                        }}
+                                        fallback={DEFAULT_IMAGE}
+                                      />
+                                    ))}
+                                  </Image.PreviewGroup>
                                 </div>
                               )}
                             </div>
@@ -2399,6 +2639,95 @@ function MosqueFinder({ onNavigate }) {
             }}
           >
             Submit Contribution
+          </Button>
+        </Form>
+      </Modal>
+
+      {/* --- MODAL EDIT PLACE (FITUR BARU) --- */}
+      <Modal
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <EditOutlined style={{ color: "#D4AF37", fontSize: 24 }} />
+            <div>
+              <Title level={4} style={{ margin: 0 }}>
+                Edit Mosque Info
+              </Title>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                Update information for better accuracy
+              </Text>
+            </div>
+          </div>
+        }
+        open={isEditModalOpen}
+        onCancel={() => setIsEditModalOpen(false)}
+        footer={null}
+        centered
+        width={600}
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleUpdateSubmit}
+          size="large"
+          style={{ marginTop: 20 }}
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="name_en"
+                label="Name (English)"
+                rules={[{ required: true }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="name_cn" label="Name (Chinese)">
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            name="address"
+            label="Address"
+            rules={[{ required: true }]}
+          >
+            <TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="promo_details" label="Facilities / Notes">
+            <TextArea rows={2} placeholder="Update facilities info..." />
+          </Form.Item>
+
+          <Form.Item label="Update Photo (Optional)">
+            <Upload
+              listType="picture-card"
+              maxCount={1}
+              beforeUpload={() => false}
+              onChange={({ fileList }) => setEditFileList(fileList)}
+              fileList={editFileList}
+            >
+              <div>
+                <CameraOutlined />
+                <div style={{ marginTop: 8 }}>Change</div>
+              </div>
+            </Upload>
+          </Form.Item>
+
+          <Button
+            type="primary"
+            htmlType="submit"
+            block
+            loading={isUpdating}
+            style={{
+              height: 48,
+              backgroundColor: "#1B4D3E",
+              borderColor: "#1B4D3E",
+              fontWeight: "bold",
+            }}
+          >
+            Save Changes
           </Button>
         </Form>
       </Modal>
