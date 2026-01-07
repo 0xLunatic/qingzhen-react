@@ -84,6 +84,8 @@ import L from "leaflet";
 import "leaflet-routing-machine";
 
 import "../App.css";
+import logoImage from "../assets/logo.png"; // <--- TAMBAHKAN INI
+// 👇 IMPORT API HELPER
 import api from "../utils/api";
 import { en } from "../lang/en";
 import { cn } from "../lang/cn";
@@ -554,6 +556,65 @@ function HalalFinder({ onNavigate }) {
       onClick: handleLogout,
     },
   ];
+
+  // Helper untuk konten menu mobile (Drawer)
+  const renderMobileMenu = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("finder"); setIsMobileMenuOpen(false); }}>
+        {t("nav_finder")}
+      </Button>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("mosque"); setIsMobileMenuOpen(false); }}>
+        {t("nav_mosque")}
+      </Button>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+        {t("nav_prayer")}
+      </Button>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+        {t("nav_community")}
+      </Button>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+        {t("nav_blog")}
+      </Button>
+
+      <Divider style={{ margin: "8px 0" }} />
+
+      {user ? (
+        <div style={{ padding: "0 8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <Avatar src={user.avatar_url} icon={<UserOutlined />} />
+            <Text strong>{user.name || user.username}</Text>
+          </div>
+          <Button block icon={<UserOutlined />} onClick={() => message.info("Profile")} style={{ marginBottom: 8 }}>
+             My Profile
+          </Button>
+          <Button block icon={<LogoutOutlined />} danger onClick={handleLogout}>
+             Log Out
+          </Button>
+        </div>
+      ) : (
+        <Button type="primary" block onClick={() => onNavigate("auth")}>
+          {t("nav_signin")}
+        </Button>
+      )}
+
+      <Button
+        block
+        onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }}
+        icon={<TranslationOutlined />}
+      >
+        {lang === "en" ? "CN" : "EN"}
+      </Button>
+      
+       <Button
+        block
+        shape="round"
+        className="btn-gold"
+        onClick={() => { setIsMobileMenuOpen(false); message.info("Download app modal"); }}
+      >
+        {t("nav_download")}
+      </Button>
+    </div>
+  );
 
   const foodTypeItems = CATEGORIES.map((cat) => ({
     key: cat,
@@ -1340,23 +1401,25 @@ function HalalFinder({ onNavigate }) {
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       {/* NAVBAR */}
-      <header className="navbar-container">
-        <div className="container navbar">
+      <header className="navbar-container" style={{ padding: '0 20px' }}>
+        <div className="container navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px' }}>
           <div
             className="brand-logo"
             onClick={() => onNavigate("landing")}
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <GlobalOutlined className="logo-icon" /> <span>QingzhenMu</span>
+            <div className="logo-icon-wrapper">
+              <img src={logoImage} alt="Logo Brand" className="logo-icon" style={{ width: '32px' }} />
+            </div>
+            <span style={{ fontWeight: 'bold', fontSize: '18px' }}>QingzhenMu</span>
           </div>
-          <div className={`nav-links ${isMobileMenuOpen ? "mobile-open" : ""}`}>
+
+          {/* Desktop Nav Links (Hidden on Mobile) */}
+          <div className="nav-links desktop-only" style={{ display: isMobile ? 'none' : 'flex', gap: '20px' }}>
             <Button
               type="link"
               className="active text-green"
-              onClick={() => {
-                onNavigate("finder");
-                setIsMobileMenuOpen(false);
-              }}
+              onClick={() => onNavigate("finder")}
             >
               {t("nav_finder")}
             </Button>
@@ -1369,79 +1432,30 @@ function HalalFinder({ onNavigate }) {
             >
               {t("nav_mosque")}
             </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+            <Button type="link" onClick={() => {}}>
               {t("nav_prayer")}
             </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+            <Button type="link" onClick={() => {}}>
               {t("nav_community")}
             </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+            <Button type="link" onClick={() => {}}>
               {t("nav_blog")}
             </Button>
-            {isMobile && (
-              <>
-                <Divider style={{ margin: "8px 0" }} />
-                {user ? (
-                  <div style={{ padding: "0 16px" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        marginBottom: 12,
-                      }}
-                    >
-                      <Avatar src={user.avatar_url} icon={<UserOutlined />} />
-                      <Text strong>{user.name || user.username}</Text>
-                    </div>
-                    <Button
-                      block
-                      icon={<UserOutlined />}
-                      style={{ marginBottom: 8 }}
-                      onClick={() => message.info("Profile")}
-                    >
-                      My Profile
-                    </Button>
-                    <Button
-                      block
-                      icon={<LogoutOutlined />}
-                      danger
-                      onClick={handleLogout}
-                    >
-                      Log Out
-                    </Button>
-                  </div>
-                ) : (
-                  <Button type="text" onClick={() => onNavigate("auth")}>
-                    {t("nav_signin")}
-                  </Button>
-                )}
-                <Divider style={{ margin: "8px 0" }} />
-                <Button
-                  type="text"
-                  onClick={() => {
-                    toggleLanguage();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  icon={<TranslationOutlined />}
-                >
-                  {lang === "en" ? "Switch to Chinese" : "Switch to English"}
-                </Button>
-              </>
-            )}
           </div>
-          <div className="nav-actions">
-            <Button
-              type="text"
-              className="hide-mobile"
-              icon={<TranslationOutlined />}
-              onClick={toggleLanguage}
-              style={{ fontWeight: "bold", marginRight: 8 }}
-            >
-              {lang === "en" ? "CN" : "EN"}
-            </Button>
 
-            <div className="hide-mobile">
+          <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {!isMobile && (
+              <Button
+                type="text"
+                icon={<TranslationOutlined />}
+                onClick={toggleLanguage}
+                style={{ fontWeight: "bold", marginRight: 8 }}
+              >
+                {lang === "en" ? "CN" : "EN"}
+              </Button>
+            )}
+
+            <div className="hide-mobile" style={{ display: isMobile ? 'none' : 'block' }}>
               {user ? (
                 <Dropdown
                   menu={{ items: userMenuItems }}
@@ -1470,18 +1484,41 @@ function HalalFinder({ onNavigate }) {
                 </Button>
               )}
             </div>
-            <Button className="btn-gold" shape="round">
-              {t("nav_download")}
-            </Button>
-            <button
-              className="mobile-menu-toggle"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
-            </button>
+
+            {!isMobile && (
+              <Button
+                type="primary"
+                shape="round"
+                className="btn-gold"
+                onClick={() => {}}
+              >
+                {t("nav_download")}
+              </Button>
+            )}
+
+            {/* Tombol Hamburger Menu (Hanya di Mobile) */}
+            {isMobile && (
+              <Button
+                type="text"
+                className="mobile-menu-toggle"
+                onClick={() => setIsMobileMenuOpen(true)}
+                icon={<MenuOutlined style={{ fontSize: '20px' }} />}
+              />
+            )}
           </div>
         </div>
       </header>
+
+      {/* DRAWER UNTUK MENU MOBILE */}
+      <Drawer
+        title="Menu"
+        placement="right"
+        onClose={() => setIsMobileMenuOpen(false)}
+        open={isMobileMenuOpen}
+        width={280}
+      >
+        {renderMobileMenu()}
+      </Drawer>
 
       {/* MAIN CONTENT */}
       <div

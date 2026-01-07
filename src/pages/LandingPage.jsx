@@ -19,6 +19,7 @@ import {
   Form,
   Upload,
   Spin,
+  Drawer, // Tambahan component Drawer untuk menu Mobile yang rapi
 } from "antd";
 import {
   SearchOutlined,
@@ -101,15 +102,15 @@ const FilterPill = ({ icon, text, active, onClick }) => (
     className={`filter-pill ${active ? "active" : ""}`}
     icon={icon}
     onClick={onClick}
-    style={{ userSelect: "none" }}
+    style={{ userSelect: "none", padding: "6px 16px", borderRadius: "20px", cursor: "pointer", margin: "4px" }}
   >
     {text}
   </Tag>
 );
 
 const CheckListItem = ({ text }) => (
-  <div className="check-list-item">
-    <CheckCircleFilled className="icon-gold" />
+  <div className="check-list-item" style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+    <CheckCircleFilled className="icon-gold" style={{ marginRight: '8px', color: '#faad14' }} />
     <Text>{text}</Text>
   </div>
 );
@@ -117,6 +118,7 @@ const CheckListItem = ({ text }) => (
 function LandingPage({ onNavigate }) {
   // --- STATE MANAGEMENT ---
   const screens = useBreakpoint();
+  // isMobile true jika layar < 768px (md)
   const isMobile = !screens.md;
 
   const [lang, setLang] = useState("en");
@@ -268,6 +270,65 @@ function LandingPage({ onNavigate }) {
     },
   ];
 
+  // Helper untuk konten menu mobile (Drawer)
+  const renderMobileMenu = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("finder"); setIsMobileMenuOpen(false); }}>
+        {t("nav_finder")}
+      </Button>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("mosque"); setIsMobileMenuOpen(false); }}>
+        {t("nav_mosque")}
+      </Button>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+        {t("nav_prayer")}
+      </Button>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+        {t("nav_community")}
+      </Button>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+        {t("nav_blog")}
+      </Button>
+
+      <Divider style={{ margin: "8px 0" }} />
+
+      {user ? (
+        <div style={{ padding: "0 8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <Avatar src={user.avatar_url} icon={<UserOutlined />} />
+            <Text strong>{user.name || user.username}</Text>
+          </div>
+          <Button block icon={<UserOutlined />} onClick={() => message.info("Profile")} style={{ marginBottom: 8 }}>
+             My Profile
+          </Button>
+          <Button block icon={<LogoutOutlined />} danger onClick={handleLogout}>
+             Log Out
+          </Button>
+        </div>
+      ) : (
+        <Button type="primary" block onClick={() => onNavigate("auth")}>
+          {t("nav_signin")}
+        </Button>
+      )}
+
+      <Button
+        block
+        onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }}
+        icon={<TranslationOutlined />}
+      >
+        {lang === "en" ? "CN" : "EN"}
+      </Button>
+      
+       <Button
+        block
+        shape="round"
+        className="btn-gold"
+        onClick={() => { setIsDownloadModalOpen(true); setIsMobileMenuOpen(false); }}
+      >
+        {t("nav_download")}
+      </Button>
+    </div>
+  );
+
   const renderStepContent = () => {
     switch (activeStep) {
       case "search":
@@ -282,6 +343,8 @@ function LandingPage({ onNavigate }) {
               <Title level={4}>{t("lbl_restaurants")}</Title>
               <Text type="secondary">{t("lbl_prayer_avail")}</Text>
             </Col>
+            
+            {/* Divider Vertikal: Hilang di Mobile (xs=0) */}
             <Col xs={0} md={1} style={{ textAlign: "center" }}>
               <div
                 style={{
@@ -292,6 +355,7 @@ function LandingPage({ onNavigate }) {
                 }}
               ></div>
             </Col>
+
             <Col xs={24} md={6} style={{ textAlign: "center" }}>
               <div className="halal-slider-visual">
                 <div style={{ padding: "0 8px", fontWeight: "bold" }}></div>
@@ -309,11 +373,14 @@ function LandingPage({ onNavigate }) {
                   Halal
                 </div>
               </div>
-              <Tag color="green">{t("filter_no_alcohol")}</Tag>
-              <Tag color="blue" style={{ marginTop: 8 }}>
-                {t("filter_family")}
-              </Tag>
+              <Space wrap justify="center" style={{ marginTop: 10 }}>
+                <Tag color="green">{t("filter_no_alcohol")}</Tag>
+                <Tag color="blue">
+                  {t("filter_family")}
+                </Tag>
+              </Space>
             </Col>
+            
             <Col xs={0} md={1} style={{ textAlign: "center" }}>
               <div
                 style={{
@@ -324,6 +391,7 @@ function LandingPage({ onNavigate }) {
                 }}
               ></div>
             </Col>
+
             <Col xs={24} md={8} style={{ textAlign: "center" }}>
               <SafetyCertificateFilled
                 style={{
@@ -393,7 +461,7 @@ function LandingPage({ onNavigate }) {
             >
               {t("lbl_confidence_desc")}
             </Paragraph>
-            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: 'wrap' }}>
               <Tag color="gold" style={{ padding: "8px 16px", fontSize: 14 }}>
                 4.9/5 Ratings
               </Tag>
@@ -411,22 +479,24 @@ function LandingPage({ onNavigate }) {
   return (
     <div className="landing-page">
       {/* HEADER / NAVBAR */}
-      <header className="navbar-container">
-        <div className="container navbar">
-          <div className="brand-logo">
+      <header className="navbar-container" style={{ padding: '0 20px' }}>
+        <div className="container navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px' }}>
+          <div className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div className="logo-icon-wrapper">
-              <img src={logoImage} alt="Logo Brand" className="logo-icon" />
+              <img src={logoImage} alt="Logo Brand" className="logo-icon" style={{ width: '32px' }} />
             </div>
-            <span>QingzhenMu</span>
+            <span style={{ fontWeight: 'bold', fontSize: '18px' }}>QingzhenMu</span>
           </div>
 
-          <div className={`nav-links ${isMobileMenuOpen ? "mobile-open" : ""}`}>
+          {/* Desktop Nav Links (Hidden on Mobile) */}
+          <div className="nav-links desktop-only" style={{ display: isMobile ? 'none' : 'flex', gap: '20px' }}>
             <Button type="link" onClick={() => onNavigate("finder")}>
               {t("nav_finder")}
             </Button>
             <Button type="link" onClick={() => onNavigate("mosque")}>
               {t("nav_mosque")}
             </Button>
+<<<<<<< HEAD
             <Button
               type="link"
               onClick={() => {
@@ -434,14 +504,18 @@ function LandingPage({ onNavigate }) {
                 setIsMobileMenuOpen(false);
               }}
             >
+=======
+            <Button type="link" onClick={() => {}}>
+>>>>>>> 08ec1a52711b1712540f1f58ab3885eda6088ef9
               {t("nav_prayer")}
             </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+            <Button type="link" onClick={() => {}}>
               {t("nav_community")}
             </Button>
-            <Button type="link" onClick={() => setIsMobileMenuOpen(false)}>
+            <Button type="link" onClick={() => {}}>
               {t("nav_blog")}
             </Button>
+<<<<<<< HEAD
             {isMobile && (
               <>
                 <Divider style={{ margin: "8px 0" }} />
@@ -494,20 +568,23 @@ function LandingPage({ onNavigate }) {
                 </Button>
               </>
             )}
+=======
+>>>>>>> 08ec1a52711b1712540f1f58ab3885eda6088ef9
           </div>
 
-          <div className="nav-actions">
-            <Button
-              type="text"
-              icon={<TranslationOutlined />}
-              onClick={toggleLanguage}
-              style={{ fontWeight: "bold", marginRight: 8 }}
-              className="hide-mobile"
-            >
-              {lang === "en" ? "CN" : "EN"}
-            </Button>
+          <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {!isMobile && (
+              <Button
+                type="text"
+                icon={<TranslationOutlined />}
+                onClick={toggleLanguage}
+                style={{ fontWeight: "bold", marginRight: 8 }}
+              >
+                {lang === "en" ? "CN" : "EN"}
+              </Button>
+            )}
 
-            <div className="hide-mobile">
+            <div className="hide-mobile" style={{ display: isMobile ? 'none' : 'block' }}>
               {user ? (
                 <Dropdown
                   menu={{ items: userMenuItems }}
@@ -537,28 +614,44 @@ function LandingPage({ onNavigate }) {
               )}
             </div>
 
-            <Button
-              type="primary"
-              shape="round"
-              className="btn-gold"
-              onClick={() => setIsDownloadModalOpen(true)}
-            >
-              {t("nav_download")}
-            </Button>
+            {!isMobile && (
+              <Button
+                type="primary"
+                shape="round"
+                className="btn-gold"
+                onClick={() => setIsDownloadModalOpen(true)}
+              >
+                {t("nav_download")}
+              </Button>
+            )}
 
-            <button
-              className="mobile-menu-toggle"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
-            </button>
+            {/* Tombol Hamburger Menu (Hanya di Mobile) */}
+            {isMobile && (
+              <Button
+                type="text"
+                className="mobile-menu-toggle"
+                onClick={() => setIsMobileMenuOpen(true)}
+                icon={<MenuOutlined style={{ fontSize: '20px' }} />}
+              />
+            )}
           </div>
         </div>
       </header>
 
+      {/* DRAWER UNTUK MENU MOBILE */}
+      <Drawer
+        title="Menu"
+        placement="right"
+        onClose={() => setIsMobileMenuOpen(false)}
+        open={isMobileMenuOpen}
+        width={280}
+      >
+        {renderMobileMenu()}
+      </Drawer>
+
       {/* HERO SECTION */}
-      <section className="hero-section">
-        <div className="container">
+      <section className="hero-section" style={{ padding: isMobile ? "40px 0" : "80px 0" }}>
+        <div className="container" style={{ padding: "0 20px" }}>
           <Row gutter={[48, 24]} align="middle">
             <Col xs={24} md={14}>
               <Title
@@ -575,7 +668,7 @@ function LandingPage({ onNavigate }) {
               <Paragraph
                 style={{
                   color: "rgba(255,255,255,0.9)",
-                  fontSize: "1.2rem",
+                  fontSize: isMobile ? "1rem" : "1.2rem",
                   marginBottom: 40,
                   maxWidth: "90%",
                 }}
@@ -583,9 +676,10 @@ function LandingPage({ onNavigate }) {
                 {t("hero_desc")}
               </Paragraph>
 
-              <div className="hero-search-bar">
+              <div className="hero-search-bar" style={{ marginBottom: '20px' }}>
                 <Input
                   placeholder={t("search_placeholder")}
+                  style={{ borderRadius: '30px', padding: '8px 20px' }}
                   prefix={
                     <SearchOutlined
                       className="text-muted"
@@ -610,7 +704,14 @@ function LandingPage({ onNavigate }) {
                 />
               </div>
 
-              <div className="hero-filters">
+              {/* Filter Pills: Scroll Horizontal di Mobile */}
+              <div className="hero-filters" style={{ 
+                display: 'flex', 
+                overflowX: isMobile ? 'auto' : 'visible', 
+                gap: '8px', 
+                paddingBottom: '10px',
+                flexWrap: isMobile ? 'nowrap' : 'wrap'
+              }}>
                 <FilterPill
                   icon={<SafetyCertificateFilled />}
                   text={t("filter_verified")}
@@ -639,7 +740,7 @@ function LandingPage({ onNavigate }) {
             </Col>
 
             <Col xs={24} md={10}>
-              <Card className="glass-card">
+              <Card className="glass-card" style={{ background: 'rgba(255,255,255,0.9)', borderRadius: '16px' }}>
                 <CheckListItem text={t("checklist_1")} />
                 <CheckListItem text={t("checklist_2")} />
                 <CheckListItem text={t("checklist_3")} />
@@ -651,6 +752,7 @@ function LandingPage({ onNavigate }) {
                     size="large"
                     shape="round"
                     onClick={() => onNavigate("finder")}
+                    style={{ background: '#2E7D32' }}
                   >
                     {t("explore_map")} <ArrowRightOutlined />
                   </Button>
@@ -662,12 +764,12 @@ function LandingPage({ onNavigate }) {
       </section>
 
       {/* FEATURES SECTION (FIXED ALIGNMENT) */}
-      <section className="section-container">
-        <div className="container">
+      <section className="section-container" style={{ padding: isMobile ? "40px 0" : "80px 0" }}>
+        <div className="container" style={{ padding: "0 20px" }}>
           <Title
             level={2}
             className="text-center mb-large"
-            style={{ color: "var(--primary-green)" }}
+            style={{ color: "var(--primary-green)", textAlign: 'center', marginBottom: '40px' }}
           >
             {t("discover_title")}
           </Title>
@@ -678,7 +780,7 @@ function LandingPage({ onNavigate }) {
                 className="feature-card"
                 bordered={false}
                 bodyStyle={{ padding: 0, height: "100%" }}
-                style={{ width: "100%" }}
+                style={{ width: "100%", borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
               >
                 <Row style={{ height: "100%", margin: 0 }}>
                   <Col
@@ -688,6 +790,7 @@ function LandingPage({ onNavigate }) {
                       display: "flex",
                       flexDirection: "column",
                       height: "100%",
+                      // Hapus border kanan di mobile, tambah border bawah
                       borderRight: !isMobile ? "1px solid #f0f0f0" : "none",
                       borderBottom: isMobile ? "1px solid #f0f0f0" : "none",
                     }}
@@ -843,7 +946,7 @@ function LandingPage({ onNavigate }) {
                   display: "flex",
                   flexDirection: "column",
                 }}
-                style={{ width: "100%" }}
+                style={{ width: "100%", borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
               >
                 <div
                   style={{
@@ -886,6 +989,7 @@ function LandingPage({ onNavigate }) {
                         borderRadius: 12,
                         justifyContent: "flex-start",
                         fontSize: 15,
+                        background: '#2E7D32'
                       }}
                       icon={<ShopOutlined />}
                     >
@@ -985,15 +1089,15 @@ function LandingPage({ onNavigate }) {
       </section>
 
       {/* HOW IT WORKS SECTION */}
-      <section className="section-container bg-gray">
-        <div className="container">
+      <section className="section-container bg-gray" style={{ background: '#f9f9f9', padding: isMobile ? "40px 0" : "80px 0" }}>
+        <div className="container" style={{ padding: "0 20px" }}>
           <Row gutter={[48, 48]} align="middle" style={{ padding: "20px 0" }}>
             <Col xs={24} md={24}>
-              <Title level={2} className="mb-medium text-center">
+              <Title level={2} className="mb-medium text-center" style={{ textAlign: 'center' }}>
                 {t("how_title")}
               </Title>
 
-              <div className="step-tabs" style={{ justifyContent: "center" }}>
+              <div className="step-tabs" style={{ justifyContent: "center", display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
                 <Button
                   type={activeStep === "search" ? "primary" : "text"}
                   className={activeStep === "search" ? "btn-green" : ""}
@@ -1026,7 +1130,7 @@ function LandingPage({ onNavigate }) {
                 </Button>
               </div>
 
-              <Card className="section-frame-card" bordered={false}>
+              <Card className="section-frame-card" bordered={false} style={{ borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', marginBottom: '30px' }}>
                 {renderStepContent()}
               </Card>
 
@@ -1034,7 +1138,7 @@ function LandingPage({ onNavigate }) {
               <Card
                 className="section-frame-card"
                 bordered={false}
-                style={{ marginBottom: 0 }}
+                style={{ marginBottom: 0, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
               >
                 <div
                   style={{
@@ -1065,8 +1169,8 @@ function LandingPage({ onNavigate }) {
 
                 <Row gutter={[24, 24]}>
                   <Col xs={24} md={8}>
-                    <div className="sub-feature">
-                      <CheckCircleFilled className="sub-feature-icon" />
+                    <div className="sub-feature" style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                      <CheckCircleFilled className="sub-feature-icon" style={{ fontSize: '24px', color: '#52c41a' }} />
                       <div>
                         <Title level={5} style={{ margin: 0 }}>
                           {t("feat_verified")}
@@ -1078,10 +1182,10 @@ function LandingPage({ onNavigate }) {
                     </div>
                   </Col>
                   <Col xs={24} md={8}>
-                    <div className="sub-feature">
+                    <div className="sub-feature" style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
                       <CompassOutlined
                         className="sub-feature-icon"
-                        style={{ color: "#1890ff" }}
+                        style={{ color: "#1890ff", fontSize: '24px' }}
                       />
                       <div>
                         <Title level={5} style={{ margin: 0 }}>
@@ -1094,10 +1198,10 @@ function LandingPage({ onNavigate }) {
                     </div>
                   </Col>
                   <Col xs={24} md={8}>
-                    <div className="sub-feature">
+                    <div className="sub-feature" style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
                       <LikeFilled
                         className="sub-feature-icon"
-                        style={{ color: "#fa8c16" }}
+                        style={{ color: "#fa8c16", fontSize: '24px' }}
                       />
                       <div>
                         <Title level={5} style={{ margin: 0 }}>
@@ -1117,9 +1221,9 @@ function LandingPage({ onNavigate }) {
       </section>
 
       {/* TESTIMONIALS (DYNAMIC) */}
-      <section className="section-container">
-        <div className="container">
-          <Title level={2} className="text-center mb-large">
+      <section className="section-container" style={{ padding: isMobile ? "40px 0" : "80px 0" }}>
+        <div className="container" style={{ padding: "0 20px" }}>
+          <Title level={2} className="text-center mb-large" style={{ textAlign: 'center', marginBottom: '40px' }}>
             {t("testi_title")}
           </Title>
 
@@ -1134,8 +1238,9 @@ function LandingPage({ onNavigate }) {
                   <Card
                     bordered={false}
                     className="feature-card testimonial-card"
+                    style={{ height: '100%', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   >
-                    <div className="testimonial-user">
+                    <div className="testimonial-user" style={{ display: 'flex', gap: '15px', alignItems: 'center', marginBottom: '15px' }}>
                       <Avatar
                         src={
                           item.avatar ||
@@ -1199,7 +1304,7 @@ function LandingPage({ onNavigate }) {
           borderBottom: "1px solid #f0f0f0",
         }}
       >
-        <div className="container">
+        <div className="container" style={{ padding: "0 20px" }}>
           <Card
             className="collab-card"
             bordered={false}
@@ -1266,38 +1371,38 @@ function LandingPage({ onNavigate }) {
       </section>
 
       {/* FOOTER */}
-      <footer className="footer-section">
-        <div className="container">
-          <div className="footer-content">
+      <footer className="footer-section" style={{ background: '#001529', color: 'white', padding: '60px 0 20px' }}>
+        <div className="container" style={{ padding: "0 20px" }}>
+          <div className="footer-content" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', marginBottom: '40px', gap: '30px' }}>
             <div style={{ maxWidth: 300 }}>
               <div
                 className="brand-logo"
-                style={{ color: "white", marginBottom: 16 }}
+                style={{ color: "white", marginBottom: 16, display: 'flex', alignItems: 'center', gap: '8px' }}
               >
                 <GlobalOutlined style={{ color: "var(--secondary-green)" }} />
-                <span>QingzhenMu</span>
+                <span style={{ fontSize: '20px', fontWeight: 'bold' }}>QingzhenMu</span>
               </div>
               <Paragraph style={{ color: "rgba(255,255,255,0.6)" }}>
                 {t("footer_desc")}
               </Paragraph>
             </div>
 
-            <div className="footer-links">
-              <Button type="link">{t("footer_about")}</Button>
-              <Button type="link">{t("footer_careers")}</Button>
-              <Button type="link">{t("footer_privacy")}</Button>
-              <Button type="link">{t("footer_terms")}</Button>
-              <Button type="link">{t("footer_contact")}</Button>
+            <div className="footer-links" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <Button type="link" style={{ color: 'rgba(255,255,255,0.8)', textAlign: 'left', padding: 0 }}>{t("footer_about")}</Button>
+              <Button type="link" style={{ color: 'rgba(255,255,255,0.8)', textAlign: 'left', padding: 0 }}>{t("footer_careers")}</Button>
+              <Button type="link" style={{ color: 'rgba(255,255,255,0.8)', textAlign: 'left', padding: 0 }}>{t("footer_privacy")}</Button>
+              <Button type="link" style={{ color: 'rgba(255,255,255,0.8)', textAlign: 'left', padding: 0 }}>{t("footer_terms")}</Button>
+              <Button type="link" style={{ color: 'rgba(255,255,255,0.8)', textAlign: 'left', padding: 0 }}>{t("footer_contact")}</Button>
             </div>
 
-            <div className="footer-social">
+            <div className="footer-social" style={{ display: 'flex', gap: '20px', fontSize: '24px' }}>
               <FacebookFilled style={{ cursor: "pointer", color: "white" }} />
               <InstagramFilled style={{ cursor: "pointer", color: "white" }} />
               <YoutubeFilled style={{ cursor: "pointer", color: "white" }} />
             </div>
           </div>
 
-          <div className="copyright">
+          <div className="copyright" style={{ textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>
             <Text style={{ color: "rgba(255,255,255,0.4)" }}>
               {t("copyright")}
             </Text>
@@ -1444,7 +1549,7 @@ function LandingPage({ onNavigate }) {
               className="btn-green"
               size="large"
               loading={submittingReview}
-              style={{ height: 48, borderRadius: 24, fontWeight: 600 }}
+              style={{ height: 48, borderRadius: 24, fontWeight: 600, background: '#2E7D32' }}
             >
               {submittingReview ? "Submitting..." : "Submit Review"}
             </Button>
