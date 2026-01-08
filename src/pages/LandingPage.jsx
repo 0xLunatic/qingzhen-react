@@ -279,7 +279,7 @@ function LandingPage({ onNavigate }) {
       <Button type="text" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("mosque"); setIsMobileMenuOpen(false); }}>
         {t("nav_mosque")}
       </Button>
-      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("prayer"); setIsMobileMenuOpen(false); }}>
         {t("nav_prayer")}
       </Button>
       <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
@@ -496,7 +496,6 @@ function LandingPage({ onNavigate }) {
             <Button type="link" onClick={() => onNavigate("mosque")}>
               {t("nav_mosque")}
             </Button>
-<<<<<<< HEAD
             <Button
               type="link"
               onClick={() => {
@@ -504,9 +503,6 @@ function LandingPage({ onNavigate }) {
                 setIsMobileMenuOpen(false);
               }}
             >
-=======
-            <Button type="link" onClick={() => {}}>
->>>>>>> 08ec1a52711b1712540f1f58ab3885eda6088ef9
               {t("nav_prayer")}
             </Button>
             <Button type="link" onClick={() => {}}>
@@ -515,7 +511,6 @@ function LandingPage({ onNavigate }) {
             <Button type="link" onClick={() => {}}>
               {t("nav_blog")}
             </Button>
-<<<<<<< HEAD
             {isMobile && (
               <>
                 <Divider style={{ margin: "8px 0" }} />
@@ -568,8 +563,6 @@ function LandingPage({ onNavigate }) {
                 </Button>
               </>
             )}
-=======
->>>>>>> 08ec1a52711b1712540f1f58ab3885eda6088ef9
           </div>
 
           <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

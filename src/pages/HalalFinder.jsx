@@ -68,7 +68,7 @@ import {
   FileTextOutlined,
   PictureOutlined,
   CheckCircleOutlined,
-  EditOutlined, // 👈 IMPORT BARU
+  EditOutlined,
 } from "@ant-design/icons";
 import { FaWalking, FaBicycle, FaMotorcycle, FaCar } from "react-icons/fa";
 
@@ -84,8 +84,7 @@ import L from "leaflet";
 import "leaflet-routing-machine";
 
 import "../App.css";
-import logoImage from "../assets/logo.png"; // <--- TAMBAHKAN INI
-// 👇 IMPORT API HELPER
+import logoImage from "../assets/logo.png";
 import api from "../utils/api";
 import { en } from "../lang/en";
 import { cn } from "../lang/cn";
@@ -101,10 +100,7 @@ const ACCENT_COLOR = "#C6A87C";
 const MECCA_COORDS = { lat: 21.4225, lng: 39.8262 };
 const MAX_RADIUS_METERS = 5000;
 const MAX_RESULTS = 30;
-
-// 👇 SESUAIKAN PORT BACKEND
 const BACKEND_URL = "http://localhost:5000";
-
 const SPEEDS = { walk: 5, bike: 15, moto: 40, car: 30 };
 
 // --- ASSETS & DATA ---
@@ -116,7 +112,6 @@ const FOOD_IMAGES = [
 ];
 
 const DEFAULT_IMAGE = "";
-
 const POSSIBLE_TAGS = [
   "Verified Halal",
   "Muslim Owned",
@@ -127,24 +122,18 @@ const POSSIBLE_TAGS = [
 const CATEGORIES = ["Vegan Option", "Real Food", "Non-Vegan", "Fast Food"];
 
 // --- UTILS ---
-
-// 👇 FUNGSI PENTING: MEMBERSIHKAN URL GAMBAR DARI DB
 const getPhotoUrl = (path) => {
   if (!path) return DEFAULT_IMAGE;
   if (path.startsWith("http")) return path;
-
   let cleanPath = path.replace(/\\/g, "/");
-
   if (cleanPath.startsWith("public/")) {
     cleanPath = cleanPath.replace("public/", "");
   } else if (cleanPath.startsWith("/public/")) {
     cleanPath = cleanPath.replace("/public/", "");
   }
-
   if (!cleanPath.startsWith("/")) {
     cleanPath = "/" + cleanPath;
   }
-
   return `${BACKEND_URL}${cleanPath}`;
 };
 
@@ -152,8 +141,7 @@ const isValidCoordinate = (lat, lng) =>
   lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng);
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  if (!isValidCoordinate(lat1, lon1) || !isValidCoordinate(lat2, lon2))
-    return 0;
+  if (!isValidCoordinate(lat1, lon1) || !isValidCoordinate(lat2, lon2)) return 0;
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -209,35 +197,51 @@ const formatDuration = (seconds) => {
 };
 
 // --- CUSTOM MARKER ICON ---
-const createCustomIcon = (source, isActive) => {
-  const color = source === "contributor" ? "#D4AF37" : "#1B4D3E";
-  const zIndex = source === "contributor" ? 200 : 100;
+// [MODIFIED] Logic icon di sini diubah untuk handle 'isVisited'
+const createCustomIcon = (source, isActive, isVisited) => {
   const scale = isActive ? 1.2 : 1;
+  let svgContent = "";
+  let iconColor = "#1B4D3E"; // Default Green
+
+  if (isVisited) {
+    // [NEW] Bintang Merah jika Visited
+    iconColor = "#D32F2F"; // Merah
+    svgContent = `
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="${iconColor}" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+    `;
+  } else {
+    // Normal Marker
+    if (source === "contributor") iconColor = "#D4AF37"; // Gold for contributor
+    svgContent = `
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="${iconColor}" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+        ${
+          source === "contributor"
+            ? '<circle cx="17" cy="5" r="3" fill="#FF5252" stroke="white" stroke-width="1"/>'
+            : ""
+        }
+      </svg>
+    `;
+  }
 
   return L.divIcon({
     className: "custom-div-icon",
     html: `
       <div style="transform: scale(${scale}); transition: all 0.3s;">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="${color}" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          ${
-            source === "contributor"
-              ? '<circle cx="17" cy="5" r="3" fill="#FF5252" stroke="white" stroke-width="1"/>'
-              : ""
-          }
-        </svg>
+        ${svgContent}
       </div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 40],
     popupAnchor: [0, -40],
-    zIndexOffset: isActive ? 1000 : zIndex,
+    zIndexOffset: isActive ? 1000 : (isVisited ? 300 : 100), // Visited z-index lebih tinggi dari normal
   });
 };
 
 // --- DRAGGABLE MARKER FOR ADD PLACE ---
 const LocationPickerMarker = ({ position, setPosition }) => {
   const markerRef = useRef(null);
-
   const eventHandlers = useMemo(
     () => ({
       dragend() {
@@ -379,7 +383,6 @@ const SidebarCard = ({ data, active, onClick, visitStatus, t }) => {
         </Tooltip>
       )}
 
-      {/* Gunakan gambar dari properti img yang sudah diproses */}
       <img
         src={data.img}
         alt={data.fullName}
@@ -475,6 +478,8 @@ function HalalFinder({ onNavigate }) {
   const [placeReviews, setPlaceReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  
+  // [MODIFIED] State ini sangat penting untuk re-render marker
   const [userVisits, setUserVisits] = useState({});
 
   // UI States
@@ -604,7 +609,7 @@ function HalalFinder({ onNavigate }) {
       >
         {lang === "en" ? "CN" : "EN"}
       </Button>
-      
+       
        <Button
         block
         shape="round"
@@ -680,17 +685,14 @@ function HalalFinder({ onNavigate }) {
         });
 
         const dbPlaces = rawData.map((p) => {
-          // ... (Logic Tags sama seperti sebelumnya)
           let tags = [p.halal_status];
           if (p.food_type) tags.push(p.food_type);
 
-          // ... (Logic Gambar sama seperti sebelumnya)
           let placeImage =
             FOOD_IMAGES[Math.floor(Math.random() * FOOD_IMAGES.length)];
           if (p.image_url) {
             placeImage = getPhotoUrl(p.image_url);
           } else if (p.photos) {
-            // ... parsing photos ...
             let parsedPhotos = p.photos;
             if (typeof p.photos === "string")
               try {
@@ -703,7 +705,7 @@ function HalalFinder({ onNavigate }) {
           return {
             id: `db-${p.id}`,
             originalId: p.id,
-            osm_id: p.osm_id, // Simpan info ini
+            osm_id: p.osm_id,
             contributor_id: p.contributor_id,
             fullName: p.name_en,
             name_cn: p.name_cn,
@@ -714,7 +716,7 @@ function HalalFinder({ onNavigate }) {
             rating: p.avgRating ? parseFloat(p.avgRating).toFixed(1) : "New",
             reviews: p.reviewCount ? parseInt(p.reviewCount) : 0,
             img: placeImage,
-            source: "contributor", // Ini akan memicu warna emas/hijau
+            source: "contributor", 
             tags: tags,
             categoryTag: p.food_type,
             isPromo: p.is_promo,
@@ -732,10 +734,8 @@ function HalalFinder({ onNavigate }) {
         const osmData = await osmRes.value.json();
 
         const osmPlaces = osmData.elements
-          // 👇 FILTER PENTING: Jangan ambil jika ID-nya sudah ada di DB
           .filter((item) => !existingOsmIds.has(String(item.id)))
           .map((item, i) => {
-            // ... (Logic mapping OSM sama seperti sebelumnya) ...
             let tags = ["Verified Halal"];
             const pool = ["Muslim Owned", "No Alcohol", "Prayer Room"].sort(
               () => 0.5 - Math.random()
@@ -764,11 +764,10 @@ function HalalFinder({ onNavigate }) {
               openTime: 9,
               closeTime: 21,
               address: getAddressFromTags(item.tags),
-              source: "osm", // Ini akan memicu warna standar
+              source: "osm", 
             };
           });
 
-        // Filter nama generic
         const validOsm = osmPlaces.filter((p) => p.fullName !== "Halal Spot");
         combined = [...combined, ...validOsm];
       }
@@ -785,27 +784,19 @@ function HalalFinder({ onNavigate }) {
   // --- FETCH REVIEWS ---
   const fetchReviews = async (placeId) => {
     try {
-      // Guard Clause: Jangan fetch jika ID kosong/null
       if (!placeId) return;
-
       const placeIdStr = placeId.toString();
 
-      // 1. Cek apakah ini data OSM?
-      // Jika data dari OSM, kita tidak punya review di database (kecuali fitur hybrid dibuat)
       if (placeIdStr.startsWith("osm-")) {
         setPlaceReviews([]);
         return;
       }
 
-      // 2. Bersihkan Prefix 'db-' agar sesuai dengan ID di Database MySQL
       const realId = placeIdStr.replace("db-", "");
-
-      // 3. Panggil API
       const response = await api.get(`/reviews/${realId}`);
 
       if (response.data.success) {
         const mappedReviews = response.data.data.map((r) => {
-          // Parse Foto Review
           let reviewPhotos = [];
           if (r.photos) {
             try {
@@ -816,14 +807,12 @@ function HalalFinder({ onNavigate }) {
           if (!Array.isArray(reviewPhotos)) reviewPhotos = [];
 
           return {
-            id: r.id, // ID Unik Review
+            id: r.id, 
             user: r.user ? r.user.name || r.user.username : "Anonymous",
-            // Gunakan helper getPhotoUrl untuk avatar user
             avatar: r.user?.avatar_url ? getPhotoUrl(r.user.avatar_url) : null,
             rating: parseFloat(r.rating),
             text: r.comment,
             date: new Date(r.created_at).toLocaleDateString(),
-            // Gunakan helper getPhotoUrl untuk foto review
             photos: reviewPhotos.map((p) => getPhotoUrl(p)),
           };
         });
@@ -831,7 +820,6 @@ function HalalFinder({ onNavigate }) {
       }
     } catch (error) {
       console.error("Fetch Review Error:", error);
-      // Jangan set error message global, cukup kosongkan list review
       setPlaceReviews([]);
     }
   };
@@ -924,12 +912,11 @@ function HalalFinder({ onNavigate }) {
   // ==========================================
   const handleOpenEdit = () => {
     if (!selectedPlace) return;
-    // Isi form dengan data yang sudah ada
     editForm.setFieldsValue({
       name_en: selectedPlace.fullName,
       name_cn: selectedPlace.name_cn,
       category: selectedPlace.type,
-      halal_status: selectedPlace.tags[0], // Asumsi tag pertama adalah halal status
+      halal_status: selectedPlace.tags[0],
       address: selectedPlace.address,
       promo_details: selectedPlace.promoText,
     });
@@ -941,8 +928,6 @@ function HalalFinder({ onNavigate }) {
     setIsUpdating(true);
     try {
       const formData = new FormData();
-
-      // Append field text
       formData.append("name_en", values.name_en);
       if (values.name_cn) formData.append("name_cn", values.name_cn);
       formData.append("category", values.category);
@@ -951,7 +936,6 @@ function HalalFinder({ onNavigate }) {
       if (values.promo_details)
         formData.append("promo_details", values.promo_details);
 
-      // Append Foto Baru
       if (editFileList && editFileList.length > 0) {
         editFileList.forEach((file) => {
           if (file.originFileObj) {
@@ -960,15 +944,12 @@ function HalalFinder({ onNavigate }) {
         });
       }
 
-      // Pastikan hanya DB Place yang bisa diedit
       if (!selectedPlace.id.toString().startsWith("db-")) {
         message.error("Cannot edit this place (OSM Data).");
         return;
       }
 
       const placeId = selectedPlace.originalId;
-
-      // Pilih Endpoint: Admin Route atau User Route
       const endpoint =
         user.role === "admin"
           ? `/admin/places/${placeId}`
@@ -980,11 +961,8 @@ function HalalFinder({ onNavigate }) {
 
       message.success("Place updated successfully!");
       setIsEditModalOpen(false);
-
-      // Refresh Data Peta
       fetchPlaces(mapCenter.lat, mapCenter.lng);
 
-      // Update UI Detail Drawer (Optimistic)
       setSelectedPlace((prev) => ({
         ...prev,
         fullName: values.name_en,
@@ -1016,7 +994,6 @@ function HalalFinder({ onNavigate }) {
     try {
       const formData = new FormData();
 
-      // LOGIC PENTING DISINI 👇
       if (selectedPlace.source === "osm") {
         formData.append("is_osm", "true");
         formData.append("osm_id", selectedPlace.originalId);
@@ -1025,8 +1002,6 @@ function HalalFinder({ onNavigate }) {
         formData.append("lng", selectedPlace.lng);
         formData.append("address", selectedPlace.address);
 
-        // 👇 TAMBAHKAN LOGIC PENENTUAN KATEGORI
-        // Cek type dari selectedPlace (yang kita set saat fetchPlaces)
         let cat = "Restaurant";
         if (
           selectedPlace.type === "Supermarket" ||
@@ -1036,17 +1011,13 @@ function HalalFinder({ onNavigate }) {
         }
         formData.append("category", cat);
       } else {
-        // Jika Database biasa
         formData.append("is_osm", "false");
-        // Pastikan ambil ID asli database (tanpa 'db-')
         formData.append("place_id", selectedPlace.originalId);
       }
 
-      // Data umum review
       formData.append("rating", values.rating);
       formData.append("comment", values.review);
 
-      // Foto Review
       if (reviewFileList && reviewFileList.length > 0) {
         reviewFileList.forEach((file) => {
           if (file.originFileObj) {
@@ -1064,9 +1035,6 @@ function HalalFinder({ onNavigate }) {
       form.resetFields();
       setReviewFileList([]);
 
-      // Auto Refresh
-      // Untuk OSM, fetchReviews mungkin masih kosong sampai user refresh map,
-      // tapi setidaknya review sudah tersimpan.
       fetchReviews(selectedPlace.id);
       fetchPlaces(mapCenter.lat, mapCenter.lng);
     } catch (error) {
@@ -1086,22 +1054,22 @@ function HalalFinder({ onNavigate }) {
     }
     if (!statusType) statusType = "Visited";
 
-    // 1. Optimistic UI Update (Biar cepat di layar)
-    // Kita pakai ID asli (db-1 atau osm-123) untuk state lokal
+    // 1. Optimistic UI Update
     const oldStatus = userVisits[placeId];
     const newVisits = { ...userVisits };
+    
     if (oldStatus === statusType) {
       delete newVisits[placeId];
     } else {
       newVisits[placeId] = statusType;
     }
+    
+    // [MODIFIED] State ini yang akan memicu re-render Marker icon
     setUserVisits(newVisits);
 
     try {
-      // 2. Siapkan Payload untuk Backend
       const payload = {
         status: statusType,
-        // Snapshot data (opsional, untuk history)
         place_data: selectedPlace
           ? {
               name: selectedPlace.fullName,
@@ -1114,25 +1082,19 @@ function HalalFinder({ onNavigate }) {
           : {},
       };
 
-      // 3. Logic Penanganan ID (DB vs OSM)
       const idStr = String(placeId);
 
       if (idStr.startsWith("db-")) {
-        // KASUS DATABASE: Bersihkan prefix "db-" jadi angka
         payload.place_id = idStr.replace("db-", "");
         payload.is_osm = false;
       } else if (idStr.startsWith("osm-")) {
-        // KASUS OSM: Kirim flag dan data lengkap untuk Auto-Import
         payload.is_osm = true;
         payload.osm_id = idStr.replace("osm-", "");
-
-        // Data pendukung untuk Create Place otomatis
         payload.name = selectedPlace.fullName;
         payload.lat = selectedPlace.lat;
         payload.lng = selectedPlace.lng;
         payload.address = selectedPlace.address;
 
-        // Tentukan kategori otomatis
         let cat = "Restaurant";
         if (
           selectedPlace.type === "Supermarket" ||
@@ -1142,11 +1104,9 @@ function HalalFinder({ onNavigate }) {
         }
         payload.category = cat;
       } else {
-        // Fallback (jika ID sudah angka murni)
         payload.place_id = placeId;
       }
 
-      // 4. Kirim ke Backend
       await api.post("/user/visits", payload);
 
       message.success(
@@ -1155,14 +1115,14 @@ function HalalFinder({ onNavigate }) {
           : `Marked as ${statusType}`
       );
 
-      // Refresh map agar jika ini tempat OSM baru, warnanya berubah jadi emas (Contributor)
       if (idStr.startsWith("osm-")) {
         fetchPlaces(mapCenter.lat, mapCenter.lng);
       }
     } catch (error) {
       console.error("API Error:", error);
       message.error("Failed. " + (error.response?.data?.message || ""));
-      setUserVisits(userVisits); // Rollback UI jika gagal
+      // Rollback UI jika gagal
+      setUserVisits(userVisits); 
     }
   };
 
@@ -1806,9 +1766,11 @@ function HalalFinder({ onNavigate }) {
                 <Marker
                   key={place.id}
                   position={[place.lat, place.lng]}
+                  // [MODIFIED] Gunakan prop 'isVisited' untuk trigger icon merah
                   icon={createCustomIcon(
                     place.source,
-                    selectedPlace?.id === place.id
+                    selectedPlace?.id === place.id,
+                    userVisits[place.id] === "Visited"
                   )}
                   eventHandlers={{
                     click: () => {
@@ -2346,7 +2308,11 @@ function HalalFinder({ onNavigate }) {
                     children: (
                       <div style={{ paddingTop: 12 }}>
                         <div
-                          style={{ display: "flex", gap: 16, marginBottom: 20 }}
+                          style={{
+                            display: "flex",
+                            gap: 16,
+                            marginBottom: 20,
+                          }}
                         >
                           <div
                             style={{
@@ -2462,7 +2428,9 @@ function HalalFinder({ onNavigate }) {
                   },
                   {
                     key: "2",
-                    label: `${t("lbl_reviews")} (${placeReviews.length || 0})`,
+                    label: `${t("lbl_reviews")} (${
+                      placeReviews.length || 0
+                    })`,
                     children: (
                       <div style={{ paddingTop: 12 }}>
                         <div
@@ -2535,7 +2503,10 @@ function HalalFinder({ onNavigate }) {
                                 <Rate
                                   disabled
                                   value={item.rating}
-                                  style={{ fontSize: 12, color: ACCENT_COLOR }}
+                                  style={{
+                                    fontSize: 12,
+                                    color: ACCENT_COLOR,
+                                  }}
                                 />
                               </div>
                               <Text
