@@ -571,7 +571,7 @@ function HalalFinder({ onNavigate }) {
       <Button type="text" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("mosque"); setIsMobileMenuOpen(false); }}>
         {t("nav_mosque")}
       </Button>
-      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+      <Button type="link" onClick={() => onNavigate("prayer")}>
         {t("nav_prayer")}
       </Button>
       <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
@@ -1392,7 +1392,7 @@ function HalalFinder({ onNavigate }) {
             >
               {t("nav_mosque")}
             </Button>
-            <Button type="link" onClick={() => {}}>
+            <Button type="link" onClick={() => onNavigate("prayer")}>
               {t("nav_prayer")}
             </Button>
             <Button type="link" onClick={() => {}}>
