@@ -1,16 +1,90 @@
 // src/pages/admin/ManageUsers.jsx
 import React, { useEffect, useState } from "react";
-import { Table, Avatar, Button, Popconfirm, message, Tag, Select } from "antd";
-import { UserOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  Table,
+  Avatar,
+  Button,
+  Popconfirm,
+  message,
+  Select,
+  Typography,
+  ConfigProvider
+} from "antd";
+import {
+  UserOutlined,
+  DeleteOutlined,
+  ReloadOutlined,
+  DownOutlined,
+  SafetyCertificateFilled
+} from "@ant-design/icons";
 import api from "../../utils/api";
 
+const { Title, Text } = Typography;
 const { Option } = Select;
 
+/* ================= THEME ================= */
+const THEME = {
+  glassBg: "rgba(255, 255, 255, 0.05)",
+  glassBorder: "1px solid rgba(255, 255, 255, 0.1)",
+  textMain: "#ffffff",
+  textSec: "rgba(255, 255, 255, 0.6)",
+  gold: "#D4AF37",
+  danger: "#ff4d4f",
+  blue: "#1890ff",
+  roleBg: {
+    admin: "rgba(255, 77, 79, 0.15)",
+    contributor: "rgba(212, 175, 55, 0.15)",
+    user: "rgba(24, 144, 255, 0.15)"
+  }
+};
+
+/* ================= ROLE BADGE ================= */
+const RoleBadge = ({ role }) => {
+  let color = THEME.blue;
+  let bg = THEME.roleBg.user;
+  let text = "USER";
+  let icon = <UserOutlined />;
+
+  if (role === "admin") {
+    color = THEME.danger;
+    bg = THEME.roleBg.admin;
+    text = "ADMIN";
+    icon = <SafetyCertificateFilled />;
+  } else if (role === "contributor") {
+    color = THEME.gold;
+    bg = THEME.roleBg.contributor;
+    text = "CONTRIBUTOR";
+    icon = <UserOutlined />;
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        background: bg,
+        border: `1px solid ${color}`,
+        color,
+        padding: "4px 14px",
+        borderRadius: 20,
+        fontSize: 11,
+        fontWeight: "bold",
+        letterSpacing: "0.6px",
+        boxShadow: `0 0 8px ${color}30`,
+        whiteSpace: "nowrap"
+      }}
+    >
+      {icon} {text}
+    </div>
+  );
+};
+
+/* ================= MAIN ================= */
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // State lokal untuk loading saat ganti role per user (biar gak nge-freeze semua)
   const [roleLoading, setRoleLoading] = useState({});
 
   useEffect(() => {
@@ -22,7 +96,7 @@ const ManageUsers = () => {
     try {
       const res = await api.get("/admin/users");
       if (res.data.success) setUsers(res.data.data);
-    } catch (error) {
+    } catch {
       message.error("Failed to load users");
     } finally {
       setLoading(false);
@@ -34,138 +108,253 @@ const ManageUsers = () => {
       await api.delete(`/admin/users/${id}`);
       message.success("User deleted");
       fetchUsers();
-    } catch (error) {
-      message.error("Failed to delete");
+    } catch {
+      message.error("Failed to delete user");
     }
   };
 
-  // 👇 Fungsi Ganti Role
-  const handleRoleChange = async (userId, newRole) => {
-    // Set loading spesifik untuk user ini
-    setRoleLoading((prev) => ({ ...prev, [userId]: true }));
-
+  const handleRoleChange = async (userId, role) => {
+    setRoleLoading((p) => ({ ...p, [userId]: true }));
     try {
-      const res = await api.put(`/admin/users/${userId}/role`, {
-        role: newRole,
-      });
-
+      const res = await api.put(`/admin/users/${userId}/role`, { role });
       if (res.data.success) {
-        message.success(`Role updated to ${newRole}`);
-
-        // Update state lokal users agar UI berubah tanpa refresh API penuh
-        setUsers((prevUsers) =>
-          prevUsers.map((user) =>
-            user.id === userId ? { ...user, role: newRole } : user
-          )
+        message.success(`Role updated to ${role.toUpperCase()}`);
+        setUsers((u) =>
+          u.map((x) => (x.id === userId ? { ...x, role } : x))
         );
       }
-    } catch (error) {
+    } catch {
       message.error("Failed to update role");
     } finally {
-      setRoleLoading((prev) => ({ ...prev, [userId]: false }));
+      setRoleLoading((p) => ({ ...p, [userId]: false }));
     }
   };
 
+  /* ================= TABLE COLUMNS ================= */
   const columns = [
     {
-      title: "Avatar",
-      dataIndex: "avatar_url",
-      key: "avatar",
-      width: 80,
-      render: (url) => <Avatar src={url} icon={<UserOutlined />} />,
-    },
-    {
-      title: "Name/Username",
+      title: <span style={{ color: THEME.textSec }}>User Info</span>,
       key: "name",
-      render: (_, record) => (
-        <div>
-          <div style={{ fontWeight: "bold" }}>{record.name || "-"}</div>
-          <div style={{ color: "#888", fontSize: 12 }}>@{record.username}</div>
-        </div>
-      ),
-    },
-    {
-      title: "Email / Phone",
-      key: "contact",
-      render: (_, record) => (
-        <div>
-          <div>{record.email || "-"}</div>
-          <div style={{ color: "#888", fontSize: 12 }}>
-            {record.phone_number}
+      width: 260,
+      render: (_, r) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Avatar
+            src={r.avatar_url}
+            icon={<UserOutlined />}
+            size={42}
+            style={{
+              border: `2px solid ${THEME.gold}`,
+              background: "rgba(255,255,255,0.1)"
+            }}
+          />
+          <div>
+            <div style={{ color: "white", fontWeight: 600 }}>
+              {r.name || "Unnamed User"}
+            </div>
+            <div style={{ color: THEME.textSec, fontSize: 12 }}>
+              @{r.username}
+            </div>
           </div>
         </div>
-      ),
+      )
     },
     {
-      title: "Role",
+      title: <span style={{ color: THEME.textSec }}>Contact</span>,
+      key: "contact",
+      render: (_, r) => (
+        <>
+          <div style={{ color: "rgba(255,255,255,0.9)" }}>{r.email}</div>
+          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
+            {r.phone_number || "-"}
+          </div>
+        </>
+      )
+    },
+    {
+      title: <span style={{ color: THEME.textSec }}>Role Access</span>,
       dataIndex: "role",
-      key: "role",
-      width: 200,
-      render: (role, record) => {
-        // Jangan biarkan admin mengubah role dirinya sendiri di sini (untuk keamanan UX)
-        // Atau biarkan saja, tapi hati-hati. Di sini saya disable jika itu akun admin utama (opsional)
-
-        return (
-          <Select
-            defaultValue={role}
-            style={{ width: 140 }}
-            onChange={(value) => handleRoleChange(record.id, value)}
-            loading={roleLoading[record.id]}
-            disabled={roleLoading[record.id]} // Disable saat loading
-          >
-            <Option value="user">
-              <Tag color="geekblue">USER</Tag>
-            </Option>
-            <Option value="contributor">
-              <Tag color="green">CONTRIBUTOR</Tag>
-            </Option>
-            <Option value="admin">
-              <Tag color="red">ADMIN</Tag>
-            </Option>
-          </Select>
-        );
-      },
+      width: 180,
+      render: (role, r) => (
+        <Select
+          value={role}
+          style={{ width: 160 }}
+          bordered={false}
+          optionLabelProp="label"
+          popupClassName="role-select-dropdown"
+          suffixIcon={
+            <DownOutlined
+              style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}
+            />
+          }
+          loading={roleLoading[r.id]}
+          disabled={roleLoading[r.id]}
+          onChange={(v) => handleRoleChange(r.id, v)}
+        >
+          <Option value="user" label={<RoleBadge role="user" />}>
+            <RoleBadge role="user" />
+          </Option>
+          <Option value="contributor" label={<RoleBadge role="contributor" />}>
+            <RoleBadge role="contributor" />
+          </Option>
+          <Option value="admin" label={<RoleBadge role="admin" />}>
+            <RoleBadge role="admin" />
+          </Option>
+        </Select>
+      )
     },
     {
-      title: "Action",
+      title: <span style={{ color: THEME.textSec }}>Action</span>,
       key: "action",
-      width: 100,
-      render: (_, record) =>
-        record.role !== "admin" && (
+      width: 80,
+      align: "center",
+      render: (_, r) =>
+        r.role !== "admin" && (
           <Popconfirm
             title="Delete user?"
-            description="This action cannot be undone."
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
+            onConfirm={() => handleDelete(r.id)}
+            okButtonProps={{ danger: true }}
           >
-            <Button danger size="small" icon={<DeleteOutlined />} />
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              style={{
+                background: "rgba(255,77,79,0.15)",
+                borderRadius: 10
+              }}
+            />
           </Popconfirm>
-        ),
-    },
+        )
+    }
   ];
 
   return (
-    <div>
-      <div
-        style={{
-          marginBottom: 16,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+    <>
+      {/* ===== CSS OVERRIDE ===== */}
+      <style>{`
+        /* SELECT CONTAINER */
+        .ant-select-selector {
+          background: transparent !important;
+          border: none !important;
+          padding: 0 !important;
+          height: auto !important;
+        }
+
+        /* VALUE DI DALAM SELECT */
+        .ant-select-selection-item {
+          padding: 0 !important;
+          display: flex;
+          align-items: center;
+        }
+
+        /* HILANGKAN BACKGROUND SAAT FOCUS */
+        .ant-select-focused .ant-select-selector {
+          box-shadow: none !important;
+        }
+
+        /* --- DROPDOWN POPUP STYLE --- */
+        .role-select-dropdown {
+          background-color: #021a12 !important;
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 16px;
+          padding: 6px;
+          box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+        }
+
+        /* ITEM DI DALAM DROPDOWN */
+        .role-select-dropdown .ant-select-item {
+          padding: 6px 10px !important;
+          background: transparent !important;
+          border-radius: 12px;
+        }
+
+        /* HAPUS BACKGROUND BAWAAN ANT SAAT SELECTED / ACTIVE */
+        .role-select-dropdown .ant-select-item-option-selected,
+        .role-select-dropdown .ant-select-item-option-active {
+          background: transparent !important;
+        }
+      `}</style>
+
+      <ConfigProvider
+        theme={{
+          token: { colorText: "white", fontFamily: "'Inter', sans-serif" },
+          components: {
+             Table: {
+               colorBgContainer: "transparent",
+               colorTextHeading: "rgba(255,255,255,0.6)",
+               borderColor: "rgba(255,255,255,0.05)",
+               headerBg: "rgba(0,0,0,0.2)",
+               rowHoverBg: "rgba(255,255,255,0.05)",
+             },
+             // Tambahan Pagination agar terlihat
+             Pagination: {
+                itemActiveBg: "transparent", // Background pagination aktif jadi transparan
+                colorText: "white"
+             }
+          }
         }}
       >
-        <h2>Manage Users</h2>
-        <Button onClick={fetchUsers}>Refresh Data</Button>
-      </div>
-      <Table
-        columns={columns}
-        dataSource={users}
-        rowKey="id"
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-      />
-    </div>
+        <div style={{ paddingBottom: 32 }}>
+          {/* HEADER */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 24,
+              alignItems: "end"
+            }}
+          >
+            <div>
+              <Title level={2} style={{ color: "white", margin: 0, fontWeight: 700 }}>
+                User Management
+              </Title>
+              <Text style={{ color: THEME.textSec }}>
+                Control access and manage registered users
+              </Text>
+            </div>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={fetchUsers}
+              style={{
+                background: "transparent",
+                color: "white",
+                borderRadius: 30,
+                border: "1px solid rgba(255,255,255,0.25)",
+                height: 40
+              }}
+            >
+              Refresh
+            </Button>
+          </div>
+
+          {/* TABLE CONTAINER */}
+          <div
+            style={{
+              background: THEME.glassBg,
+              border: THEME.glassBorder,
+              borderRadius: 24,
+              backdropFilter: "blur(20px)",
+              padding: "8px 0",
+              overflow: "hidden"
+            }}
+          >
+            <Table
+              columns={columns}
+              dataSource={users}
+              rowKey="id"
+              loading={loading}
+              pagination={{ 
+                 pageSize: 8, 
+                 showSizeChanger: false,
+                 position: ["bottomRight"],
+                 style: { marginRight: 24 } // Geser pagination biar gak mepet
+              }}
+              scroll={{ x: 800 }}
+            />
+          </div>
+        </div>
+      </ConfigProvider>
+    </>
   );
 };
 
