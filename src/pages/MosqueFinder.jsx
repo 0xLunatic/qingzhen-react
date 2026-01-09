@@ -112,7 +112,7 @@ const MAX_RADIUS_METERS = 5000;
 const MAX_RESULTS = 30;
 
 // 👇 SESUAIKAN PORT BACKEND
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 const SPEEDS = { walk: 5, bike: 15, moto: 40, car: 30 };
 
@@ -629,20 +629,55 @@ function MosqueFinder({ onNavigate }) {
 
   // Helper untuk konten menu mobile (Drawer)
   const renderMobileMenu = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("finder"); setIsMobileMenuOpen(false); }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("finder");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_finder")}
       </Button>
-      <Button type="text" block style={{ textAlign: 'left' }} className="text-green" onClick={() => { onNavigate("mosque"); setIsMobileMenuOpen(false); }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        className="text-green"
+        onClick={() => {
+          onNavigate("mosque");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_mosque")}
       </Button>
-      <Button type="link" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("prayer"); setIsMobileMenuOpen(false); }}>
+      <Button
+        type="link"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("prayer");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_prayer")}
       </Button>
-      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
         {t("nav_community")}
       </Button>
-      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
         {t("nav_blog")}
       </Button>
 
@@ -650,15 +685,27 @@ function MosqueFinder({ onNavigate }) {
 
       {user ? (
         <div style={{ padding: "0 8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 12,
+            }}
+          >
             <Avatar src={user.avatar_url} icon={<UserOutlined />} />
             <Text strong>{user.name || user.username}</Text>
           </div>
-          <Button block icon={<UserOutlined />} onClick={() => message.info("Profile")} style={{ marginBottom: 8 }}>
-             My Profile
+          <Button
+            block
+            icon={<UserOutlined />}
+            onClick={() => message.info("Profile")}
+            style={{ marginBottom: 8 }}
+          >
+            My Profile
           </Button>
           <Button block icon={<LogoutOutlined />} danger onClick={handleLogout}>
-             Log Out
+            Log Out
           </Button>
         </div>
       ) : (
@@ -669,17 +716,23 @@ function MosqueFinder({ onNavigate }) {
 
       <Button
         block
-        onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }}
+        onClick={() => {
+          toggleLanguage();
+          setIsMobileMenuOpen(false);
+        }}
         icon={<TranslationOutlined />}
       >
         {lang === "en" ? "CN" : "EN"}
       </Button>
-       
-       <Button
+
+      <Button
         block
         shape="round"
         className="btn-gold"
-        onClick={() => { setIsMobileMenuOpen(false); message.info("Download app modal"); }}
+        onClick={() => {
+          setIsMobileMenuOpen(false);
+          message.info("Download app modal");
+        }}
       >
         {t("nav_download")}
       </Button>
@@ -1334,25 +1387,45 @@ function MosqueFinder({ onNavigate }) {
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       {/* NAVBAR */}
-      <header className="navbar-container" style={{ padding: '0 20px' }}>
-        <div className="container navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px' }}>
+      <header className="navbar-container" style={{ padding: "0 20px" }}>
+        <div
+          className="container navbar"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            height: "64px",
+          }}
+        >
           <div
             className="brand-logo"
             onClick={() => onNavigate("landing")}
-            style={{ cursor: "pointer", display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
           >
             <div className="logo-icon-wrapper">
-              <img src={logoImage} alt="Logo Brand" className="logo-icon" style={{ width: '32px' }} />
+              <img
+                src={logoImage}
+                alt="Logo Brand"
+                className="logo-icon"
+                style={{ width: "32px" }}
+              />
             </div>
-            <span style={{ fontWeight: 'bold', fontSize: '18px' }}>QingzhenMu</span>
+            <span style={{ fontWeight: "bold", fontSize: "18px" }}>
+              QingzhenMu
+            </span>
           </div>
 
           {/* Desktop Nav Links (Hidden on Mobile) */}
-          <div className="nav-links desktop-only" style={{ display: isMobile ? 'none' : 'flex', gap: '20px' }}>
-            <Button
-              type="link"
-              onClick={() => onNavigate("finder")}
-            >
+          <div
+            className="nav-links desktop-only"
+            style={{ display: isMobile ? "none" : "flex", gap: "20px" }}
+          >
+            <Button type="link" onClick={() => onNavigate("finder")}>
               {t("nav_finder")}
             </Button>
             <Button
@@ -1376,7 +1449,10 @@ function MosqueFinder({ onNavigate }) {
             </Button>
           </div>
 
-          <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div
+            className="nav-actions"
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          >
             {!isMobile && (
               <Button
                 type="text"
@@ -1388,7 +1464,10 @@ function MosqueFinder({ onNavigate }) {
               </Button>
             )}
 
-            <div className="hide-mobile" style={{ display: isMobile ? 'none' : 'block' }}>
+            <div
+              className="hide-mobile"
+              style={{ display: isMobile ? "none" : "block" }}
+            >
               {user ? (
                 <Dropdown
                   menu={{ items: userMenuItems }}
@@ -1435,7 +1514,7 @@ function MosqueFinder({ onNavigate }) {
                 type="text"
                 className="mobile-menu-toggle"
                 onClick={() => setIsMobileMenuOpen(true)}
-                icon={<MenuOutlined style={{ fontSize: '20px' }} />}
+                icon={<MenuOutlined style={{ fontSize: "20px" }} />}
               />
             )}
           </div>

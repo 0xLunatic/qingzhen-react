@@ -100,7 +100,7 @@ const ACCENT_COLOR = "#C6A87C";
 const MECCA_COORDS = { lat: 21.4225, lng: 39.8262 };
 const MAX_RADIUS_METERS = 5000;
 const MAX_RESULTS = 30;
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 const SPEEDS = { walk: 5, bike: 15, moto: 40, car: 30 };
 
 // --- ASSETS & DATA ---
@@ -141,7 +141,8 @@ const isValidCoordinate = (lat, lng) =>
   lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng);
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  if (!isValidCoordinate(lat1, lon1) || !isValidCoordinate(lat2, lon2)) return 0;
+  if (!isValidCoordinate(lat1, lon1) || !isValidCoordinate(lat2, lon2))
+    return 0;
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -235,7 +236,7 @@ const createCustomIcon = (source, isActive, isVisited) => {
     iconSize: [40, 40],
     iconAnchor: [20, 40],
     popupAnchor: [0, -40],
-    zIndexOffset: isActive ? 1000 : (isVisited ? 300 : 100), // Visited z-index lebih tinggi dari normal
+    zIndexOffset: isActive ? 1000 : isVisited ? 300 : 100, // Visited z-index lebih tinggi dari normal
   });
 };
 
@@ -478,7 +479,7 @@ function HalalFinder({ onNavigate }) {
   const [placeReviews, setPlaceReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
-  
+
   // [MODIFIED] State ini sangat penting untuk re-render marker
   const [userVisits, setUserVisits] = useState({});
 
@@ -564,20 +565,46 @@ function HalalFinder({ onNavigate }) {
 
   // Helper untuk konten menu mobile (Drawer)
   const renderMobileMenu = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("finder"); setIsMobileMenuOpen(false); }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("finder");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_finder")}
       </Button>
-      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => { onNavigate("mosque"); setIsMobileMenuOpen(false); }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("mosque");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_mosque")}
       </Button>
       <Button type="link" onClick={() => onNavigate("prayer")}>
         {t("nav_prayer")}
       </Button>
-      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
         {t("nav_community")}
       </Button>
-      <Button type="text" block style={{ textAlign: 'left' }} onClick={() => setIsMobileMenuOpen(false)}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
         {t("nav_blog")}
       </Button>
 
@@ -585,15 +612,27 @@ function HalalFinder({ onNavigate }) {
 
       {user ? (
         <div style={{ padding: "0 8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 12,
+            }}
+          >
             <Avatar src={user.avatar_url} icon={<UserOutlined />} />
             <Text strong>{user.name || user.username}</Text>
           </div>
-          <Button block icon={<UserOutlined />} onClick={() => message.info("Profile")} style={{ marginBottom: 8 }}>
-             My Profile
+          <Button
+            block
+            icon={<UserOutlined />}
+            onClick={() => message.info("Profile")}
+            style={{ marginBottom: 8 }}
+          >
+            My Profile
           </Button>
           <Button block icon={<LogoutOutlined />} danger onClick={handleLogout}>
-             Log Out
+            Log Out
           </Button>
         </div>
       ) : (
@@ -604,17 +643,23 @@ function HalalFinder({ onNavigate }) {
 
       <Button
         block
-        onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }}
+        onClick={() => {
+          toggleLanguage();
+          setIsMobileMenuOpen(false);
+        }}
         icon={<TranslationOutlined />}
       >
         {lang === "en" ? "CN" : "EN"}
       </Button>
-       
-       <Button
+
+      <Button
         block
         shape="round"
         className="btn-gold"
-        onClick={() => { setIsMobileMenuOpen(false); message.info("Download app modal"); }}
+        onClick={() => {
+          setIsMobileMenuOpen(false);
+          message.info("Download app modal");
+        }}
       >
         {t("nav_download")}
       </Button>
@@ -716,7 +761,7 @@ function HalalFinder({ onNavigate }) {
             rating: p.avgRating ? parseFloat(p.avgRating).toFixed(1) : "New",
             reviews: p.reviewCount ? parseInt(p.reviewCount) : 0,
             img: placeImage,
-            source: "contributor", 
+            source: "contributor",
             tags: tags,
             categoryTag: p.food_type,
             isPromo: p.is_promo,
@@ -764,7 +809,7 @@ function HalalFinder({ onNavigate }) {
               openTime: 9,
               closeTime: 21,
               address: getAddressFromTags(item.tags),
-              source: "osm", 
+              source: "osm",
             };
           });
 
@@ -807,7 +852,7 @@ function HalalFinder({ onNavigate }) {
           if (!Array.isArray(reviewPhotos)) reviewPhotos = [];
 
           return {
-            id: r.id, 
+            id: r.id,
             user: r.user ? r.user.name || r.user.username : "Anonymous",
             avatar: r.user?.avatar_url ? getPhotoUrl(r.user.avatar_url) : null,
             rating: parseFloat(r.rating),
@@ -1057,13 +1102,13 @@ function HalalFinder({ onNavigate }) {
     // 1. Optimistic UI Update
     const oldStatus = userVisits[placeId];
     const newVisits = { ...userVisits };
-    
+
     if (oldStatus === statusType) {
       delete newVisits[placeId];
     } else {
       newVisits[placeId] = statusType;
     }
-    
+
     // [MODIFIED] State ini yang akan memicu re-render Marker icon
     setUserVisits(newVisits);
 
@@ -1122,7 +1167,7 @@ function HalalFinder({ onNavigate }) {
       console.error("API Error:", error);
       message.error("Failed. " + (error.response?.data?.message || ""));
       // Rollback UI jika gagal
-      setUserVisits(userVisits); 
+      setUserVisits(userVisits);
     }
   };
 
@@ -1361,21 +1406,44 @@ function HalalFinder({ onNavigate }) {
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       {/* NAVBAR */}
-      <header className="navbar-container" style={{ padding: '0 20px' }}>
-        <div className="container navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px' }}>
+      <header className="navbar-container" style={{ padding: "0 20px" }}>
+        <div
+          className="container navbar"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            height: "64px",
+          }}
+        >
           <div
             className="brand-logo"
             onClick={() => onNavigate("landing")}
-            style={{ cursor: "pointer", display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
           >
             <div className="logo-icon-wrapper">
-              <img src={logoImage} alt="Logo Brand" className="logo-icon" style={{ width: '32px' }} />
+              <img
+                src={logoImage}
+                alt="Logo Brand"
+                className="logo-icon"
+                style={{ width: "32px" }}
+              />
             </div>
-            <span style={{ fontWeight: 'bold', fontSize: '18px' }}>QingzhenMu</span>
+            <span style={{ fontWeight: "bold", fontSize: "18px" }}>
+              QingzhenMu
+            </span>
           </div>
 
           {/* Desktop Nav Links (Hidden on Mobile) */}
-          <div className="nav-links desktop-only" style={{ display: isMobile ? 'none' : 'flex', gap: '20px' }}>
+          <div
+            className="nav-links desktop-only"
+            style={{ display: isMobile ? "none" : "flex", gap: "20px" }}
+          >
             <Button
               type="link"
               className="active text-green"
@@ -1403,7 +1471,10 @@ function HalalFinder({ onNavigate }) {
             </Button>
           </div>
 
-          <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div
+            className="nav-actions"
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          >
             {!isMobile && (
               <Button
                 type="text"
@@ -1415,7 +1486,10 @@ function HalalFinder({ onNavigate }) {
               </Button>
             )}
 
-            <div className="hide-mobile" style={{ display: isMobile ? 'none' : 'block' }}>
+            <div
+              className="hide-mobile"
+              style={{ display: isMobile ? "none" : "block" }}
+            >
               {user ? (
                 <Dropdown
                   menu={{ items: userMenuItems }}
@@ -1462,7 +1536,7 @@ function HalalFinder({ onNavigate }) {
                 type="text"
                 className="mobile-menu-toggle"
                 onClick={() => setIsMobileMenuOpen(true)}
-                icon={<MenuOutlined style={{ fontSize: '20px' }} />}
+                icon={<MenuOutlined style={{ fontSize: "20px" }} />}
               />
             )}
           </div>
@@ -2428,9 +2502,7 @@ function HalalFinder({ onNavigate }) {
                   },
                   {
                     key: "2",
-                    label: `${t("lbl_reviews")} (${
-                      placeReviews.length || 0
-                    })`,
+                    label: `${t("lbl_reviews")} (${placeReviews.length || 0})`,
                     children: (
                       <div style={{ paddingTop: 12 }}>
                         <div
