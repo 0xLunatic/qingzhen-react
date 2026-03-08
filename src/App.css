@@ -26,7 +26,8 @@ html,
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family:
+    "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
   overscroll-behavior-y: none;
 }
 
@@ -44,14 +45,30 @@ html,
   box-sizing: border-box;
 }
 
-.text-center { text-align: center; }
-.text-green { color: var(--primary-green) !important; }
-.text-gold { color: var(--accent-gold) !important; }
-.text-muted { color: var(--text-muted) !important; }
-.bg-gray { background-color: var(--light-bg); }
-.mb-large { margin-bottom: 48px !important; }
-.mb-medium { margin-bottom: 32px !important; }
-.mb-small { margin-bottom: 16px !important; }
+.text-center {
+  text-align: center;
+}
+.text-green {
+  color: var(--primary-green) !important;
+}
+.text-gold {
+  color: var(--accent-gold) !important;
+}
+.text-muted {
+  color: var(--text-muted) !important;
+}
+.bg-gray {
+  background-color: var(--light-bg);
+}
+.mb-large {
+  margin-bottom: 48px !important;
+}
+.mb-medium {
+  margin-bottom: 32px !important;
+}
+.mb-small {
+  margin-bottom: 16px !important;
+}
 
 /* ========================================= */
 /* BUTTONS                                   */
@@ -150,7 +167,7 @@ html,
 /* ========================================= */
 .hero-section {
   width: 100%;
-  background: url("assets/bg\ \(2\).png"); 
+  background: url("assets/bg\ \(2\).png");
   background-size: cover;
   background-position: center center;
   padding: 100px 0 140px 0;
@@ -360,12 +377,13 @@ html,
   display: flex;
   flex-direction: row;
   height: calc(100vh - 64px);
-  height: calc(100dvh - 64px); 
+  height: calc(100dvh - 64px);
   width: 100%;
   position: relative;
   overflow: hidden;
   background-color: #f2f4f6;
-  font-family: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family:
+    "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 .finder-map-container {
@@ -412,15 +430,15 @@ html,
   backdrop-filter: blur(5px);
   padding: 12px;
   border-radius: 20px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 90px;
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.main-overlay-bar, 
+.main-overlay-bar,
 .overlay-pills {
   pointer-events: auto;
 }
@@ -476,9 +494,9 @@ html,
 /* --- OVERLAY PILLS DEFAULT (DESKTOP) --- */
 .overlay-pills {
   display: flex;
-  flex-direction: row; 
+  flex-direction: row;
   gap: 8px;
-  flex-wrap: wrap; 
+  flex-wrap: wrap;
 }
 
 .overlay-pill {
@@ -762,7 +780,7 @@ html,
 
 /* --- PERBAIKAN: Jarak Tombol Transportasi di Detail Sheet --- */
 .transport-section {
-    margin-bottom: 32px !important; /* Paksa jarak agar tidak ditabrak tombol Navigasi */
+  margin-bottom: 32px !important; /* Paksa jarak agar tidak ditabrak tombol Navigasi */
 }
 
 /* --- TOMBOL MARK VISITED (DETAIL SHEET) --- */
@@ -837,7 +855,7 @@ html,
 /* --- FACILITIES GRID STYLE --- */
 .facilities-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); 
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-top: 8px;
   margin-bottom: 24px;
@@ -887,17 +905,38 @@ html,
 /* Menggunakan max-width 1024px agar TABLET (iPad/Fold) juga masuk ke mode mobile/drawer */
 @media (max-width: 1024px) {
   /* 1. Global Container Adjustments */
-  .container { padding: 0 16px; }
-  .navbar-container { padding: 0 12px; }
+  .container {
+    padding: 0 16px;
+  }
+  .navbar-container {
+    padding: 0 12px;
+  }
 
   /* 2. Logo Configuration */
-  .brand-logo { display: flex; align-items: center; z-index: 1001; }
-  .brand-logo span { display: block; font-size: 16px; }
-  .logo-icon { width: 28px; height: auto; display: block; }
-  @media (max-width: 380px) { .brand-logo span { display: none; } }
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    z-index: 1001;
+  }
+  .brand-logo span {
+    display: block;
+    font-size: 16px;
+  }
+  .logo-icon {
+    width: 28px;
+    height: auto;
+    display: block;
+  }
+  @media (max-width: 380px) {
+    .brand-logo span {
+      display: none;
+    }
+  }
 
   /* 3. MENU DROPDOWN */
-  .nav-links { display: none; } /* Default Hidden */
+  .nav-links {
+    display: none;
+  } /* Default Hidden */
 
   .nav-links.mobile-open {
     display: flex !important;
@@ -910,12 +949,12 @@ html,
     width: 100%;
     background: white;
     padding: 24px 16px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     z-index: 2000;
     border-top: 1px solid #eee;
     animation: slideDown 0.3s ease;
   }
-  
+
   /* Tombol Menu Dropdown */
   .nav-links.mobile-open .ant-btn {
     width: 100% !important;
@@ -928,7 +967,7 @@ html,
     padding: 0 !important;
     gap: 8px !important;
   }
-  
+
   .nav-links.mobile-open .ant-btn span {
     display: inline-block !important;
     text-align: center !important;
@@ -943,11 +982,16 @@ html,
   /* 4. Navbar Controls */
   .mobile-menu-toggle {
     display: flex !important;
-    align-items: center; justify-content: center;
-    margin-left: 8px; padding: 4px; font-size: 20px;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    padding: 4px;
+    font-size: 20px;
   }
-  
-  .nav-actions button.hide-mobile { display: none !important; }
+
+  .nav-actions button.hide-mobile {
+    display: none !important;
+  }
 
   .btn-gold {
     padding: 0 16px !important;
@@ -955,23 +999,36 @@ html,
     height: 32px !important;
     line-height: 32px !important;
   }
-  .nav-actions { gap: 6px; }
+  .nav-actions {
+    gap: 6px;
+  }
 
   /* 5. Layout Mobile (Map Full, Sidebar Hidden/Drawer) */
-  .finder-layout { flexDirection: column; height: calc(100dvh - 64px); width: 100vw; }
-  .finder-map-container { width: 100% !important; height: 100% !important; flex: 1; order: 1; }
-  .finder-list-container { display: none; }
+  .finder-layout {
+    flexdirection: column;
+    height: calc(100dvh - 64px);
+    width: 100vw;
+  }
+  .finder-map-container {
+    width: 100% !important;
+    height: 100% !important;
+    flex: 1;
+    order: 1;
+  }
+  .finder-list-container {
+    display: none;
+  }
 
   /* 6. PENTING: Fix Search Bar & Pills Layout */
-  .map-overlay-top-left { 
-    top: 16px; 
-    left: 16px; 
-    right: auto; 
-    
+  .map-overlay-top-left {
+    top: 16px;
+    left: 16px;
+    right: auto;
+
     /* Lebar penuh agar search bar maksimal */
     width: calc(100vw - 32px) !important; /* FIXED */
     max-width: none !important;
-    
+
     padding-right: 0;
     max-height: 80vh;
     overflow-y: visible; /* Allow content to flow */
@@ -981,62 +1038,79 @@ html,
   .map-overlay-top-left * {
     pointer-events: auto;
   }
-  
-  .main-overlay-bar { 
-    width: 100%; 
+
+  .main-overlay-bar {
+    width: 100%;
     max-width: 100%;
-    min-width: 0 !important; 
-    white-space: normal !important; 
+    min-width: 0 !important;
+    white-space: normal !important;
     display: flex;
   }
-  
+
   /* Text overflow handling untuk tombol search yang panjang */
-  .overlay-search-btn { 
-    flex: 1; 
+  .overlay-search-btn {
+    flex: 1;
     width: 100%;
-    min-width: 0; 
+    min-width: 0;
   }
-  
-  .overlay-search-btn span { 
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
+
+  .overlay-search-btn span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     display: block;
   }
-  
-  .overlay-divider, .overlay-text-btn { display: none; }
-  
+
+  .overlay-divider,
+  .overlay-text-btn {
+    display: none;
+  }
+
   /* 7. UPDATE: Widget Kiblat Sejajar dengan Pills (Baris Kedua Kanan) */
   .qibla-widget-container {
     top: 72px !important; /* Turunkan agar pas di bawah search bar */
     right: 16px !important;
-    z-index: 1001; 
+    z-index: 1001;
     transform: none !important;
   }
 
   /* 8. Pills di Baris Kedua (Kiri - Vertikal) */
-  .overlay-pills { 
-    flex-direction: column !important; 
+  .overlay-pills {
+    flex-direction: column !important;
     align-items: flex-start;
     flex-wrap: nowrap;
-    
+
     /* Batasi lebar agar tidak menabrak widget kiblat di kanannya */
-    max-width: calc(100% - 115px); 
-    
+    max-width: calc(100% - 115px);
+
     margin-top: 8px;
-    overflow: visible; 
+    overflow: visible;
     padding-bottom: 4px;
   }
 
   /* Controls Bawah */
-  .finder-map-container .leaflet-control-container .leaflet-bottom { bottom: 120px !important; }
-  .place-detail-drawer .ant-drawer-content-wrapper { width: 100% !important; height: 85vh !important; bottom: 0 !important; top: auto !important; border-radius: 24px 24px 0 0; }
+  .finder-map-container .leaflet-control-container .leaflet-bottom {
+    bottom: 120px !important;
+  }
+  .place-detail-drawer .ant-drawer-content-wrapper {
+    width: 100% !important;
+    height: 85vh !important;
+    bottom: 0 !important;
+    top: auto !important;
+    border-radius: 24px 24px 0 0;
+  }
 }
 
 /* Animasi Slide Down */
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Extra Small Devices (Phone < 480px) */
@@ -1080,7 +1154,11 @@ html,
 .auth-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(27, 77, 62, 0.85), rgba(27, 77, 62, 0.4));
+  background: linear-gradient(
+    135deg,
+    rgba(27, 77, 62, 0.85),
+    rgba(27, 77, 62, 0.4)
+  );
   padding: 60px;
   display: flex;
   flex-direction: column;
@@ -1129,7 +1207,7 @@ html,
 }
 .leaflet-bottom,
 .leaflet-top {
-  z-index: 800 !important; 
+  z-index: 800 !important;
 }
 .leaflet-routing-container {
   display: none !important;
@@ -1141,7 +1219,6 @@ html,
 
 /* FIX SEARCH BAR vs QIBLA */
 @media (max-width: 1024px) {
-
   .map-overlay-top-left {
     max-width: calc(100vw - 120px) !important;
   }
