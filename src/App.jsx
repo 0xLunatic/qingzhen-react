@@ -21,6 +21,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageUsers from "./pages/admin/ManageUsers";
 import ManagePlaces from "./pages/admin/ManagePlaces";
+import ManageReviews from "./pages/admin/ManageReviews";
 import AdminLogin from "./pages/admin/AdminLogin"; // 👈 Import Halaman Login Admin Baru
 
 import "./App.css";
@@ -109,6 +110,7 @@ const AppRoutes = () => {
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<ManageUsers />} />
         <Route path="places" element={<ManagePlaces />} />
+        <Route path="reviews" element={<ManageReviews />} />
       </Route>
 
       {/* FALLBACK ROUTE */}
