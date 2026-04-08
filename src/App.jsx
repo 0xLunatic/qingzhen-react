@@ -15,6 +15,7 @@ import MosqueFinder from "./pages/MosqueFinder.jsx";
 import AuthenticationPage from "./pages/AuthenticationPage.jsx";
 import PrayerTimesPage from "./pages/PrayerTimesPage.jsx";
 import TravelPlanPage from "./pages/TravelPlan.jsx";
+import CommunityPage from "./pages/CommunityPage.jsx";
 import BlogPage from "./pages/BlogPage.jsx";
 
 // Import Pages Admin
@@ -22,6 +23,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageUsers from "./pages/admin/ManageUsers";
 import ManagePlaces from "./pages/admin/ManagePlaces";
+import ManageReviews from "./pages/admin/ManageReviews";
 import AdminLogin from "./pages/admin/AdminLogin"; // 👈 Import Halaman Login Admin Baru
 
 import "./App.css";
@@ -68,8 +70,11 @@ const AppRoutes = () => {
       case "travel-plan":
         navigate("/travel-plan");
         break;
-      case "blog":
-        navigate("/blog");
+      case "community-page":
+        navigate("/community-page");
+        break;
+      case "blog-page":
+        navigate("/blog-page");
         break;
       default:
         navigate("/");
@@ -101,7 +106,11 @@ const AppRoutes = () => {
         element={<TravelPlanPage onNavigate={handleNavigation} />}
       />
       <Route
-        path="/blog"
+        path="/community-page"
+        element={<CommunityPage onNavigate={handleNavigation} />}
+      />
+      <Route
+        path="/blog-page"
         element={<BlogPage onNavigate={handleNavigation} />}
       />
       {/* ADMIN ROUTES (PROTECTED) */}
@@ -117,6 +126,7 @@ const AppRoutes = () => {
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<ManageUsers />} />
         <Route path="places" element={<ManagePlaces />} />
+        <Route path="reviews" element={<ManageReviews />} />
       </Route>
 
       {/* FALLBACK ROUTE */}

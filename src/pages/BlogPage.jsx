@@ -16,6 +16,12 @@ import {
   Modal,
   Drawer,
   message,
+  Form,
+  Upload,
+  Select,
+  Empty,
+  Badge,
+  Tooltip,
 } from "antd";
 import {
   SearchOutlined,
@@ -36,6 +42,19 @@ import {
   AppleFilled,
   AndroidFilled,
   ShareAltOutlined,
+  EditOutlined,
+  CameraOutlined,
+  EyeOutlined,
+  HeartOutlined,
+  HeartFilled,
+  FireOutlined,
+  ClockCircleOutlined,
+  TagOutlined,
+  FilterOutlined,
+  BookOutlined,
+  SafetyCertificateFilled,
+  CheckCircleFilled,
+  CompassFilled,
 } from "@ant-design/icons";
 import "../App.css";
 import logoImage from "../assets/logo.png";
@@ -45,106 +64,457 @@ import { en } from "../lang/en";
 import { cn } from "../lang/cn";
 
 const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
+const { Option } = Select;
 const { useBreakpoint } = Grid;
 
-// --- MOCK DATA CONTENT ARTIKEL ---
+// --- MOCK DATA CATEGORIES ---
+const CATEGORIES = [
+  { key: "all", label: "All News", icon: <GlobalOutlined />, color: "#2E7D32" },
+  {
+    key: "certification",
+    label: "Halal Certification",
+    icon: <SafetyCertificateFilled />,
+    color: "#1890ff",
+  },
+  {
+    key: "food",
+    label: "Food & Restaurants",
+    icon: <FireOutlined />,
+    color: "#fa8c16",
+  },
+  {
+    key: "travel",
+    label: "Muslim Travel",
+    icon: <CompassFilled />,
+    color: "#722ed1",
+  },
+  {
+    key: "policy",
+    label: "Policy & Regulation",
+    icon: <BookOutlined />,
+    color: "#eb2f96",
+  },
+  {
+    key: "community",
+    label: "Community",
+    icon: <UserOutlined />,
+    color: "#13c2c2",
+  },
+];
+
 const mockContent = [
   "Bagi wisatawan Muslim, menemukan makanan halal di luar negeri terkadang terasa seperti mencari jarum di tumpukan jerami. Namun, dengan persiapan yang matang dan penggunaan teknologi modern, pengalaman kuliner Anda bisa menjadi sangat menyenangkan dan bebas rasa khawatir.",
   "Pertama-tama, kenali sertifikasi halal lokal. Setiap negara biasanya memiliki lembaga resmi yang mengeluarkan logo halal. Pastikan Anda menyimpan gambar logo tersebut di ponsel Anda sebagai referensi cepat saat melihat menu atau papan nama restoran di jalan.",
   "Selain itu, jangan ragu untuk bertanya. Meskipun ada kendala bahasa, banyak pemilik restoran yang mengerti kata 'Halal' atau 'No Pork, No Lard'. Aplikasi penerjemah atau kamus saku yang berisi frasa-frasa penting tentang pantangan makanan akan sangat membantu.",
-  "Terakhir, manfaatkan komunitas. Aplikasi seperti QingzhenMu mengandalkan ulasan dari sesama pengguna Muslim yang telah memverifikasi secara langsung status kehalalan tempat tersebut. Membaca ulasan dan melihat foto dari komunitas seringkali memberikan informasi yang lebih akurat daripada sekadar klaim di internet."
+  "Terakhir, manfaatkan komunitas. Aplikasi seperti QingzhenMu mengandalkan ulasan dari sesama pengguna Muslim yang telah memverifikasi secara langsung status kehalalan tempat tersebut. Membaca ulasan dan melihat foto dari komunitas seringkali memberikan informasi yang lebih akurat daripada sekadar klaim di internet.",
 ];
 
-// --- MOCK DATA BERITA/BLOG ---
-const FEATURED_POST = {
-  id: 1,
-  title: "Panduan Lengkap Mencari Makanan Halal Otentik di Tiongkok",
-  excerpt: "Menemukan makanan halal di luar negeri bisa menjadi tantangan, tetapi dengan beberapa tips dan trik ini, Anda bisa menikmati kuliner lokal tanpa rasa khawatir. Pelajari cara mengidentifikasi logo halal dan restoran ramah Muslim.",
-  category: "Panduan Wisata",
-  author: "Ahmad Rizqi",
-  date: "8 April 2026",
-  readTime: "5 min read",
-  image: "https://images.unsplash.com/photo-1525059696034-4967a8e1dca2?auto=format&fit=crop&w=1200&q=80",
-  content: mockContent,
-};
-
-const BLOG_POSTS = [
+// --- MOCK BLOG DATA ---
+const MOCK_POSTS = [
+  {
+    id: 1,
+    title: "China Issues New National Halal Food Standards for 2025",
+    excerpt:
+      "The State Administration for Market Regulation has released comprehensive guidelines covering halal slaughter, processing facilities, and certification requirements across all provinces.",
+    content: mockContent,
+    category: "certification",
+    author: "Ahmad Wei",
+    authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=AhmadWei",
+    date: "2025-03-15",
+    readTime: "5 min read",
+    views: 2841,
+    likes: 142,
+    image:
+      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
+    tags: ["certification", "regulation", "2025"],
+    featured: true,
+  },
   {
     id: 2,
-    title: "5 Masjid Bersejarah yang Wajib Dikunjungi Tahun Ini",
-    excerpt: "Jelajahi keindahan arsitektur dan nilai sejarah dari masjid-masjid tertua yang ada di Asia.",
-    category: "Komunitas",
-    author: "Siti Aminah",
-    date: "5 April 2026",
-    readTime: "4 min read",
-    image: "https://img.freepik.com/free-photo/mosque-building_1409-5435.jpg?w=600",
+    title: "Xi'an's Muslim Quarter: A Complete Guide for Halal Travelers",
+    excerpt:
+      "Discover the best halal restaurants, traditional markets, and cultural experiences in China's most iconic Islamic neighborhood. From lamb skewers to hand-pulled noodles.",
     content: mockContent,
+    category: "travel",
+    author: "Fatimah Chen",
+    authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=FatimahChen",
+    date: "2025-03-10",
+    readTime: "8 min read",
+    views: 5302,
+    likes: 267,
+    image:
+      "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=800&q=80",
+    tags: ["travel", "xian", "guide"],
+    featured: true,
   },
   {
     id: 3,
-    title: "Review: Restoran Daging Bakar Halal Baru di Pusat Kota",
-    excerpt: "Kami mencoba menu andalan di restoran yang sedang viral ini. Apakah rasanya sepadan dengan antreannya?",
-    category: "Food Review",
-    author: "Chef Budi",
-    date: "2 April 2026",
-    readTime: "6 min read",
-    image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80",
+    title: "Top 10 Halal-Certified Chain Restaurants Expanding in China",
+    excerpt:
+      "Major F&B brands are racing to obtain halal certification as Muslim consumer spending reaches record highs. Here are the chains leading the charge.",
     content: mockContent,
+    category: "food",
+    author: "Muhammad Liu",
+    authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=MuhammadLiu",
+    date: "2025-03-05",
+    readTime: "6 min read",
+    views: 3788,
+    likes: 201,
+    image:
+      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80",
+    tags: ["food", "restaurant", "certification"],
+    featured: false,
   },
   {
     id: 4,
-    title: "Tips Menjaga Pola Makan Sehat Selama Puasa",
-    excerpt: "Ahli gizi membagikan rahasia tetap bugar dan terhidrasi dengan baik saat menjalankan ibadah puasa.",
-    category: "Gaya Hidup",
-    author: "Dr. Laila",
-    date: "28 Maret 2026",
-    readTime: "3 min read",
-    image: "https://images.unsplash.com/photo-1490645943967-cb2eb5b80061?auto=format&fit=crop&w=600&q=80",
+    title: "Xinjiang Halal Industry to Reach ¥50 Billion by 2026",
+    excerpt:
+      "Regional government reports indicate rapid growth in halal food production, hospitality, and export sectors as international demand surges.",
     content: mockContent,
+    category: "policy",
+    author: "Yusuf Zhang",
+    authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=YusufZhang",
+    date: "2025-02-28",
+    readTime: "4 min read",
+    views: 1923,
+    likes: 89,
+    image:
+      "https://images.unsplash.com/photo-1542223616-9de9adb5e3e8?w=800&q=80",
+    tags: ["xinjiang", "economy", "growth"],
+    featured: false,
   },
   {
     id: 5,
-    title: "Update Aplikasi: Fitur Arah Kiblat Kini Lebih Akurat",
-    excerpt: "QingzhenMu meluncurkan pembaruan terbaru yang meningkatkan presisi kompas kiblat di daerah terpencil.",
-    category: "Berita App",
-    author: "Tim Developer",
-    date: "25 Maret 2026",
-    readTime: "2 min read",
-    image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80",
+    title: "How Chinese Muslims Are Reviving Traditional Halal Recipes",
+    excerpt:
+      "A new generation of Hui chefs is blending ancient Islamic culinary traditions with modern techniques, creating a renaissance of authentic Chinese halal cuisine.",
     content: mockContent,
+    category: "food",
+    author: "Khadijah Zhao",
+    authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=KhadijahZhao",
+    date: "2025-02-20",
+    readTime: "7 min read",
+    views: 4156,
+    likes: 315,
+    image:
+      "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&q=80",
+    tags: ["culture", "food", "hui"],
+    featured: false,
   },
   {
     id: 6,
-    title: "Mengenal Label Sertifikasi Halal dari Berbagai Negara",
-    excerpt: "Pahami perbedaan logo sertifikasi halal ketika Anda bepergian ke luar negeri agar tidak salah pilih.",
-    category: "Panduan Wisata",
-    author: "Ahmad Rizqi",
-    date: "20 Maret 2026",
-    readTime: "5 min read",
-    image: "https://images.unsplash.com/photo-1580436541340-9753bbfe092d?auto=format&fit=crop&w=600&q=80",
+    title:
+      "Prayer Room Facilities Become Mandatory in New Shanghai Airports Terminal",
+    excerpt:
+      "Shanghai Pudong International Airport's new Terminal 4 will feature dedicated prayer rooms, halal dining zones, and wudu washing facilities as part of inclusive design.",
     content: mockContent,
+    category: "community",
+    author: "Ibrahim Sun",
+    authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=IbrahimSun",
+    date: "2025-02-14",
+    readTime: "3 min read",
+    views: 2674,
+    likes: 178,
+    image:
+      "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80",
+    tags: ["community", "travel", "infrastructure"],
+    featured: false,
   },
 ];
 
-const CATEGORIES = ["Semua", "Berita App", "Food Review", "Panduan Wisata", "Gaya Hidup", "Komunitas"];
+// --- BlogCard Component ---
+const BlogCard = ({ post, onRead, onLike, likedPosts }) => {
+  const isLiked = likedPosts.includes(post.id);
+  const catObj =
+    CATEGORIES.find((c) => c.key === post.category) || CATEGORIES[0];
 
+  return (
+    <Card
+      hoverable
+      bordered={false}
+      bodyStyle={{ padding: 0 }}
+      style={{
+        borderRadius: 16,
+        overflow: "hidden",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-4px)";
+        e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.14)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.08)";
+      }}
+    >
+      <div style={{ position: "relative", overflow: "hidden", height: 200 }}>
+        <img
+          src={post.image}
+          alt={post.title}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            transition: "transform 0.3s ease",
+          }}
+        />
+        <div style={{ position: "absolute", top: 12, left: 12 }}>
+          <Tag
+            icon={catObj.icon}
+            style={{
+              background: catObj.color,
+              color: "white",
+              border: "none",
+              borderRadius: 20,
+              padding: "2px 12px",
+              fontWeight: 600,
+              fontSize: 12,
+            }}
+          >
+            {catObj.label}
+          </Tag>
+        </div>
+      </div>
+
+      <div style={{ padding: "20px 20px 16px", flex: 1 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 10,
+            flexWrap: "wrap",
+          }}
+        >
+          <Avatar src={post.authorAvatar} size={24} />
+          <Text style={{ fontSize: 13, color: "#666" }}>{post.author}</Text>
+          <Text style={{ fontSize: 12, color: "#bbb" }}>·</Text>
+          <Text style={{ fontSize: 12, color: "#bbb" }}>
+            <CalendarOutlined style={{ marginRight: 4 }} />
+            {post.date}
+          </Text>
+        </div>
+
+        <Title
+          level={5}
+          style={{ margin: "0 0 8px", lineHeight: 1.4, color: "#1a1a1a" }}
+          ellipsis={{ rows: 2 }}
+        >
+          {post.title}
+        </Title>
+        <Paragraph
+          type="secondary"
+          style={{ fontSize: 13, margin: 0 }}
+          ellipsis={{ rows: 3 }}
+        >
+          {post.excerpt}
+        </Paragraph>
+      </div>
+
+      <div
+        style={{
+          padding: "12px 20px",
+          borderTop: "1px solid #f0f0f0",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Space size={16}>
+          <Tooltip title={isLiked ? "Unlike" : "Like"}>
+            <Button
+              type="text"
+              size="small"
+              icon={
+                isLiked ? (
+                  <HeartFilled style={{ color: "#ff4d4f" }} />
+                ) : (
+                  <HeartOutlined />
+                )
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                onLike(post.id);
+              }}
+              style={{ color: isLiked ? "#ff4d4f" : "#999", padding: 0 }}
+            >
+              {post.likes + (isLiked ? 1 : 0)}
+            </Button>
+          </Tooltip>
+          <Text style={{ fontSize: 12, color: "#999" }}>
+            <EyeOutlined style={{ marginRight: 4 }} />
+            {post.views.toLocaleString()}
+          </Text>
+        </Space>
+        <Button
+          type="link"
+          size="small"
+          onClick={() => onRead(post)}
+          style={{
+            color: "var(--primary-green, #2E7D32)",
+            fontWeight: 600,
+            padding: 0,
+          }}
+        >
+          Read More <ArrowRightOutlined />
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
+// --- FeaturedCard Component ---
+const FeaturedCard = ({ post, onRead, onLike, likedPosts }) => {
+  const isLiked = likedPosts.includes(post.id);
+  const catObj =
+    CATEGORIES.find((c) => c.key === post.category) || CATEGORIES[0];
+
+  return (
+    <Card
+      hoverable
+      bordered={false}
+      bodyStyle={{ padding: 0 }}
+      style={{
+        borderRadius: 20,
+        overflow: "hidden",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+        height: "100%",
+        cursor: "pointer",
+      }}
+      onClick={() => onRead(post)}
+    >
+      <div style={{ position: "relative", height: "100%" }}>
+        <img
+          src={post.image}
+          alt={post.title}
+          style={{
+            width: "100%",
+            height: 300,
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 16,
+            left: 16,
+            display: "flex",
+            gap: 8,
+          }}
+        >
+          <Tag
+            icon={catObj.icon}
+            style={{
+              background: catObj.color,
+              color: "white",
+              border: "none",
+              borderRadius: 20,
+              padding: "3px 12px",
+              fontWeight: 600,
+            }}
+          >
+            {catObj.label}
+          </Tag>
+          <Tag
+            icon={<FireOutlined />}
+            style={{
+              background: "#ff4d4f",
+              color: "white",
+              border: "none",
+              borderRadius: 20,
+              padding: "3px 12px",
+              fontWeight: 600,
+            }}
+          >
+            Featured
+          </Tag>
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: "24px",
+          }}
+        >
+          <Title
+            level={3}
+            style={{
+              color: "white",
+              margin: "0 0 8px",
+              textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+            }}
+          >
+            {post.title}
+          </Title>
+          <Paragraph
+            style={{
+              color: "rgba(255,255,255,0.85)",
+              margin: "0 0 12px",
+              fontSize: 14,
+            }}
+            ellipsis={{ rows: 2 }}
+          >
+            {post.excerpt}
+          </Paragraph>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Avatar src={post.authorAvatar} size={28} />
+            <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 13 }}>
+              {post.author}
+            </Text>
+            <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
+              · {post.date}
+            </Text>
+            <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
+              <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 13 }}>
+                <EyeOutlined style={{ marginRight: 4 }} />
+                {post.views.toLocaleString()}
+              </Text>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+// ============================================================
+// MAIN BlogPage COMPONENT
+// ============================================================
 function BlogPage({ onNavigate }) {
-  // --- STATE MANAGEMENT ---
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
   const [lang, setLang] = useState("en");
-  const [activeCategory, setActiveCategory] = useState("Semua");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [searchText, setSearchText] = useState("");
+  const [sortBy, setSortBy] = useState("latest");
+  const [likedPosts, setLikedPosts] = useState([]);
+  const [posts, setPosts] = useState(MOCK_POSTS);
 
-  // 👇 State untuk Artikel yang dipilih (jika null, tampilkan daftar berita)
+  // Modals & Navigation States
   const [selectedPost, setSelectedPost] = useState(null);
-
-  // Modals & Drawers
+  const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // User State
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -171,7 +541,7 @@ function BlogPage({ onNavigate }) {
   };
 
   const TRANSLATIONS = { en, cn };
-  const t = (key) => TRANSLATIONS[lang][key];
+  const t = (key) => TRANSLATIONS[lang]?.[key] || key;
 
   const toggleLanguage = () => {
     setLang((prev) => (prev === "en" ? "cn" : "en"));
@@ -258,12 +628,77 @@ function BlogPage({ onNavigate }) {
     </div>
   );
 
-  // Filter Logic untuk Blog List
-  const filteredPosts = BLOG_POSTS.filter((post) => {
-    const matchCategory = activeCategory === "Semua" || post.category === activeCategory;
-    const matchSearch = post.title.toLowerCase().includes(searchText.toLowerCase());
-    return matchCategory && matchSearch;
-  });
+  // --- Computed: filtered & sorted posts ---
+  const filteredPosts = posts
+    .filter((p) => {
+      const matchCat =
+        activeCategory === "all" || p.category === activeCategory;
+      const matchSearch =
+        !searchText ||
+        p.title.toLowerCase().includes(searchText.toLowerCase()) ||
+        p.excerpt.toLowerCase().includes(searchText.toLowerCase()) ||
+        p.tags.some((tag) => tag.toLowerCase().includes(searchText.toLowerCase()));
+      return matchCat && matchSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "latest") return new Date(b.date) - new Date(a.date);
+      if (sortBy === "popular") return b.views - a.views;
+      if (sortBy === "liked") return b.likes - a.likes;
+      return 0;
+    });
+
+  const featuredPosts = filteredPosts.filter((p) => p.featured);
+  const regularPosts = filteredPosts.filter((p) => !p.featured);
+
+  const handleLike = (id) => {
+    setLikedPosts((prev) =>
+      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]
+    );
+  };
+
+  const handleRead = (post) => {
+    setSelectedPost(post);
+    // increment view count
+    setPosts((prev) =>
+      prev.map((p) => (p.id === post.id ? { ...p, views: p.views + 1 } : p))
+    );
+  };
+
+  const handleWriteOpen = () => {
+    if (!user) {
+      message.warning("Please sign in to write an article.");
+      if (onNavigate) onNavigate("auth");
+      return;
+    }
+    setIsWriteModalOpen(true);
+  };
+
+  const handleSubmitArticle = async (values) => {
+    setSubmitting(true);
+    setTimeout(() => {
+      const newPost = {
+        id: Date.now(),
+        title: values.title,
+        excerpt: values.excerpt,
+        content: values.content,
+        category: values.category,
+        author: user?.name || user?.username || "Anonymous",
+        authorAvatar: `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || "user"}`,
+        date: new Date().toISOString().split("T")[0],
+        readTime: `${Math.max(1, Math.ceil(values.content?.split(" ").length / 200))} min read`,
+        views: 0,
+        likes: 0,
+        image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80",
+        tags: values.tags ? values.tags.split(",").map((t) => t.trim()) : [],
+        featured: false,
+      };
+      setPosts((prev) => [newPost, ...prev]);
+      message.success("Article submitted successfully! It will be reviewed before publishing.");
+      setIsWriteModalOpen(false);
+      form.resetFields();
+      setSubmitting(false);
+    }, 1200);
+  };
 
   return (
     <div className="blog-page landing-page" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
@@ -327,10 +762,10 @@ function BlogPage({ onNavigate }) {
         {renderMobileMenu()}
       </Drawer>
 
-      {/* 👇 RENDER DETAIL ARTIKEL JIKA ADA YANG DIPILIH */}
+      {/* RENDER DETAIL ARTIKEL JIKA ADA YANG DIPILIH */}
       {selectedPost ? (
         <section style={{ padding: isMobile ? "40px 0" : "60px 0", background: "#fff", minHeight: "80vh" }}>
-          <div className="container" style={{ maxWidth: "800px", margin: "0 auto" }}>
+          <div className="container" style={{ maxWidth: "800px", margin: "0 auto", padding: "0 20px" }}>
             {/* Tombol Back */}
             <Button
               type="text"
@@ -343,20 +778,25 @@ function BlogPage({ onNavigate }) {
 
             {/* Article Header */}
             <div style={{ marginBottom: 32 }}>
-              <Tag color="gold" style={{ margin: 0, padding: "6px 16px", borderRadius: 20, fontWeight: "700", border: "none", marginBottom: 16, fontSize: "14px" }}>
-                {selectedPost.category}
-              </Tag>
+              {(() => {
+                const catObj = CATEGORIES.find(c => c.key === selectedPost.category) || CATEGORIES[0];
+                return (
+                  <Tag style={{ background: catObj.color, color: "white", padding: "6px 16px", borderRadius: 20, fontWeight: "700", border: "none", marginBottom: 16, fontSize: "14px" }}>
+                    {catObj.icon} {catObj.label}
+                  </Tag>
+                );
+              })()}
               <Title level={1} style={{ marginTop: 0, marginBottom: 24, fontWeight: 800, fontSize: isMobile ? "2.2rem" : "3.2rem", lineHeight: 1.2, color: "var(--text-dark)" }}>
                 {selectedPost.title}
               </Title>
               
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 24, borderBottom: "1px solid #f1f5f9" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <Avatar size={48} src={`https://api.dicebear.com/7.x/notionists/svg?seed=${selectedPost.author}`} style={{ backgroundColor: "#f1f5f9" }} />
+                  <Avatar size={48} src={selectedPost.authorAvatar} style={{ backgroundColor: "#f1f5f9" }} />
                   <div>
                     <Text strong style={{ display: "block", fontSize: "16px", color: "#334155" }}>{selectedPost.author}</Text>
                     <Text type="secondary" style={{ fontSize: "14px" }}>
-                      {selectedPost.date} • {selectedPost.readTime || "5 min read"}
+                      {selectedPost.date} • {selectedPost.readTime} • <EyeOutlined style={{marginLeft: 4}}/> {selectedPost.views.toLocaleString()} views
                     </Text>
                   </div>
                 </div>
@@ -376,258 +816,251 @@ function BlogPage({ onNavigate }) {
                 {selectedPost.excerpt}
               </Paragraph>
               
-              {selectedPost.content.map((para, idx) => (
-                <Paragraph key={idx} style={{ fontSize: "18px", lineHeight: 1.8, color: "#334155", marginBottom: 24 }}>
-                  {para}
+              {Array.isArray(selectedPost.content) ? (
+                selectedPost.content.map((para, idx) => (
+                  <Paragraph key={idx} style={{ fontSize: "18px", lineHeight: 1.8, color: "#334155", marginBottom: 24 }}>
+                    {para}
+                  </Paragraph>
+                ))
+              ) : (
+                <Paragraph style={{ fontSize: "18px", lineHeight: 1.8, color: "#334155", marginBottom: 24, whiteSpace: "pre-wrap" }}>
+                  {selectedPost.content}
                 </Paragraph>
-              ))}
+              )}
             </div>
           </div>
         </section>
 
       ) : (
-        /* 👇 RENDER DAFTAR BERITA (JIKA TIDAK ADA YANG DIPILIH) */
+        /* RENDER DAFTAR BERITA (JIKA TIDAK ADA YANG DIPILIH) */
         <>
-          {/* MODERN HERO SECTION */}
-          <section 
-            className="blog-hero" 
-            style={{ 
-              background: "linear-gradient(135deg, var(--primary-green) 0%, #115c38 100%)", 
-              padding: isMobile ? "50px 20px" : "80px 20px", 
-              color: "white", 
+          {/* HERO BANNER */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 40%, #388E3C 70%, #43A047 100%)",
+              padding: isMobile ? "50px 20px" : "80px 20px",
               textAlign: "center",
               position: "relative",
-              overflow: "hidden"
+              overflow: "hidden",
             }}
           >
-            {/* Decorative Background Elements */}
-            <div style={{ position: "absolute", top: "-50px", left: "-50px", width: "200px", height: "200px", background: "rgba(255,255,255,0.05)", borderRadius: "50%", filter: "blur(40px)" }} />
-            <div style={{ position: "absolute", bottom: "-80px", right: "-20px", width: "300px", height: "300px", background: "rgba(197, 157, 36, 0.1)", borderRadius: "50%", filter: "blur(60px)" }} />
-
-            <div className="container" style={{ position: "relative", zIndex: 2 }}>
-              <Tag color="rgba(255,255,255,0.2)" style={{ border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "4px 16px", marginBottom: 24, fontSize: 13, color: "white" }}>
-                {lang === "en" ? "Explore • Learn • Connect" : "探索 • 学习 • 连接"}
+            {/* Decorative pattern */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage: "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%)",
+              }}
+            />
+            <div style={{ position: "relative", maxWidth: 720, margin: "0 auto", zIndex: 2 }}>
+              <Tag
+                icon={<SafetyCertificateFilled />}
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  color: "white",
+                  border: "1px solid rgba(255,255,255,0.3)",
+                  borderRadius: 20,
+                  padding: "4px 16px",
+                  marginBottom: 16,
+                  backdropFilter: "blur(4px)",
+                }}
+              >
+                {lang === "en" ? "Halal News in China" : "中国清真新闻"}
               </Tag>
-              
-              <Title style={{ color: "white", fontSize: isMobile ? "2.2rem" : "3.2rem", marginBottom: 20, fontWeight: 800, letterSpacing: "-0.5px" }}>
+              <Title
+                style={{
+                  color: "white",
+                  fontSize: isMobile ? "2.2rem" : "3.2rem",
+                  margin: "0 0 16px",
+                  fontWeight: 800,
+                  lineHeight: 1.2,
+                }}
+              >
                 {lang === "en" ? "QingzhenMu Journal" : "QingzhenMu 期刊"}
               </Title>
-              
-              <Paragraph style={{ color: "rgba(255,255,255,0.85)", fontSize: isMobile ? "1rem" : "1.15rem", maxWidth: 650, margin: "0 auto 40px", lineHeight: 1.6 }}>
-                 {lang === "en" 
-                    ? "Discover the latest news, authentic food reviews, Muslim-friendly travel guides, and inspiring stories from our global community." 
-                    : "发现最新新闻、真实的美食评论、穆斯林友好旅游指南以及我们全球社区的鼓舞人心的故事。"}
+              <Paragraph
+                style={{
+                  color: "rgba(255,255,255,0.85)",
+                  fontSize: isMobile ? 15 : 17,
+                  margin: "0 auto 32px",
+                  maxWidth: 580,
+                  lineHeight: 1.6
+                }}
+              >
+                {lang === "en" 
+                  ? "The latest news, certifications, travel guides, and community stories about halal living in China — curated for Muslim travelers and residents." 
+                  : "有关中国清真生活的最新新闻、认证、旅游指南和社区故事——专为穆斯林游客和居民精心策划。"}
               </Paragraph>
               
-              <div style={{ maxWidth: 550, margin: "0 auto", position: "relative" }}>
+              <div style={{ maxWidth: 550, margin: "0 auto" }}>
                 <Input
                   size="large"
                   placeholder={lang === "en" ? "Search articles, guides, or reviews..." : "搜索文章、指南或评论..."}
                   prefix={<SearchOutlined style={{ color: "var(--primary-green)", fontSize: 18, marginRight: 8 }} />}
                   style={{ 
                     borderRadius: 40, 
-                    padding: "12px 24px", 
+                    padding: "8px 24px", 
                     fontSize: 16,
                     boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
                     border: "none"
                   }}
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
+                  allowClear
                 />
               </div>
             </div>
-          </section>
+          </div>
 
-          {/* MAIN CONTENT SECTION */}
-          <section style={{ padding: isMobile ? "40px 0" : "80px 0", background: "#f8f9fa" }}>
-            <div className="container">
-              
-              {/* MODERN CATEGORY FILTER (PILLS) */}
-              <div style={{ 
-                display: "flex", 
-                gap: "12px", 
-                overflowX: "auto", 
-                paddingBottom: "16px", 
-                marginBottom: "40px", 
-                scrollbarWidth: "none",
-                WebkitOverflowScrolling: "touch"
-              }}>
-                {CATEGORIES.map((cat) => {
-                  const isActive = activeCategory === cat;
-                  return (
-                    <div
-                      key={cat}
-                      style={{ 
-                        cursor: "pointer", 
-                        padding: "10px 24px", 
-                        fontSize: "14px", 
-                        borderRadius: "30px", 
-                        border: isActive ? "1px solid var(--primary-green)" : "1px solid #e2e8f0",
-                        background: isActive ? "var(--primary-green)" : "#ffffff",
-                        color: isActive ? "#ffffff" : "#475569",
-                        fontWeight: isActive ? 600 : 500,
-                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                        whiteSpace: "nowrap",
-                        boxShadow: isActive ? "0 4px 12px rgba(15, 81, 50, 0.2)" : "0 2px 4px rgba(0,0,0,0.02)"
-                      }}
-                      onClick={() => setActiveCategory(cat)}
-                    >
-                      {cat}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* FEATURED POST (MAGAZINE STYLE) */}
-              {activeCategory === "Semua" && !searchText && (
-                <Card
-                  bordered={false}
-                  bodyStyle={{ padding: 0 }}
-                  className="modern-blog-card"
-                  style={{ 
-                    borderRadius: "24px", 
-                    overflow: "hidden", 
-                    marginBottom: "60px", 
-                    boxShadow: "0 20px 40px rgba(0,0,0,0.06)",
-                    border: "1px solid rgba(0,0,0,0.02)",
-                    cursor: "pointer"
+          {/* CATEGORY TABS */}
+          <div style={{ background: "white", borderBottom: "1px solid #f0f0e8", padding: "0 20px", overflowX: "auto" }}>
+            <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", gap: 0, minWidth: "max-content" }}>
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.key}
+                  onClick={() => setActiveCategory(cat.key)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "16px 20px",
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    fontWeight: activeCategory === cat.key ? 700 : 500,
+                    color: activeCategory === cat.key ? cat.color : "#666",
+                    borderBottom: activeCategory === cat.key ? `3px solid ${cat.color}` : "3px solid transparent",
+                    transition: "all 0.2s",
+                    fontSize: 14,
+                    whiteSpace: "nowrap",
                   }}
-                  onClick={() => setSelectedPost(FEATURED_POST)}
                 >
-                  <Row>
-                    <Col xs={24} md={13}>
-                      <div style={{ position: "relative", height: "100%", minHeight: isMobile ? "280px" : "450px" }}>
-                        <img 
-                          src={FEATURED_POST.image} 
-                          alt={FEATURED_POST.title} 
-                          style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0, transition: "transform 0.5s ease" }} 
-                        />
-                      </div>
-                    </Col>
-                    <Col xs={24} md={11} style={{ padding: isMobile ? "32px 24px" : "56px 48px", display: "flex", flexDirection: "column", justifyContent: "center", background: "white" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-                        <Tag color="gold" style={{ margin: 0, padding: "4px 12px", borderRadius: 20, fontWeight: "700", border: "none" }}>
-                          {FEATURED_POST.category}
-                        </Tag>
-                        <Text type="secondary" style={{ fontSize: "13px", fontWeight: 500 }}>
-                          <CalendarOutlined style={{ marginRight: 6 }} /> {FEATURED_POST.date}
-                        </Text>
-                      </div>
-                      
-                      <Title level={2} style={{ marginTop: 0, marginBottom: 20, lineHeight: 1.3, fontWeight: 800, fontSize: isMobile ? "1.8rem" : "2.2rem" }}>
-                        {FEATURED_POST.title}
-                      </Title>
-                      
-                      <Paragraph type="secondary" style={{ fontSize: "16px", marginBottom: 32, lineHeight: 1.6, color: "#64748b" }}>
-                        {FEATURED_POST.excerpt}
-                      </Paragraph>
-                      
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 24, borderTop: "1px solid #f1f5f9" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <Avatar size={48} src={`https://api.dicebear.com/7.x/notionists/svg?seed=${FEATURED_POST.author}`} style={{ backgroundColor: "#f1f5f9" }} />
-                          <div>
-                            <Text strong style={{ display: "block", fontSize: "15px", color: "#334155" }}>{FEATURED_POST.author}</Text>
-                            <Text type="secondary" style={{ fontSize: "13px" }}>{FEATURED_POST.readTime}</Text>
-                          </div>
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
-                </Card>
-              )}
-
-              {/* BLOG GRID */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 32 }}>
-                <Title level={3} style={{ margin: 0, color: "var(--text-dark)", fontWeight: 800 }}>
-                  {searchText 
-                    ? (lang === "en" ? `Search Results for "${searchText}"` : `"${searchText}" 的搜索结果`) 
-                    : (lang === "en" ? "Latest Articles" : "最新文章")}
-                </Title>
-              </div>
-              
-              <Row gutter={[24, 32]}>
-                {filteredPosts.length > 0 ? (
-                  filteredPosts.map((post) => (
-                    <Col xs={24} sm={12} lg={8} key={post.id}>
-                      <Card
-                        hoverable
-                        bordered={false}
-                        onClick={() => setSelectedPost(post)}
-                        className="modern-blog-card"
-                        bodyStyle={{ padding: "24px", display: "flex", flexDirection: "column", height: "100%" }}
-                        cover={
-                          <div style={{ overflow: "hidden", height: "220px", position: "relative" }}>
-                            <img 
-                              alt={post.title} 
-                              src={post.image} 
-                              style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }} 
-                            />
-                            <div style={{ position: "absolute", top: 16, left: 16 }}>
-                              <Tag style={{ background: "rgba(255,255,255,0.9)", border: "none", color: "var(--primary-green)", fontWeight: 700, borderRadius: 12, padding: "4px 10px" }}>
-                                {post.category}
-                              </Tag>
-                            </div>
-                          </div>
-                        }
-                        style={{ 
-                          height: "100%", 
-                          display: "flex", 
-                          flexDirection: "column", 
-                          borderRadius: "20px",
-                          overflow: "hidden",
-                          boxShadow: "0 10px 20px rgba(0,0,0,0.04)",
-                          transition: "all 0.3s ease"
-                        }}
-                      >
-                        <Text type="secondary" style={{ fontSize: "13px", marginBottom: 12, display: "block" }}>
-                          {post.date}
-                        </Text>
-                        <Title level={4} style={{ marginTop: 0, fontSize: "19px", lineHeight: 1.4, fontWeight: 700, marginBottom: 16 }}>
-                          {post.title}
-                        </Title>
-                        <Paragraph type="secondary" ellipsis={{ rows: 3 }} style={{ flex: 1, color: "#64748b", lineHeight: 1.6, marginBottom: 24 }}>
-                          {post.excerpt}
-                        </Paragraph>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
-                          <Text strong style={{ fontSize: "14px", color: "#475569" }}>By {post.author}</Text>
-                          <Button type="link" style={{ padding: 0, color: "var(--primary-green)", fontWeight: 700, pointerEvents: "none" }}>
-                            {lang === "en" ? "Read" : "阅读"} <ArrowRightOutlined />
-                          </Button>
-                        </div>
-                      </Card>
-                    </Col>
-                  ))
-                ) : (
-                  <Col span={24}>
-                    <div style={{ textAlign: "center", padding: "80px 20px", background: "white", borderRadius: 24, border: "1px dashed #cbd5e1" }}>
-                      <ReadOutlined style={{ fontSize: 64, color: "#cbd5e1", marginBottom: 24 }} />
-                      <Title level={4} style={{ color: "#64748b", margin: 0 }}>
-                        {lang === "en" ? "No articles found matching your criteria." : "找不到符合您标准的文章。"}
-                      </Title>
-                      <Button type="primary" shape="round" onClick={() => {setSearchText(""); setActiveCategory("Semua")}} style={{ marginTop: 24, background: "var(--primary-green)" }}>
-                        {lang === "en" ? "Clear Filters" : "清除过滤器"}
-                      </Button>
-                    </div>
-                  </Col>
-                )}
-              </Row>
-
-              {/* LOAD MORE */}
-              {filteredPosts.length > 0 && (
-                <div style={{ textAlign: "center", marginTop: 60 }}>
-                  <Button size="large" shape="round" style={{ fontWeight: 600, padding: "0 48px", height: 50, borderColor: "var(--primary-green)", color: "var(--primary-green)" }}>
-                    {lang === "en" ? "Load More Articles" : "加载更多文章"}
-                  </Button>
-                </div>
-              )}
+                  <span style={{ color: activeCategory === cat.key ? cat.color : "#999" }}>
+                    {cat.icon}
+                  </span>
+                  {cat.label}
+                  <Badge
+                    count={cat.key === "all" ? posts.length : posts.filter((p) => p.category === cat.key).length}
+                    style={{
+                      background: activeCategory === cat.key ? cat.color : "#f0f0f0",
+                      color: activeCategory === cat.key ? "white" : "#999",
+                      boxShadow: "none",
+                      fontSize: 11,
+                    }}
+                  />
+                </button>
+              ))}
             </div>
-          </section>
+          </div>
+
+          {/* MAIN CONTENT AREA */}
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "24px 16px" : "40px 20px" }}>
+            {/* Sort & Results count */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
+              <Text style={{ color: "#888", fontSize: 14 }}>
+                Showing <strong style={{ color: "#1a1a1a" }}>{filteredPosts.length}</strong> articles
+                {activeCategory !== "all" && (
+                  <> in <strong style={{ color: "#2E7D32" }}>{CATEGORIES.find((c) => c.key === activeCategory)?.label}</strong></>
+                )}
+                {searchText && (
+                  <> for "<strong>{searchText}</strong>"</>
+                )}
+              </Text>
+              
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <Select
+                  value={sortBy}
+                  onChange={setSortBy}
+                  style={{ width: 160, borderRadius: 8 }}
+                  suffixIcon={<FilterOutlined />}
+                >
+                  <Option value="latest">Latest First</Option>
+                  <Option value="popular">Most Viewed</Option>
+                  <Option value="liked">Most Liked</Option>
+                </Select>
+                {!isMobile && (
+                  <Button type="primary" shape="round" icon={<EditOutlined />} onClick={handleWriteOpen} style={{ background: "#2E7D32", borderColor: "#2E7D32", fontWeight: 600 }}>
+                    Write Article
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Featured Posts */}
+            {featuredPosts.length > 0 && (
+              <>
+                <div style={{ marginBottom: 16 }}>
+                  <Title level={5} style={{ color: "#888", textTransform: "uppercase", letterSpacing: 1, margin: 0, fontSize: 12 }}>
+                    <FireOutlined style={{ color: "#ff4d4f", marginRight: 6 }} /> Featured Stories
+                  </Title>
+                </div>
+                <Row gutter={[20, 20]} style={{ marginBottom: 40 }}>
+                  {featuredPosts.map((post) => (
+                    <Col xs={24} md={12} key={post.id}>
+                      <FeaturedCard post={post} onRead={handleRead} onLike={handleLike} likedPosts={likedPosts} />
+                    </Col>
+                  ))}
+                </Row>
+              </>
+            )}
+
+            {/* Regular Posts */}
+            {regularPosts.length > 0 && (
+              <>
+                <div style={{ marginBottom: 16 }}>
+                  <Title level={5} style={{ color: "#888", textTransform: "uppercase", letterSpacing: 1, margin: 0, fontSize: 12 }}>
+                    <GlobalOutlined style={{ color: "#2E7D32", marginRight: 6 }} /> Latest Articles
+                  </Title>
+                </div>
+                <Row gutter={[20, 20]}>
+                  {regularPosts.map((post) => (
+                    <Col xs={24} sm={12} lg={8} key={post.id}>
+                      <BlogCard post={post} onRead={handleRead} onLike={handleLike} likedPosts={likedPosts} />
+                    </Col>
+                  ))}
+                </Row>
+              </>
+            )}
+
+            {/* Empty state */}
+            {filteredPosts.length === 0 && (
+              <div style={{ textAlign: "center", padding: "80px 20px" }}>
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <div>
+                      <Title level={4} style={{ color: "#888" }}>No articles found</Title>
+                      <Text type="secondary">Try a different category or search keyword</Text>
+                    </div>
+                  }
+                >
+                  <Button type="primary" style={{ background: "#2E7D32" }} onClick={() => { setActiveCategory("all"); setSearchText(""); }}>
+                    View All Articles
+                  </Button>
+                </Empty>
+              </div>
+            )}
+
+            {/* CTA Write */}
+            <div style={{ marginTop: 60, borderRadius: 20, background: "linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%)", border: "1px solid #C8E6C9", padding: isMobile ? "32px 20px" : "48px 40px", textAlign: "center" }}>
+              <CheckCircleFilled style={{ fontSize: 40, color: "#2E7D32", marginBottom: 16 }} />
+              <Title level={3} style={{ color: "#1B5E20", margin: "0 0 12px" }}>
+                Have a Story About Halal in China?
+              </Title>
+              <Paragraph style={{ color: "#4CAF50", fontSize: 16, margin: "0 auto 28px", maxWidth: 600 }}>
+                Share news, experiences, or tips with our community. Help Muslim travelers and residents navigate China with confidence.
+              </Paragraph>
+              <Button type="primary" size="large" shape="round" icon={<EditOutlined />} onClick={handleWriteOpen} style={{ background: "#2E7D32", borderColor: "#2E7D32", height: 48, paddingLeft: 32, paddingRight: 32, fontWeight: 700, fontSize: 15 }}>
+                Write an Article
+              </Button>
+            </div>
+          </div>
         </>
       )}
 
       {/* FOOTER */}
-      <footer className="footer-section" style={{ background: "#0f172a", color: "white", padding: "80px 0 24px" }}>
-        <div className="container" style={{ padding: "0 20px" }}>
+      <footer className="footer-section" style={{ background: "#0f172a", color: "white", padding: "80px 0 24px", marginTop: "auto" }}>
+        <div className="container" style={{ padding: "0 20px", maxWidth: 1200, margin: "0 auto" }}>
           <div className="footer-content" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", marginBottom: "60px", gap: "40px" }}>
             <div style={{ maxWidth: 320 }}>
               <div className="brand-logo" style={{ color: "white", marginBottom: 20, display: "flex", alignItems: "center", gap: "10px" }}>
@@ -635,16 +1068,16 @@ function BlogPage({ onNavigate }) {
                 <span style={{ fontSize: "24px", fontWeight: "800" }}>QingzhenMu</span>
               </div>
               <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.6 }}>
-                {t("footer_desc")}
+                {t("footer_desc") || "Empowering Muslim travelers across China with reliable guides and halal information."}
               </Paragraph>
             </div>
 
             <div className="footer-links" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_about")}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_careers")}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_privacy")}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_terms")}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_contact")}</Button>
+              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_about") || "About Us"}</Button>
+              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_careers") || "Careers"}</Button>
+              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_privacy") || "Privacy Policy"}</Button>
+              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_terms") || "Terms of Service"}</Button>
+              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_contact") || "Contact Us"}</Button>
             </div>
 
             <div className="footer-social" style={{ display: "flex", gap: "24px", fontSize: "24px" }}>
@@ -656,18 +1089,18 @@ function BlogPage({ onNavigate }) {
 
           <div className="copyright" style={{ textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "24px" }}>
             <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
-              {t("copyright")}
+              {t("copyright") || "© 2026 QingzhenMu. Empowering Muslim travelers across China."}
             </Text>
           </div>
         </div>
       </footer>
 
-      {/* DOWNLOAD MODAL */}
-      <Modal title={null} footer={null} open={isDownloadModalOpen} onCancel={() => setIsDownloadModalOpen(false)} centered width={400} bodyStyle={{ padding: 32 }}>
+      {/* DOWNLOAD APP MODAL */}
+      <Modal title={null} footer={null} open={isDownloadModalOpen} onCancel={() => setIsDownloadModalOpen(false)} centered width={400} styles={{ body: { padding: 32 } }}>
         <div style={{ textAlign: "center" }}>
           <GlobalOutlined style={{ fontSize: 56, color: "var(--primary-green)", marginBottom: 20 }} />
-          <Title level={3} style={{ fontWeight: 800 }}>{t("modal_title")}</Title>
-          <Paragraph style={{ color: "#64748b", marginBottom: 32 }}>{t("modal_desc")}</Paragraph>
+          <Title level={3} style={{ fontWeight: 800 }}>{t("modal_title") || "Get QingzhenMu App"}</Title>
+          <Paragraph style={{ color: "#64748b", marginBottom: 32 }}>{t("modal_desc") || "Download our mobile app to find halal food and prayer spaces on the go."}</Paragraph>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <Button type="primary" size="large" icon={<AppleFilled />} style={{ background: "#0f172a", borderColor: "#0f172a", height: 50, borderRadius: 12, fontWeight: 600 }} block onClick={() => message.info("Redirecting to App Store...")}>
               Download on App Store
@@ -679,16 +1112,75 @@ function BlogPage({ onNavigate }) {
         </div>
       </Modal>
 
-      {/* Internal CSS Setup for the Hover effect on Cards */}
-      <style>{`
-        .modern-blog-card:hover img {
-          transform: scale(1.05) !important;
+      {/* WRITE ARTICLE MODAL */}
+      <Modal
+        title={
+          <div>
+            <Title level={4} style={{ margin: 0 }}>
+              <EditOutlined style={{ marginRight: 8, color: "#2E7D32" }} />
+              Write an Article
+            </Title>
+            <Text type="secondary" style={{ fontSize: 13 }}>Share halal news & stories with the community</Text>
+          </div>
         }
-        .modern-blog-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
-        }
-      `}</style>
+        open={isWriteModalOpen}
+        onCancel={() => { setIsWriteModalOpen(false); form.resetFields(); }}
+        footer={null}
+        centered
+        width={isMobile ? "100%" : 680}
+        styles={{ body: { padding: "24px 28px", maxHeight: "75vh", overflowY: "auto" } }}
+      >
+        {user && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "#f6ffed", borderRadius: 10, border: "1px solid #b7eb8f", marginBottom: 20 }}>
+            <Avatar src={user.avatar_url} icon={<UserOutlined />} />
+            <Text>Publishing as <strong>{user.name || user.username}</strong></Text>
+          </div>
+        )}
+        <Form form={form} layout="vertical" onFinish={handleSubmitArticle} size="large">
+          <Form.Item name="category" label="Category" rules={[{ required: true, message: "Please select a category" }]}>
+            <Select placeholder="Select article category">
+              {CATEGORIES.filter((c) => c.key !== "all").map((cat) => (
+                <Option key={cat.key} value={cat.key}>{cat.icon} {cat.label}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="title" label="Article Title" rules={[{ required: true, message: "Please enter a title" }, { min: 10, message: "Title should be at least 10 characters" }]}>
+            <Input placeholder="Enter a clear, informative title..." style={{ borderRadius: 10 }} />
+          </Form.Item>
+
+          <Form.Item name="excerpt" label="Short Summary" rules={[{ required: true, message: "Please write a short summary" }]}>
+            <TextArea rows={2} placeholder="A brief 1-2 sentence summary of your article..." style={{ borderRadius: 10 }} />
+          </Form.Item>
+
+          <Form.Item name="content" label="Article Content" rules={[{ required: true, message: "Please write the article content" }, { min: 100, message: "Article should be at least 100 characters" }]}>
+            <TextArea rows={8} placeholder="Write your full article here... You can include facts, personal experience, tips, or news about halal in China." style={{ borderRadius: 10 }} />
+          </Form.Item>
+
+          <Form.Item name="tags" label="Tags (comma separated)">
+            <Input placeholder="e.g. certification, beijing, food" style={{ borderRadius: 10 }} />
+          </Form.Item>
+
+          <Form.Item label="Cover Image (Optional)">
+            <Upload listType="picture-card" maxCount={1} beforeUpload={() => false}>
+              <div>
+                <CameraOutlined />
+                <div style={{ marginTop: 8, fontSize: 12 }}>Upload Image</div>
+              </div>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0 }}>
+            <div style={{ display: "flex", gap: 10 }}>
+              <Button block onClick={() => { setIsWriteModalOpen(false); form.resetFields(); }} style={{ borderRadius: 24 }}>Cancel</Button>
+              <Button type="primary" htmlType="submit" block loading={submitting} style={{ background: "#2E7D32", borderColor: "#2E7D32", borderRadius: 24, fontWeight: 700, height: 44 }}>
+                {submitting ? "Submitting..." : "Submit Article"}
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
+
     </div>
   );
 }

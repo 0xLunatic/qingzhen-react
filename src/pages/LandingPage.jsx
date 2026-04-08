@@ -177,7 +177,7 @@ function LandingPage({ onNavigate }) {
   const toggleLanguage = () => {
     setLang((prev) => (prev === "en" ? "cn" : "en"));
     message.success(
-      lang === "en" ? "Switched to Chinese" : "Switched to English"
+      lang === "en" ? "Switched to Chinese" : "Switched to English",
     );
   };
 
@@ -222,7 +222,7 @@ function LandingPage({ onNavigate }) {
     } catch (error) {
       console.error("Submit review error:", error);
       message.error(
-        error.response?.data?.message || "Failed to submit review."
+        error.response?.data?.message || "Failed to submit review.",
       );
     } finally {
       setSubmittingReview(false);
@@ -302,7 +302,7 @@ function LandingPage({ onNavigate }) {
         type="text"
         block
         style={{ textAlign: "left" }}
-        onClick={() => setIsMobileMenuOpen(false)}
+        onClick={() => onNavigate("community-page")}
       >
         {t("nav_community")}
       </Button>
@@ -310,7 +310,7 @@ function LandingPage({ onNavigate }) {
         type="text"
         block
         style={{ textAlign: "left" }}
-        onClick={() => setIsMobileMenuOpen(false)}
+        onClick={() => onNavigate("blog-page")}
       >
         {t("nav_blog")}
       </Button>
@@ -575,10 +575,10 @@ function LandingPage({ onNavigate }) {
             >
               {t("nav_prayer")}
             </Button>
-            <Button type="link" onClick={() => {}}>
+            <Button type="link" onClick={() => onNavigate("community-page")}>
               {t("nav_community")}
             </Button>
-            <Button type="link" onClick={() => onNavigate("blog")}>
+            <Button type="link" onClick={() => onNavigate("blog-page")}>
               {t("nav_blog")}
             </Button>
             {isMobile && (
