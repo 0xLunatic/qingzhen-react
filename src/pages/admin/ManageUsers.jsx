@@ -210,7 +210,12 @@ const ManageUsers = () => {
           <Popconfirm
             title={<span style={{ color: "red" }}>Delete this user?</span>}
             onConfirm={() => handleDelete(r.id)}
+            okText="Delete"
+            cancelText="Cancel"
             okButtonProps={{ danger: true }}
+            cancelButtonProps={{
+              style: { color: "#aaa" },
+            }}
           >
             <Button
               type="text"
