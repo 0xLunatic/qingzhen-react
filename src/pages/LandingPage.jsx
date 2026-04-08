@@ -578,7 +578,7 @@ function LandingPage({ onNavigate }) {
             <Button type="link" onClick={() => {}}>
               {t("nav_community")}
             </Button>
-            <Button type="link" onClick={() => {}}>
+            <Button type="link" onClick={() => onNavigate("blog")}>
               {t("nav_blog")}
             </Button>
             {isMobile && (

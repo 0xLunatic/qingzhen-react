@@ -15,6 +15,7 @@ import MosqueFinder from "./pages/MosqueFinder.jsx";
 import AuthenticationPage from "./pages/AuthenticationPage.jsx";
 import PrayerTimesPage from "./pages/PrayerTimesPage.jsx";
 import TravelPlanPage from "./pages/TravelPlan.jsx";
+import BlogPage from "./pages/BlogPage.jsx";
 
 // Import Pages Admin
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -67,6 +68,9 @@ const AppRoutes = () => {
       case "travel-plan":
         navigate("/travel-plan");
         break;
+      case "blog":
+        navigate("/blog");
+        break;
       default:
         navigate("/");
     }
@@ -95,6 +99,10 @@ const AppRoutes = () => {
       <Route
         path="/travel-plan"
         element={<TravelPlanPage onNavigate={handleNavigation} />}
+      />
+      <Route
+        path="/blog"
+        element={<BlogPage onNavigate={handleNavigation} />}
       />
       {/* ADMIN ROUTES (PROTECTED) */}
       <Route
