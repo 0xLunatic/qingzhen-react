@@ -259,7 +259,7 @@ const getMosqueStatus = (lat, lng, t) => {
     return {
       isOpen: true,
       text: `Next: ${capitalize(nextPrayer)} ${getFormattedTime(
-        nextPrayerTime
+        nextPrayerTime,
       )}`,
       color: "#d48806",
     };
@@ -318,7 +318,7 @@ const LocationPickerMarker = ({ position, setPosition }) => {
         }
       },
     }),
-    [setPosition]
+    [setPosition],
   );
 
   return (
@@ -668,7 +668,7 @@ function MosqueFinder({ onNavigate }) {
         type="text"
         block
         style={{ textAlign: "left" }}
-        onClick={() => setIsMobileMenuOpen(false)}
+        onClick={() => onNavigate("community-page")}
       >
         {t("nav_community")}
       </Button>
@@ -781,7 +781,7 @@ function MosqueFinder({ onNavigate }) {
       const query = `[out:json][timeout:15];(node["amenity"="place_of_worship"]["religion"="muslim"](around:${MAX_RADIUS_METERS}, ${lat}, ${lng}););out ${MAX_RESULTS};`;
       const osmPromise = fetch(
         "https://overpass.kumi.systems/api/interpreter",
-        { method: "POST", body: query }
+        { method: "POST", body: query },
       );
       const [dbRes, osmRes] = await Promise.allSettled([dbPromise, osmPromise]);
 
@@ -1073,7 +1073,7 @@ function MosqueFinder({ onNavigate }) {
       }));
     } catch (error) {
       message.error(
-        "Update failed: " + (error.response?.data?.message || "Error")
+        "Update failed: " + (error.response?.data?.message || "Error"),
       );
     } finally {
       setIsUpdating(false);
@@ -1220,7 +1220,7 @@ function MosqueFinder({ onNavigate }) {
   useEffect(() => {
     if (userLocation)
       setQiblaDirection(
-        calculateQiblaDirection(userLocation[0], userLocation[1])
+        calculateQiblaDirection(userLocation[0], userLocation[1]),
       );
   }, [userLocation]);
 
@@ -1259,7 +1259,7 @@ function MosqueFinder({ onNavigate }) {
       (err) => {
         fallbackToIpLocation();
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   };
 
@@ -1272,11 +1272,11 @@ function MosqueFinder({ onNavigate }) {
     if (mapCenter) fetchPlaces(mapCenter.lat, mapCenter.lng);
   };
   const safeFilteredPlaces = filteredPlaces.filter((p) =>
-    isValidCoordinate(p.lat, p.lng)
+    isValidCoordinate(p.lat, p.lng),
   );
   const safeUserLocation = isValidCoordinate(
     userLocation?.[0],
-    userLocation?.[1]
+    userLocation?.[1],
   )
     ? userLocation
     : [39.9042, 116.4074];
@@ -1441,7 +1441,7 @@ function MosqueFinder({ onNavigate }) {
             <Button type="link" onClick={() => onNavigate("prayer")}>
               {t("nav_prayer")}
             </Button>
-            <Button type="link" onClick={() => onNavigate("community")}>
+            <Button type="link" onClick={() => onNavigate("community-page")}>
               {t("nav_community")}
             </Button>
             <Button type="link" onClick={() => onNavigate("blog")}>
@@ -1818,7 +1818,7 @@ function MosqueFinder({ onNavigate }) {
                   position={[place.lat, place.lng]}
                   icon={createCustomIcon(
                     place.source,
-                    selectedPlace?.id === place.id
+                    selectedPlace?.id === place.id,
                   )}
                   eventHandlers={{
                     click: () => {
@@ -2124,7 +2124,7 @@ function MosqueFinder({ onNavigate }) {
                   const detailStatus = getMosqueStatus(
                     selectedPlace.lat,
                     selectedPlace.lng,
-                    t
+                    t,
                   );
                   return (
                     <div className="stat-box">

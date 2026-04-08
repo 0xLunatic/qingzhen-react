@@ -1,315 +1,517 @@
 import React, { useState, useEffect } from "react";
 import {
-  Layout,
+  Button,
+  Input,
   Row,
   Col,
   Card,
   Tag,
   Typography,
   Avatar,
-  Input,
-  Button,
-  Divider,
-  Space,
-  Badge,
-  Pagination,
+  Modal,
+  message,
   Grid,
+  Divider,
+  Drawer,
+  Space,
+  Form,
+  Upload,
+  Spin,
+  Select,
+  Layout,
 } from "antd";
 import {
   SearchOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  ArrowRightOutlined,
-  FireOutlined,
-  MessageOutlined,
-  TranslationOutlined,
   MenuOutlined,
+  TranslationOutlined,
+  UserOutlined,
+  LogoutOutlined,
   DownOutlined,
+  PlusOutlined,
+  CameraOutlined,
+  CalendarOutlined,
+  EyeOutlined,
+  GlobalOutlined,
+  ShopOutlined,
+  CompassOutlined,
+  ArrowRightOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
+import "../App.css"; // Memastikan CSS global Landing Page terpakai
+import logoImage from "../assets/logo.png";
+import api from "../utils/api";
+import { en } from "../lang/en";
+import { cn } from "../lang/cn";
 
-const { Header, Content, Footer } = Layout;
 const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 const { useBreakpoint } = Grid;
 
-const BlogPage = ({ onNavigate }) => {
+function BlogPage({ onNavigate }) {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
-  const [searchText, setSearchText] = useState("");
 
-  // --- MOCK DATA BLOG ---
-  const FEATURED_POST = {
-    title: "10 Masjid Bersejarah di Beijing yang Wajib Dikunjungi",
-    excerpt:
-      "Menelusuri jejak sejarah Islam di ibukota Tiongkok, mulai dari Masjid Niujie hingga arsitektur unik di distrik pusat...",
-    author: "Admin Qingzhen",
-    date: "12 Maret 2026",
-    category: "Travel Guide",
-    image:
-      "https://images.unsplash.com/photo-1590075865003-e48277eb57d7?auto=format&fit=crop&w=1200&q=80",
-  };
+  // --- STATE ---
+  const [lang, setLang] = useState("en");
+  const [user, setUser] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [activeRegion, setActiveRegion] = useState("All China");
 
-  const POSTS = [
-    {
-      id: 1,
-      title: "Cara Mencari Makanan Halal di Shanghai",
-      date: "10 Mar 2026",
-      category: "Tips",
-      img: "https://images.unsplash.com/photo-1543352658-92901426fce0?w=500",
-    },
-    {
-      id: 2,
-      title: "Persiapan Ramadhan di Guangzhou",
-      date: "08 Mar 2026",
-      category: "Community",
-      img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=500",
-    },
-    {
-      id: 3,
-      title: "Review Restoran Lanzhou Lamian Terbaik",
-      date: "05 Mar 2026",
-      category: "Food",
-      img: "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=500",
-    },
+  const TRANSLATIONS = { en, cn };
+  const t = (key) => TRANSLATIONS[lang][key] || key;
+
+  const CHINA_REGIONS = [
+    "Beijing",
+    "Shanghai",
+    "Xi'an",
+    "Guangzhou",
+    "Xinjiang",
+    "Yunnan",
   ];
 
-  return (
-    <Layout style={{ background: "#fff" }}>
-      {/* --- NAVBAR (Konsisten dengan Landing Page) --- */}
-      <Header
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser));
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setUser(null);
+    message.success("Logged out successfully");
+  };
+
+  // --- REUSABLE NAVBAR (Sama dengan Landing Page) ---
+  const renderNavbar = () => (
+    <header className="navbar-container" style={{ padding: "0 20px" }}>
+      <div
+        className="container navbar"
         style={{
-          background: "#fff",
-          padding: isMobile ? "0 16px" : "0 50px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
+          height: "64px",
         }}
       >
         <div
+          className="brand-logo"
           style={{
             display: "flex",
             alignItems: "center",
             gap: "8px",
             cursor: "pointer",
           }}
-          onClick={() => onNavigate("home")}
+          onClick={() => onNavigate("landing")}
         >
-          <div
-            style={{
-              width: 30,
-              height: 30,
-              background: "#2E7D32",
-              borderRadius: 6,
-            }}
-          />
-          <Title level={4} style={{ margin: 0 }}>
+          <div className="logo-icon-wrapper">
+            <img
+              src={logoImage}
+              alt="Logo"
+              className="logo-icon"
+              style={{ width: "32px" }}
+            />
+          </div>
+          <span style={{ fontWeight: "bold", fontSize: "18px" }}>
             QingzhenMu
-          </Title>
+          </span>
         </div>
-        {!isMobile && (
-          <Space size={20}>
-            <Button type="text" onClick={() => onNavigate("finder")}>
-              Finder
+
+        <div
+          className="nav-links desktop-only"
+          style={{ display: isMobile ? "none" : "flex", gap: "20px" }}
+        >
+          <Button type="link" onClick={() => onNavigate("finder")}>
+            {t("nav_finder")}
+          </Button>
+          <Button type="link" onClick={() => onNavigate("mosque")}>
+            {t("nav_mosque")}
+          </Button>
+          <Button type="link" onClick={() => onNavigate("prayer")}>
+            {t("nav_prayer")}
+          </Button>
+          <Button
+            type="link"
+            className="active-link"
+            style={{ color: "var(--primary-green)", fontWeight: "bold" }}
+          >
+            Blog
+          </Button>
+        </div>
+
+        <div
+          className="nav-actions"
+          style={{ display: "flex", alignItems: "center", gap: "8px" }}
+        >
+          {!isMobile && (
+            <Button
+              type="text"
+              icon={<TranslationOutlined />}
+              onClick={() => setLang(lang === "en" ? "cn" : "en")}
+              style={{ fontWeight: "bold" }}
+            >
+              {lang === "en" ? "CN" : "EN"}
             </Button>
-            <Button type="text" onClick={() => onNavigate("community")}>
-              Community
+          )}
+
+          {user ? (
+            <Avatar
+              src={user.avatar_url}
+              icon={<UserOutlined />}
+              style={{
+                backgroundColor: "var(--primary-green)",
+                cursor: "pointer",
+              }}
+            />
+          ) : (
+            <Button type="text" onClick={() => onNavigate("auth")}>
+              {t("nav_signin")}
             </Button>
-            <Button type="link" strong>
-              Blog
-            </Button>
+          )}
+
+          {isMobile ? (
+            <Button
+              type="text"
+              onClick={() => setIsMobileMenuOpen(true)}
+              icon={<MenuOutlined style={{ fontSize: "20px" }} />}
+            />
+          ) : (
             <Button
               type="primary"
               shape="round"
-              style={{ background: "#2E7D32" }}
+              className="btn-gold"
+              onClick={() => setIsUploadModalOpen(true)}
             >
-              Sign In
+              Post News
             </Button>
-          </Space>
-        )}
-      </Header>
+          )}
+        </div>
+      </div>
+    </header>
+  );
 
-      <Content style={{ padding: isMobile ? "20px" : "40px 50px" }}>
-        <div
-          className="container-xl"
-          style={{ maxWidth: 1200, margin: "0 auto" }}
-        >
-          {/* --- HERO SECTION BLOG --- */}
-          <div style={{ marginBottom: 40 }}>
-            <Title level={2}>
-              QingzhenMu <span style={{ color: "#2E7D32" }}>Blog</span>
-            </Title>
-            <Paragraph type="secondary" style={{ fontSize: 16 }}>
-              Wawasan terbaru mengenai gaya hidup halal, destinasi wisata, dan
-              komunitas Muslim di Tiongkok.
-            </Paragraph>
+  return (
+    <div className="landing-page">
+      {" "}
+      {/* Gunakan wrapper class yang sama untuk CSS context */}
+      {renderNavbar()}
+      {/* HERO SECTION - STYLE IDENTIK */}
+      <section
+        className="hero-section"
+        style={{ padding: isMobile ? "40px 0" : "60px 0", textAlign: "center" }}
+      >
+        <div className="container" style={{ padding: "0 20px" }}>
+          <Title
+            style={{
+              color: "white",
+              fontSize: isMobile ? "2.5rem" : "3.5rem",
+              marginBottom: 16,
+              fontWeight: 800,
+            }}
+          >
+            {lang === "en" ? "China Halal News" : "中国清真新闻"}
+          </Title>
+          <Paragraph
+            style={{
+              color: "rgba(255,255,255,0.9)",
+              fontSize: "1.1rem",
+              maxWidth: "700px",
+              margin: "0 auto 40px",
+            }}
+          >
+            Stay informed about the latest halal culinary trends, mosque events,
+            and community stories across the mainland.
+          </Paragraph>
+
+          <div
+            className="hero-search-bar"
+            style={{ maxWidth: "600px", margin: "0 auto" }}
+          >
             <Input
-              placeholder="Cari artikel..."
-              prefix={<SearchOutlined />}
-              style={{ maxWidth: 400, borderRadius: 20 }}
-              size="large"
+              placeholder="Search region or news topic..."
+              style={{ borderRadius: "30px", padding: "10px 25px" }}
+              prefix={<SearchOutlined className="text-muted" />}
+              suffix={
+                <Button type="primary" shape="round" className="btn-gold">
+                  Search
+                </Button>
+              }
+              bordered={false}
             />
+          </div>
+        </div>
+      </section>
+      {/* BLOG CONTENT SECTION */}
+      <section style={{ padding: "60px 0", background: "#fff" }}>
+        <div className="container" style={{ padding: "0 20px" }}>
+          {/* FILTER PILLS - STYLE IDENTIK */}
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginBottom: "40px",
+              overflowX: "auto",
+              paddingBottom: "10px",
+            }}
+          >
+            <Tag
+              className={`filter-pill ${activeRegion === "All China" ? "active" : ""}`}
+              onClick={() => setActiveRegion("All China")}
+              style={{
+                padding: "8px 20px",
+                borderRadius: "20px",
+                cursor: "pointer",
+              }}
+            >
+              All China
+            </Tag>
+            {CHINA_REGIONS.map((reg) => (
+              <Tag
+                key={reg}
+                className={`filter-pill ${activeRegion === reg ? "active" : ""}`}
+                onClick={() => setActiveRegion(reg)}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: "20px",
+                  cursor: "pointer",
+                }}
+              >
+                {reg}
+              </Tag>
+            ))}
           </div>
 
           <Row gutter={[32, 32]}>
-            {/* --- MAIN CONTENT (Kiri) --- */}
-            <Col xs={24} lg={16}>
-              {/* Featured Post */}
+            {/* FEATURED POST */}
+            <Col span={24}>
               <Card
-                hoverable
-                cover={
-                  <img
-                    alt="featured"
-                    src={FEATURED_POST.image}
-                    style={{ height: 350, objectFit: "cover" }}
-                  />
-                }
+                className="feature-card"
                 style={{
-                  borderRadius: 16,
+                  borderRadius: "24px",
                   overflow: "hidden",
-                  marginBottom: 32,
+                  border: "none",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
                 }}
-                bodyStyle={{ padding: 24 }}
+                bodyStyle={{ padding: 0 }}
               >
-                <Tag color="gold" style={{ marginBottom: 12 }}>
-                  FEATURED
-                </Tag>
-                <Title level={2}>{FEATURED_POST.title}</Title>
-                <Paragraph type="secondary" style={{ fontSize: 16 }}>
-                  {FEATURED_POST.excerpt}
-                </Paragraph>
-                <Space split={<Divider type="vertical" />}>
-                  <Text type="secondary">
-                    <UserOutlined /> {FEATURED_POST.author}
-                  </Text>
-                  <Text type="secondary">
-                    <CalendarOutlined /> {FEATURED_POST.date}
-                  </Text>
-                </Space>
-                <div style={{ marginTop: 20 }}>
-                  <Button
-                    type="primary"
-                    shape="round"
-                    style={{ background: "#2E7D32" }}
-                  >
-                    Baca Selengkapnya <ArrowRightOutlined />
-                  </Button>
-                </div>
-              </Card>
-
-              {/* Grid Artikel Lainnya */}
-              <Row gutter={[20, 20]}>
-                {POSTS.map((post) => (
-                  <Col xs={24} sm={12} key={post.id}>
-                    <Card
-                      hoverable
-                      cover={
-                        <img
-                          alt="blog"
-                          src={post.img}
-                          style={{ height: 180, objectFit: "cover" }}
-                        />
-                      }
-                      style={{ borderRadius: 12, overflow: "hidden" }}
-                    >
-                      <Tag color="green">{post.category}</Tag>
-                      <Title level={5} style={{ marginTop: 10 }}>
-                        {post.title}
-                      </Title>
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {post.date}
-                      </Text>
-                    </Card>
+                <Row>
+                  <Col xs={24} md={12}>
+                    <img
+                      src="https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=1200"
+                      alt="Featured"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        minHeight: "300px",
+                      }}
+                    />
                   </Col>
-                ))}
-              </Row>
-              <Pagination
-                style={{ marginTop: 40, textAlign: "center" }}
-                total={50}
-              />
+                  <Col
+                    xs={24}
+                    md={12}
+                    style={{ padding: isMobile ? "30px" : "60px" }}
+                  >
+                    <Tag color="gold" style={{ marginBottom: 16 }}>
+                      MUST READ
+                    </Tag>
+                    <Title level={2} style={{ color: "var(--text-dark)" }}>
+                      The Rising Popularity of Halal Hotpot in Shanghai
+                    </Title>
+                    <Paragraph type="secondary" style={{ fontSize: 16 }}>
+                      As the demand for diverse culinary experiences grows,
+                      halal hotpot establishments are becoming the new center
+                      for social gatherings...
+                    </Paragraph>
+                    <Button
+                      type="primary"
+                      className="btn-green"
+                      shape="round"
+                      size="large"
+                      style={{ marginTop: 24 }}
+                    >
+                      Read Story <ArrowRightOutlined />
+                    </Button>
+                  </Col>
+                </Row>
+              </Card>
             </Col>
 
-            {/* --- SIDEBAR (Kanan) --- */}
-            <Col xs={24} lg={8}>
-              {/* Kategori */}
-              <Card
-                title="Kategori"
-                style={{ borderRadius: 16, marginBottom: 24 }}
-              >
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Text>Travel Guide</Text>
-                    <Badge
-                      count={12}
-                      style={{ backgroundColor: "#f5f5f5", color: "#999" }}
-                    />
-                  </div>
-                  <Divider style={{ margin: "8px 0" }} />
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Text>Halal Food</Text>
-                    <Badge
-                      count={8}
-                      style={{ backgroundColor: "#f5f5f5", color: "#999" }}
-                    />
-                  </div>
-                  <Divider style={{ margin: "8px 0" }} />
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Text>Community</Text>
-                    <Badge
-                      count={5}
-                      style={{ backgroundColor: "#f5f5f5", color: "#999" }}
-                    />
-                  </div>
-                </Space>
-              </Card>
-
-              {/* Newsletter (Gaya Glassmorphism) */}
-              <Card
-                style={{
-                  borderRadius: 16,
-                  background:
-                    "linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%)",
-                  color: "#fff",
-                }}
-              >
-                <FireOutlined style={{ fontSize: 30, color: "#faad14" }} />
-                <Title level={4} style={{ color: "#fff", marginTop: 10 }}>
-                  Jangan Ketinggalan!
-                </Title>
-                <Text style={{ color: "rgba(255,255,255,0.8)" }}>
-                  Dapatkan update destinasi halal terbaru langsung di email
-                  kamu.
-                </Text>
-                <Input
-                  placeholder="Email Anda"
-                  style={{ margin: "16px 0", borderRadius: 8 }}
-                />
-                <Button
-                  block
-                  type="primary"
+            {/* NORMAL POSTS */}
+            {[1, 2, 3].map((item) => (
+              <Col xs={24} md={8} key={item}>
+                <Card
+                  hoverable
+                  className="feature-card"
                   style={{
-                    background: "#faad14",
+                    borderRadius: "16px",
                     border: "none",
-                    borderRadius: 8,
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
                   }}
+                  cover={
+                    <img
+                      alt="news"
+                      src={`https://images.unsplash.com/photo-1590076215667-875d4ef2d97e?w=800&sig=${item}`}
+                      style={{ height: 220, objectFit: "cover" }}
+                    />
+                  }
                 >
-                  Subscribe Now
-                </Button>
-              </Card>
-            </Col>
+                  <Space style={{ marginBottom: 12 }}>
+                    <CalendarOutlined style={{ color: "#999" }} />
+                    <Text type="secondary">April 05, 2026</Text>
+                  </Space>
+                  <Title level={4} style={{ marginTop: 0 }}>
+                    Beijing's Oldest Mosque Renovation Completed
+                  </Title>
+                  <Paragraph type="secondary" ellipsis={{ rows: 2 }}>
+                    The historical restoration project in Niujie has finally
+                    reached its completion phase...
+                  </Paragraph>
+                  <Divider style={{ margin: "16px 0" }} />
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Space>
+                      <Avatar size="small" icon={<UserOutlined />} />
+                      <Text strong>Admin</Text>
+                    </Space>
+                    <Button
+                      type="link"
+                      style={{ color: "var(--primary-green)", padding: 0 }}
+                    >
+                      View Detail
+                    </Button>
+                  </div>
+                </Card>
+              </Col>
+            ))}
           </Row>
         </div>
-      </Content>
-    </Layout>
+      </section>
+      {/* MODAL UPLOAD - STYLE FORM IDENTIK */}
+      <Modal
+        title={
+          <div style={{ textAlign: "center" }}>
+            <Title level={4} style={{ margin: 0 }}>
+              Publish New Article
+            </Title>
+            <Text type="secondary">
+              Share news or guides with the community
+            </Text>
+          </div>
+        }
+        open={isUploadModalOpen}
+        onCancel={() => setIsUploadModalOpen(false)}
+        footer={null}
+        centered
+        width={600}
+      >
+        <Form layout="vertical" size="large" style={{ marginTop: 24 }}>
+          <Form.Item label="News Title">
+            <Input placeholder="Enter title" style={{ borderRadius: 12 }} />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Region">
+                <Select
+                  placeholder="Select Region"
+                  style={{ borderRadius: 12 }}
+                >
+                  {CHINA_REGIONS.map((r) => (
+                    <Select.Option key={r} value={r}>
+                      {r}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Category">
+                <Select placeholder="Category" style={{ borderRadius: 12 }}>
+                  <Select.Option value="food">Food Guide</Select.Option>
+                  <Select.Option value="event">Community Event</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item label="Content Article">
+            <TextArea
+              rows={5}
+              placeholder="Write the full story..."
+              style={{ borderRadius: 12 }}
+            />
+          </Form.Item>
+          <Form.Item label="Cover Image">
+            <Upload listType="picture-card">
+              <div>
+                <CameraOutlined />
+                <div style={{ marginTop: 8 }}>Upload</div>
+              </div>
+            </Upload>
+          </Form.Item>
+          <Button
+            type="primary"
+            block
+            className="btn-green"
+            size="large"
+            shape="round"
+            style={{ height: 48, background: "#2E7D32" }}
+          >
+            Publish Now
+          </Button>
+        </Form>
+      </Modal>
+      {/* DRAWER MOBILE - STYLE IDENTIK */}
+      <Drawer
+        title="Menu"
+        placement="right"
+        onClose={() => setIsMobileMenuOpen(false)}
+        open={isMobileMenuOpen}
+        width={280}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <Button
+            type="text"
+            block
+            style={{ textAlign: "left" }}
+            onClick={() => onNavigate("landing")}
+          >
+            Home
+          </Button>
+          <Button
+            type="text"
+            block
+            style={{ textAlign: "left" }}
+            onClick={() => onNavigate("finder")}
+          >
+            Halal Finder
+          </Button>
+          <Button
+            type="text"
+            block
+            style={{ textAlign: "left" }}
+            onClick={() => onNavigate("mosque")}
+          >
+            Mosque Map
+          </Button>
+          <Divider />
+          <Button
+            type="primary"
+            block
+            className="btn-gold"
+            onClick={() => setIsUploadModalOpen(true)}
+          >
+            Post News
+          </Button>
+        </div>
+      </Drawer>
+    </div>
   );
-};
+}
 
 export default BlogPage;

@@ -252,7 +252,7 @@ const LocationPickerMarker = ({ position, setPosition }) => {
         }
       },
     }),
-    [setPosition]
+    [setPosition],
   );
 
   return (
@@ -595,7 +595,7 @@ function HalalFinder({ onNavigate }) {
         type="text"
         block
         style={{ textAlign: "left" }}
-        onClick={() => setIsMobileMenuOpen(false)}
+        onClick={() => onNavigate("community-page")}
       >
         {t("nav_community")}
       </Button>
@@ -711,7 +711,7 @@ function HalalFinder({ onNavigate }) {
       const query = `[out:json][timeout:15];(node["amenity"~"restaurant|cafe|fast_food"](around:${MAX_RADIUS_METERS}, ${lat}, ${lng}););out ${MAX_RESULTS};`;
       const osmPromise = fetch(
         "https://overpass.kumi.systems/api/interpreter",
-        { method: "POST", body: query }
+        { method: "POST", body: query },
       );
 
       const [dbRes, osmRes] = await Promise.allSettled([dbPromise, osmPromise]);
@@ -783,7 +783,7 @@ function HalalFinder({ onNavigate }) {
           .map((item, i) => {
             let tags = ["Verified Halal"];
             const pool = ["Muslim Owned", "No Alcohol", "Prayer Room"].sort(
-              () => 0.5 - Math.random()
+              () => 0.5 - Math.random(),
             );
             tags.push(...pool.slice(0, 3));
 
@@ -1020,7 +1020,7 @@ function HalalFinder({ onNavigate }) {
     } catch (error) {
       console.error("Update Error:", error);
       message.error(
-        "Failed to update: " + (error.response?.data?.message || error.message)
+        "Failed to update: " + (error.response?.data?.message || error.message),
       );
     } finally {
       setIsUpdating(false);
@@ -1157,7 +1157,7 @@ function HalalFinder({ onNavigate }) {
       message.success(
         oldStatus === statusType
           ? "Removed from list"
-          : `Marked as ${statusType}`
+          : `Marked as ${statusType}`,
       );
 
       if (idStr.startsWith("osm-")) {
@@ -1216,7 +1216,7 @@ function HalalFinder({ onNavigate }) {
   useEffect(() => {
     if (userLocation)
       setQiblaDirection(
-        calculateQiblaDirection(userLocation[0], userLocation[1])
+        calculateQiblaDirection(userLocation[0], userLocation[1]),
       );
   }, [userLocation]);
 
@@ -1257,7 +1257,7 @@ function HalalFinder({ onNavigate }) {
         message.error("Check GPS settings / Allow Location Access");
         fallbackToIpLocation();
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   };
 
@@ -1276,7 +1276,7 @@ function HalalFinder({ onNavigate }) {
       (err) => {
         fallbackToIpLocation();
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   }, []);
 
@@ -1285,11 +1285,11 @@ function HalalFinder({ onNavigate }) {
     if (mapCenter) fetchPlaces(mapCenter.lat, mapCenter.lng);
   };
   const safeFilteredPlaces = filteredPlaces.filter((p) =>
-    isValidCoordinate(p.lat, p.lng)
+    isValidCoordinate(p.lat, p.lng),
   );
   const safeUserLocation = isValidCoordinate(
     userLocation?.[0],
-    userLocation?.[1]
+    userLocation?.[1],
   )
     ? userLocation
     : [39.9042, 116.4074];
@@ -1463,7 +1463,7 @@ function HalalFinder({ onNavigate }) {
             <Button type="link" onClick={() => onNavigate("prayer")}>
               {t("nav_prayer")}
             </Button>
-            <Button type="link" onClick={() => {}}>
+            <Button type="link" onClick={() => onNavigate("community-page")}>
               {t("nav_community")}
             </Button>
             <Button type="link" onClick={() => {}}>
@@ -1844,7 +1844,7 @@ function HalalFinder({ onNavigate }) {
                   icon={createCustomIcon(
                     place.source,
                     selectedPlace?.id === place.id,
-                    userVisits[place.id] === "Visited"
+                    userVisits[place.id] === "Visited",
                   )}
                   eventHandlers={{
                     click: () => {
@@ -2202,14 +2202,14 @@ function HalalFinder({ onNavigate }) {
                       color: getOpenStatus(
                         selectedPlace.openTime,
                         selectedPlace.closeTime,
-                        t
+                        t,
                       ).color,
                     }}
                   >
                     {getOpenStatus(
                       selectedPlace.openTime,
                       selectedPlace.closeTime,
-                      t
+                      t,
                     ).isOpen
                       ? t("status_open").toUpperCase()
                       : t("status_closed").toUpperCase()}
