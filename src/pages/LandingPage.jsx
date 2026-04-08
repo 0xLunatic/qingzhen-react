@@ -310,7 +310,7 @@ function LandingPage({ onNavigate }) {
         type="text"
         block
         style={{ textAlign: "left" }}
-        onClick={() => setIsMobileMenuOpen(false)}
+        onClick={() => onNavigate("blog-page")}
       >
         {t("nav_blog")}
       </Button>

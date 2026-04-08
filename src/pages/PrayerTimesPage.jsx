@@ -377,7 +377,7 @@ function PrayerTime({ onNavigate }) {
         type="text"
         block
         style={{ textAlign: "left" }}
-        onClick={() => setIsMobileMenuOpen(false)}
+        onClick={() => onNavigate("blog-page")}
       >
         {t("nav_blog")}
       </Button>
@@ -511,7 +511,7 @@ function PrayerTime({ onNavigate }) {
             <Button type="link" onClick={() => onNavigate("community-page")}>
               {t("nav_community")}
             </Button>
-            <Button type="link" onClick={() => {}}>
+            <Button type="link" onClick={() => onNavigate("blog-page")}>
               {t("nav_blog")}
             </Button>
           </div>

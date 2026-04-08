@@ -676,7 +676,7 @@ function MosqueFinder({ onNavigate }) {
         type="text"
         block
         style={{ textAlign: "left" }}
-        onClick={() => setIsMobileMenuOpen(false)}
+        onClick={() => onNavigate("blog-page")}
       >
         {t("nav_blog")}
       </Button>
@@ -1444,7 +1444,7 @@ function MosqueFinder({ onNavigate }) {
             <Button type="link" onClick={() => onNavigate("community-page")}>
               {t("nav_community")}
             </Button>
-            <Button type="link" onClick={() => onNavigate("blog")}>
+            <Button type="link" onClick={() => onNavigate("blog-page")}>
               {t("nav_blog")}
             </Button>
           </div>
