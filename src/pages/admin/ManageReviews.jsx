@@ -114,7 +114,7 @@ const ManageReviews = () => {
       align: "center",
       render: (_, r) => (
         <Popconfirm
-          title="Delete this review?"
+          title={<span style={{ color: "red" }}>Delete this review?</span>}
           onConfirm={() => handleDelete(r.id)}
           okButtonProps={{ danger: true }}
         >

@@ -8,14 +8,14 @@ import {
   message,
   Select,
   Typography,
-  ConfigProvider
+  ConfigProvider,
 } from "antd";
 import {
   UserOutlined,
   DeleteOutlined,
   ReloadOutlined,
   DownOutlined,
-  SafetyCertificateFilled
+  SafetyCertificateFilled,
 } from "@ant-design/icons";
 import api from "../../utils/api";
 
@@ -34,8 +34,8 @@ const THEME = {
   roleBg: {
     admin: "rgba(255, 77, 79, 0.15)",
     contributor: "rgba(212, 175, 55, 0.15)",
-    user: "rgba(24, 144, 255, 0.15)"
-  }
+    user: "rgba(24, 144, 255, 0.15)",
+  },
 };
 
 /* ================= ROLE BADGE ================= */
@@ -73,7 +73,7 @@ const RoleBadge = ({ role }) => {
         fontWeight: "bold",
         letterSpacing: "0.6px",
         boxShadow: `0 0 8px ${color}30`,
-        whiteSpace: "nowrap"
+        whiteSpace: "nowrap",
       }}
     >
       {icon} {text}
@@ -119,9 +119,7 @@ const ManageUsers = () => {
       const res = await api.put(`/admin/users/${userId}/role`, { role });
       if (res.data.success) {
         message.success(`Role updated to ${role.toUpperCase()}`);
-        setUsers((u) =>
-          u.map((x) => (x.id === userId ? { ...x, role } : x))
-        );
+        setUsers((u) => u.map((x) => (x.id === userId ? { ...x, role } : x)));
       }
     } catch {
       message.error("Failed to update role");
@@ -144,7 +142,7 @@ const ManageUsers = () => {
             size={42}
             style={{
               border: `2px solid ${THEME.gold}`,
-              background: "rgba(255,255,255,0.1)"
+              background: "rgba(255,255,255,0.1)",
             }}
           />
           <div>
@@ -156,7 +154,7 @@ const ManageUsers = () => {
             </div>
           </div>
         </div>
-      )
+      ),
     },
     {
       title: <span style={{ color: THEME.textSec }}>Contact</span>,
@@ -168,7 +166,7 @@ const ManageUsers = () => {
             {r.phone_number || "-"}
           </div>
         </>
-      )
+      ),
     },
     {
       title: <span style={{ color: THEME.textSec }}>Role Access</span>,
@@ -200,7 +198,7 @@ const ManageUsers = () => {
             <RoleBadge role="admin" />
           </Option>
         </Select>
-      )
+      ),
     },
     {
       title: <span style={{ color: THEME.textSec }}>Action</span>,
@@ -210,7 +208,7 @@ const ManageUsers = () => {
       render: (_, r) =>
         r.role !== "admin" && (
           <Popconfirm
-            title="Delete user?"
+            title={<span style={{ color: "red" }}>Delete this user?</span>}
             onConfirm={() => handleDelete(r.id)}
             okButtonProps={{ danger: true }}
           >
@@ -220,12 +218,12 @@ const ManageUsers = () => {
               icon={<DeleteOutlined />}
               style={{
                 background: "rgba(255,77,79,0.15)",
-                borderRadius: 10
+                borderRadius: 10,
               }}
             />
           </Popconfirm>
-        )
-    }
+        ),
+    },
   ];
 
   return (
@@ -279,19 +277,19 @@ const ManageUsers = () => {
         theme={{
           token: { colorText: "white", fontFamily: "'Inter', sans-serif" },
           components: {
-             Table: {
-               colorBgContainer: "transparent",
-               colorTextHeading: "rgba(255,255,255,0.6)",
-               borderColor: "rgba(255,255,255,0.05)",
-               headerBg: "rgba(0,0,0,0.2)",
-               rowHoverBg: "rgba(255,255,255,0.05)",
-             },
-             // Tambahan Pagination agar terlihat
-             Pagination: {
-                itemActiveBg: "transparent", // Background pagination aktif jadi transparan
-                colorText: "white"
-             }
-          }
+            Table: {
+              colorBgContainer: "transparent",
+              colorTextHeading: "rgba(255,255,255,0.6)",
+              borderColor: "rgba(255,255,255,0.05)",
+              headerBg: "rgba(0,0,0,0.2)",
+              rowHoverBg: "rgba(255,255,255,0.05)",
+            },
+            // Tambahan Pagination agar terlihat
+            Pagination: {
+              itemActiveBg: "transparent", // Background pagination aktif jadi transparan
+              colorText: "white",
+            },
+          },
         }}
       >
         <div style={{ paddingBottom: 32 }}>
@@ -301,11 +299,14 @@ const ManageUsers = () => {
               display: "flex",
               justifyContent: "space-between",
               marginBottom: 24,
-              alignItems: "end"
+              alignItems: "end",
             }}
           >
             <div>
-              <Title level={2} style={{ color: "white", margin: 0, fontWeight: 700 }}>
+              <Title
+                level={2}
+                style={{ color: "white", margin: 0, fontWeight: 700 }}
+              >
                 User Management
               </Title>
               <Text style={{ color: THEME.textSec }}>
@@ -320,7 +321,7 @@ const ManageUsers = () => {
                 color: "white",
                 borderRadius: 30,
                 border: "1px solid rgba(255,255,255,0.25)",
-                height: 40
+                height: 40,
               }}
             >
               Refresh
@@ -335,7 +336,7 @@ const ManageUsers = () => {
               borderRadius: 24,
               backdropFilter: "blur(20px)",
               padding: "8px 0",
-              overflow: "hidden"
+              overflow: "hidden",
             }}
           >
             <Table
@@ -343,11 +344,11 @@ const ManageUsers = () => {
               dataSource={users}
               rowKey="id"
               loading={loading}
-              pagination={{ 
-                 pageSize: 8, 
-                 showSizeChanger: false,
-                 position: ["bottomRight"],
-                 style: { marginRight: 24 } // Geser pagination biar gak mepet
+              pagination={{
+                pageSize: 8,
+                showSizeChanger: false,
+                position: ["bottomRight"],
+                style: { marginRight: 24 }, // Geser pagination biar gak mepet
               }}
               scroll={{ x: 800 }}
             />
