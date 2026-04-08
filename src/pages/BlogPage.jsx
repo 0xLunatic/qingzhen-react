@@ -9,49 +9,59 @@ import {
   Tag,
   Typography,
   Avatar,
-  Modal,
-  message,
-  Grid,
   Divider,
+  Grid,
+  Dropdown,
+  Space,
+  Modal,
+  Drawer,
+  message,
   Form,
   Upload,
-  Spin,
   Select,
-  Breadcrumb,
   Empty,
   Badge,
   Tooltip,
-  Drawer,
-  Space,
 } from "antd";
 import {
   SearchOutlined,
+  CalendarOutlined,
+  UserOutlined,
   ArrowRightOutlined,
   ArrowLeftOutlined,
+  GlobalOutlined,
+  FacebookFilled,
+  InstagramFilled,
+  YoutubeFilled,
+  ReadOutlined,
+  TranslationOutlined,
+  MenuOutlined,
+  LogoutOutlined,
+  SettingOutlined,
+  DownOutlined,
+  AppleFilled,
+  AndroidFilled,
+  ShareAltOutlined,
   EditOutlined,
   CameraOutlined,
-  UserOutlined,
-  CalendarOutlined,
   EyeOutlined,
   HeartOutlined,
   HeartFilled,
-  ShareAltOutlined,
   FireOutlined,
-  GlobalOutlined,
   ClockCircleOutlined,
   TagOutlined,
-  ReadOutlined,
-  PlusOutlined,
   FilterOutlined,
   BookOutlined,
   SafetyCertificateFilled,
   CheckCircleFilled,
-  MenuOutlined,
-  TranslationOutlined,
-  LogoutOutlined,
-  DownOutlined,
   CompassFilled,
 } from "@ant-design/icons";
+import "../App.css";
+import logoImage from "../assets/logo.png";
+
+// 👇 IMPORT BAHASA (Sesuaikan path-nya jika berbeda)
+import { en } from "../lang/en";
+import { cn } from "../lang/cn";
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -93,6 +103,13 @@ const CATEGORIES = [
   },
 ];
 
+const mockContent = [
+  "Bagi wisatawan Muslim, menemukan makanan halal di luar negeri terkadang terasa seperti mencari jarum di tumpukan jerami. Namun, dengan persiapan yang matang dan penggunaan teknologi modern, pengalaman kuliner Anda bisa menjadi sangat menyenangkan dan bebas rasa khawatir.",
+  "Pertama-tama, kenali sertifikasi halal lokal. Setiap negara biasanya memiliki lembaga resmi yang mengeluarkan logo halal. Pastikan Anda menyimpan gambar logo tersebut di ponsel Anda sebagai referensi cepat saat melihat menu atau papan nama restoran di jalan.",
+  "Selain itu, jangan ragu untuk bertanya. Meskipun ada kendala bahasa, banyak pemilik restoran yang mengerti kata 'Halal' atau 'No Pork, No Lard'. Aplikasi penerjemah atau kamus saku yang berisi frasa-frasa penting tentang pantangan makanan akan sangat membantu.",
+  "Terakhir, manfaatkan komunitas. Aplikasi seperti QingzhenMu mengandalkan ulasan dari sesama pengguna Muslim yang telah memverifikasi secara langsung status kehalalan tempat tersebut. Membaca ulasan dan melihat foto dari komunitas seringkali memberikan informasi yang lebih akurat daripada sekadar klaim di internet.",
+];
+
 // --- MOCK BLOG DATA ---
 const MOCK_POSTS = [
   {
@@ -100,7 +117,7 @@ const MOCK_POSTS = [
     title: "China Issues New National Halal Food Standards for 2025",
     excerpt:
       "The State Administration for Market Regulation has released comprehensive guidelines covering halal slaughter, processing facilities, and certification requirements across all provinces.",
-    content: "Full article content here...",
+    content: mockContent,
     category: "certification",
     author: "Ahmad Wei",
     authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=AhmadWei",
@@ -118,7 +135,7 @@ const MOCK_POSTS = [
     title: "Xi'an's Muslim Quarter: A Complete Guide for Halal Travelers",
     excerpt:
       "Discover the best halal restaurants, traditional markets, and cultural experiences in China's most iconic Islamic neighborhood. From lamb skewers to hand-pulled noodles.",
-    content: "Full article content here...",
+    content: mockContent,
     category: "travel",
     author: "Fatimah Chen",
     authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=FatimahChen",
@@ -136,7 +153,7 @@ const MOCK_POSTS = [
     title: "Top 10 Halal-Certified Chain Restaurants Expanding in China",
     excerpt:
       "Major F&B brands are racing to obtain halal certification as Muslim consumer spending reaches record highs. Here are the chains leading the charge.",
-    content: "Full article content here...",
+    content: mockContent,
     category: "food",
     author: "Muhammad Liu",
     authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=MuhammadLiu",
@@ -154,7 +171,7 @@ const MOCK_POSTS = [
     title: "Xinjiang Halal Industry to Reach ¥50 Billion by 2026",
     excerpt:
       "Regional government reports indicate rapid growth in halal food production, hospitality, and export sectors as international demand surges.",
-    content: "Full article content here...",
+    content: mockContent,
     category: "policy",
     author: "Yusuf Zhang",
     authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=YusufZhang",
@@ -172,7 +189,7 @@ const MOCK_POSTS = [
     title: "How Chinese Muslims Are Reviving Traditional Halal Recipes",
     excerpt:
       "A new generation of Hui chefs is blending ancient Islamic culinary traditions with modern techniques, creating a renaissance of authentic Chinese halal cuisine.",
-    content: "Full article content here...",
+    content: mockContent,
     category: "food",
     author: "Khadijah Zhao",
     authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=KhadijahZhao",
@@ -191,7 +208,7 @@ const MOCK_POSTS = [
       "Prayer Room Facilities Become Mandatory in New Shanghai Airports Terminal",
     excerpt:
       "Shanghai Pudong International Airport's new Terminal 4 will feature dedicated prayer rooms, halal dining zones, and wudu washing facilities as part of inclusive design.",
-    content: "Full article content here...",
+    content: mockContent,
     category: "community",
     author: "Ibrahim Sun",
     authorAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=IbrahimSun",
@@ -222,6 +239,8 @@ const BlogCard = ({ post, onRead, onLike, likedPosts }) => {
         overflow: "hidden",
         boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
         height: "100%",
+        display: "flex",
+        flexDirection: "column",
         transition: "transform 0.2s ease, box-shadow 0.2s ease",
       }}
       onMouseEnter={(e) => {
@@ -233,7 +252,6 @@ const BlogCard = ({ post, onRead, onLike, likedPosts }) => {
         e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.08)";
       }}
     >
-      {/* Image */}
       <div style={{ position: "relative", overflow: "hidden", height: 200 }}>
         <img
           src={post.image}
@@ -244,8 +262,6 @@ const BlogCard = ({ post, onRead, onLike, likedPosts }) => {
             objectFit: "cover",
             transition: "transform 0.3s ease",
           }}
-          onMouseEnter={(e) => (e.target.style.transform = "scale(1.05)")}
-          onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
         />
         <div style={{ position: "absolute", top: 12, left: 12 }}>
           <Tag
@@ -263,28 +279,9 @@ const BlogCard = ({ post, onRead, onLike, likedPosts }) => {
             {catObj.label}
           </Tag>
         </div>
-        {post.featured && (
-          <div style={{ position: "absolute", top: 12, right: 12 }}>
-            <Tag
-              icon={<FireOutlined />}
-              style={{
-                background: "#ff4d4f",
-                color: "white",
-                border: "none",
-                borderRadius: 20,
-                padding: "2px 10px",
-                fontWeight: 600,
-                fontSize: 12,
-              }}
-            >
-              Featured
-            </Tag>
-          </div>
-        )}
       </div>
 
-      {/* Content */}
-      <div style={{ padding: "20px 20px 16px" }}>
+      <div style={{ padding: "20px 20px 16px", flex: 1 }}>
         <div
           style={{
             display: "flex",
@@ -300,11 +297,6 @@ const BlogCard = ({ post, onRead, onLike, likedPosts }) => {
           <Text style={{ fontSize: 12, color: "#bbb" }}>
             <CalendarOutlined style={{ marginRight: 4 }} />
             {post.date}
-          </Text>
-          <Text style={{ fontSize: 12, color: "#bbb" }}>·</Text>
-          <Text style={{ fontSize: 12, color: "#bbb" }}>
-            <ClockCircleOutlined style={{ marginRight: 4 }} />
-            {post.readTime}
           </Text>
         </div>
 
@@ -324,7 +316,6 @@ const BlogCard = ({ post, onRead, onLike, likedPosts }) => {
         </Paragraph>
       </div>
 
-      {/* Footer */}
       <div
         style={{
           padding: "12px 20px",
@@ -397,7 +388,7 @@ const FeaturedCard = ({ post, onRead, onLike, likedPosts }) => {
       }}
       onClick={() => onRead(post)}
     >
-      <div style={{ position: "relative" }}>
+      <div style={{ position: "relative", height: "100%" }}>
         <img
           src={post.image}
           alt={post.title}
@@ -413,7 +404,7 @@ const FeaturedCard = ({ post, onRead, onLike, likedPosts }) => {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)",
+              "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)",
           }}
         />
         <div
@@ -489,32 +480,11 @@ const FeaturedCard = ({ post, onRead, onLike, likedPosts }) => {
             <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
               · {post.date}
             </Text>
-            <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
-              · {post.readTime}
-            </Text>
             <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
               <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 13 }}>
                 <EyeOutlined style={{ marginRight: 4 }} />
                 {post.views.toLocaleString()}
               </Text>
-              <Button
-                type="text"
-                size="small"
-                icon={
-                  isLiked ? (
-                    <HeartFilled style={{ color: "#ff4d4f" }} />
-                  ) : (
-                    <HeartOutlined style={{ color: "white" }} />
-                  )
-                }
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onLike(post.id);
-                }}
-                style={{ color: "white", padding: 0 }}
-              >
-                {post.likes + (isLiked ? 1 : 0)}
-              </Button>
             </div>
           </div>
         </div>
@@ -530,30 +500,133 @@ function BlogPage({ onNavigate }) {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
+  const [lang, setLang] = useState("en");
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [sortBy, setSortBy] = useState("latest");
   const [likedPosts, setLikedPosts] = useState([]);
   const [posts, setPosts] = useState(MOCK_POSTS);
-  const [loading, setLoading] = useState(false);
 
-  // Modals
+  // Modals & Navigation States
   const [selectedPost, setSelectedPost] = useState(null);
-  const [isReadModalOpen, setIsReadModalOpen] = useState(false);
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // Scroll to top ketika artikel dibuka/ditutup
+    window.scrollTo(0, 0);
+  }, [selectedPost]);
+
+  useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
-      } catch (e) {}
+      } catch (error) {
+        console.error("Failed to parse user data");
+      }
     }
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    message.success("Logged out successfully");
+  };
+
+  const TRANSLATIONS = { en, cn };
+  const t = (key) => TRANSLATIONS[lang]?.[key] || key;
+
+  const toggleLanguage = () => {
+    setLang((prev) => (prev === "en" ? "cn" : "en"));
+    message.success(
+      lang === "en" ? "Switched to Chinese" : "Switched to English"
+    );
+  };
+
+  const handleNavigateBlog = () => {
+    setSelectedPost(null); // Tutup artikel jika sedang baca, kembali ke list
+    setIsMobileMenuOpen(false);
+  };
+
+  const userMenuItems = [
+    {
+      key: "profile",
+      label: "My Profile",
+      icon: <UserOutlined />,
+      onClick: () => message.info("Go to Profile Page"),
+    },
+    {
+      key: "settings",
+      label: "Settings",
+      icon: <SettingOutlined />,
+      onClick: () => message.info("Go to Settings"),
+    },
+    { type: "divider" },
+    {
+      key: "logout",
+      label: "Log Out",
+      icon: <LogoutOutlined />,
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
+
+  // Helper Menu Mobile (Drawer)
+  const renderMobileMenu = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <Button type="text" block style={{ textAlign: "left" }} onClick={() => { onNavigate("finder"); setIsMobileMenuOpen(false); }}>
+        {t("nav_finder")}
+      </Button>
+      <Button type="text" block style={{ textAlign: "left" }} onClick={() => { onNavigate("mosque"); setIsMobileMenuOpen(false); }}>
+        {t("nav_mosque")}
+      </Button>
+      <Button type="text" block style={{ textAlign: "left" }} onClick={() => { onNavigate("prayer"); setIsMobileMenuOpen(false); }}>
+        {t("nav_prayer")}
+      </Button>
+      <Button type="text" block style={{ textAlign: "left" }} onClick={() => setIsMobileMenuOpen(false)}>
+        {t("nav_community")}
+      </Button>
+      <Button type="text" block style={{ textAlign: "left", color: "var(--primary-green)", fontWeight: "bold", background: "rgba(15, 81, 50, 0.05)" }} onClick={handleNavigateBlog}>
+        {t("nav_blog")}
+      </Button>
+
+      <Divider style={{ margin: "8px 0" }} />
+
+      {user ? (
+        <div style={{ padding: "0 8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+            <Avatar src={user.avatar_url} icon={<UserOutlined />} style={{ border: "2px solid var(--primary-green)" }} />
+            <Text strong>{user.name || user.username}</Text>
+          </div>
+          <Button block icon={<UserOutlined />} onClick={() => message.info("Profile")} style={{ marginBottom: 8, borderRadius: 8 }}>
+            My Profile
+          </Button>
+          <Button block icon={<LogoutOutlined />} danger onClick={handleLogout} style={{ borderRadius: 8 }}>
+            Log Out
+          </Button>
+        </div>
+      ) : (
+        <Button type="primary" block onClick={() => onNavigate("auth")} style={{ borderRadius: 8, background: "var(--primary-green)" }}>
+          {t("nav_signin")}
+        </Button>
+      )}
+
+      <Button block onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }} icon={<TranslationOutlined />} style={{ borderRadius: 8 }}>
+        {lang === "en" ? "CN" : "EN"}
+      </Button>
+
+      <Button block shape="round" className="btn-gold" onClick={() => { setIsDownloadModalOpen(true); setIsMobileMenuOpen(false); }} style={{ marginTop: 8 }}>
+        {t("nav_download")}
+      </Button>
+    </div>
+  );
 
   // --- Computed: filtered & sorted posts ---
   const filteredPosts = posts
@@ -564,7 +637,7 @@ function BlogPage({ onNavigate }) {
         !searchText ||
         p.title.toLowerCase().includes(searchText.toLowerCase()) ||
         p.excerpt.toLowerCase().includes(searchText.toLowerCase()) ||
-        p.tags.some((t) => t.toLowerCase().includes(searchText.toLowerCase()));
+        p.tags.some((tag) => tag.toLowerCase().includes(searchText.toLowerCase()));
       return matchCat && matchSearch;
     })
     .sort((a, b) => {
@@ -579,23 +652,22 @@ function BlogPage({ onNavigate }) {
 
   const handleLike = (id) => {
     setLikedPosts((prev) =>
-      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]
     );
   };
 
   const handleRead = (post) => {
     setSelectedPost(post);
-    setIsReadModalOpen(true);
     // increment view count
     setPosts((prev) =>
-      prev.map((p) => (p.id === post.id ? { ...p, views: p.views + 1 } : p)),
+      prev.map((p) => (p.id === post.id ? { ...p, views: p.views + 1 } : p))
     );
   };
 
   const handleWriteOpen = () => {
     if (!user) {
       message.warning("Please sign in to write an article.");
-      onNavigate && onNavigate("auth");
+      if (onNavigate) onNavigate("auth");
       return;
     }
     setIsWriteModalOpen(true);
@@ -616,15 +688,12 @@ function BlogPage({ onNavigate }) {
         readTime: `${Math.max(1, Math.ceil(values.content?.split(" ").length / 200))} min read`,
         views: 0,
         likes: 0,
-        image:
-          "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80",
+        image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80",
         tags: values.tags ? values.tags.split(",").map((t) => t.trim()) : [],
         featured: false,
       };
       setPosts((prev) => [newPost, ...prev]);
-      message.success(
-        "Article submitted successfully! It will be reviewed before publishing.",
-      );
+      message.success("Article submitted successfully! It will be reviewed before publishing.");
       setIsWriteModalOpen(false);
       form.resetFields();
       setSubmitting(false);
@@ -632,666 +701,418 @@ function BlogPage({ onNavigate }) {
   };
 
   return (
-    <div
-      style={{
-        fontFamily: "'Noto Serif', Georgia, serif",
-        background: "#fafaf8",
-        minHeight: "100vh",
-      }}
-    >
-      {/* ─── HEADER ─── */}
-      <header
-        style={{
-          background: "white",
-          borderBottom: "1px solid #e8e8e0",
-          padding: "0 20px",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            display: "flex",
-            alignItems: "center",
-            height: 64,
-            gap: 16,
-            justifyContent: "space-between",
-          }}
-        >
-          {/* Brand */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              flexShrink: 0,
-            }}
-          >
-            <Button
-              type="text"
-              icon={<ArrowLeftOutlined />}
-              onClick={() => onNavigate && onNavigate("landing")}
-              style={{ color: "#2E7D32", fontWeight: 600 }}
-            >
-              {!isMobile && "QingzhenMu"}
-            </Button>
-            <Text style={{ color: "#ccc" }}>/</Text>
-            <Text strong style={{ color: "#1a1a1a", fontSize: 16 }}>
-              <ReadOutlined style={{ marginRight: 6, color: "#2E7D32" }} />
-              Halal News
-            </Text>
+    <div className="blog-page landing-page" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+      
+      {/* HEADER / NAVBAR */}
+      <header className="navbar-container" style={{ padding: "0 20px", background: "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(10px)", position: "sticky", top: 0, zIndex: 1000, borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+        <div className="container navbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: "64px" }}>
+          <div className="brand-logo" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }} onClick={() => onNavigate("home")}>
+            <div className="logo-icon-wrapper">
+              <img src={logoImage} alt="Logo Brand" className="logo-icon" style={{ width: "32px" }} />
+            </div>
+            <span style={{ fontWeight: "800", fontSize: "18px", color: "var(--text-dark)" }}>QingzhenMu</span>
           </div>
 
-          {/* Search - desktop */}
-          {!isMobile && (
-            <Input
-              placeholder="Search articles, topics, tags..."
-              prefix={<SearchOutlined style={{ color: "#bbb" }} />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{
-                maxWidth: 320,
-                borderRadius: 24,
-                background: "#f5f5f0",
-                border: "none",
-              }}
-              allowClear
-            />
-          )}
+          <div className="nav-links desktop-only" style={{ display: isMobile ? "none" : "flex", gap: "24px" }}>
+            <Button type="text" onClick={() => onNavigate("finder")} style={{ fontWeight: 500 }}>{t("nav_finder")}</Button>
+            <Button type="text" onClick={() => onNavigate("mosque")} style={{ fontWeight: 500 }}>{t("nav_mosque")}</Button>
+            <Button type="text" onClick={() => onNavigate("prayer")} style={{ fontWeight: 500 }}>{t("nav_prayer")}</Button>
+            <Button type="text" onClick={() => {}} style={{ fontWeight: 500 }}>{t("nav_community")}</Button>
+            <Button type="text" onClick={handleNavigateBlog} style={{ color: "var(--primary-green)", fontWeight: "700", background: "rgba(15, 81, 50, 0.05)", borderRadius: "8px" }}>{t("nav_blog")}</Button>
+          </div>
 
-          {/* Actions */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {isMobile && (
-              <Button
-                type="text"
-                icon={<SearchOutlined />}
-                onClick={() => message.info("Use the search bar below")}
-              />
+          <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {!isMobile && (
+              <Button type="text" icon={<TranslationOutlined />} onClick={toggleLanguage} style={{ fontWeight: "600", color: "#555" }}>
+                {lang === "en" ? "CN" : "EN"}
+              </Button>
             )}
-            <Button
-              type="primary"
-              shape="round"
-              icon={<EditOutlined />}
-              onClick={handleWriteOpen}
-              style={{
-                background: "#2E7D32",
-                borderColor: "#2E7D32",
-                fontWeight: 600,
-              }}
-            >
-              {!isMobile ? "Write Article" : "Write"}
-            </Button>
+
+            <div className="hide-mobile" style={{ display: isMobile ? "none" : "block" }}>
+              {user ? (
+                <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                  <Button type="text" style={{ height: "auto", padding: "4px 8px", borderRadius: 24 }}>
+                    <Space>
+                      <Avatar src={user.avatar_url} icon={<UserOutlined />} style={{ backgroundColor: "var(--primary-green)" }} />
+                      <Text strong style={{ color: "var(--text-dark)" }}>{user.name || user.username || "User"}</Text>
+                      <DownOutlined style={{ fontSize: 10, color: "#999" }} />
+                    </Space>
+                  </Button>
+                </Dropdown>
+              ) : (
+                <Button type="text" onClick={() => onNavigate("auth")} style={{ fontWeight: 600 }}>{t("nav_signin")}</Button>
+              )}
+            </div>
+
+            {!isMobile && (
+              <Button type="primary" shape="round" className="btn-gold" onClick={() => setIsDownloadModalOpen(true)} style={{ boxShadow: "0 4px 14px rgba(197, 157, 36, 0.3)" }}>
+                {t("nav_download")}
+              </Button>
+            )}
+
+            {isMobile && (
+              <Button type="text" className="mobile-menu-toggle" onClick={() => setIsMobileMenuOpen(true)} icon={<MenuOutlined style={{ fontSize: "20px" }} />} />
+            )}
           </div>
         </div>
       </header>
 
-      {/* ─── HERO BANNER ─── */}
-      <div
-        style={{
-          background:
-            "linear-gradient(135deg, #1B5E20 0%, #2E7D32 40%, #388E3C 70%, #43A047 100%)",
-          padding: isMobile ? "40px 20px" : "60px 20px",
-          textAlign: "center",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Decorative pattern */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage:
-              "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%)",
-          }}
-        />
-        <div style={{ position: "relative", maxWidth: 720, margin: "0 auto" }}>
-          <Tag
-            icon={<SafetyCertificateFilled />}
-            style={{
-              background: "rgba(255,255,255,0.15)",
-              color: "white",
-              border: "1px solid rgba(255,255,255,0.3)",
-              borderRadius: 20,
-              padding: "4px 16px",
-              marginBottom: 16,
-              backdropFilter: "blur(4px)",
-            }}
-          >
-            Halal News in China
-          </Tag>
-          <Title
-            style={{
-              color: "white",
-              fontSize: isMobile ? "2rem" : "3rem",
-              margin: "0 0 16px",
-              fontWeight: 800,
-              lineHeight: 1.2,
-            }}
-          >
-            Stay Informed on Halal in China
-          </Title>
-          <Paragraph
-            style={{
-              color: "rgba(255,255,255,0.85)",
-              fontSize: isMobile ? 15 : 17,
-              margin: "0 0 32px",
-              maxWidth: 580,
-              marginLeft: "auto",
-              marginRight: "auto",
-            }}
-          >
-            The latest news, certifications, travel guides, and community
-            stories about halal living in China — curated for Muslim travelers
-            and residents.
-          </Paragraph>
-          {isMobile && (
-            <Input
-              placeholder="Search articles..."
-              prefix={<SearchOutlined style={{ color: "#bbb" }} />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{
-                borderRadius: 24,
-                maxWidth: 400,
-                border: "none",
-              }}
-              allowClear
-            />
-          )}
-          {/* Stats */}
+      {/* DRAWER UNTUK MENU MOBILE */}
+      <Drawer title={<span style={{ fontWeight: 700 }}>Menu</span>} placement="right" onClose={() => setIsMobileMenuOpen(false)} open={isMobileMenuOpen} width={280}>
+        {renderMobileMenu()}
+      </Drawer>
+
+      {/* RENDER DETAIL ARTIKEL JIKA ADA YANG DIPILIH */}
+      {selectedPost ? (
+        <section style={{ padding: isMobile ? "40px 0" : "60px 0", background: "#fff", minHeight: "80vh" }}>
+          <div className="container" style={{ maxWidth: "800px", margin: "0 auto", padding: "0 20px" }}>
+            {/* Tombol Back */}
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => setSelectedPost(null)}
+              style={{ marginBottom: 32, fontWeight: 600, color: "var(--primary-green)", padding: 0, fontSize: "16px" }}
+            >
+              {lang === "en" ? "Back to Journal" : "返回期刊"}
+            </Button>
+
+            {/* Article Header */}
+            <div style={{ marginBottom: 32 }}>
+              {(() => {
+                const catObj = CATEGORIES.find(c => c.key === selectedPost.category) || CATEGORIES[0];
+                return (
+                  <Tag style={{ background: catObj.color, color: "white", padding: "6px 16px", borderRadius: 20, fontWeight: "700", border: "none", marginBottom: 16, fontSize: "14px" }}>
+                    {catObj.icon} {catObj.label}
+                  </Tag>
+                );
+              })()}
+              <Title level={1} style={{ marginTop: 0, marginBottom: 24, fontWeight: 800, fontSize: isMobile ? "2.2rem" : "3.2rem", lineHeight: 1.2, color: "var(--text-dark)" }}>
+                {selectedPost.title}
+              </Title>
+              
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 24, borderBottom: "1px solid #f1f5f9" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <Avatar size={48} src={selectedPost.authorAvatar} style={{ backgroundColor: "#f1f5f9" }} />
+                  <div>
+                    <Text strong style={{ display: "block", fontSize: "16px", color: "#334155" }}>{selectedPost.author}</Text>
+                    <Text type="secondary" style={{ fontSize: "14px" }}>
+                      {selectedPost.date} • {selectedPost.readTime} • <EyeOutlined style={{marginLeft: 4}}/> {selectedPost.views.toLocaleString()} views
+                    </Text>
+                  </div>
+                </div>
+                {/* Tombol Share */}
+                <Button shape="circle" icon={<ShareAltOutlined />} onClick={() => message.success("Link copied to clipboard!")} />
+              </div>
+            </div>
+
+            {/* Article Hero Image */}
+            <div style={{ borderRadius: "24px", overflow: "hidden", marginBottom: 40, boxShadow: "0 20px 40px rgba(0,0,0,0.08)" }}>
+              <img src={selectedPost.image} alt={selectedPost.title} style={{ width: "100%", maxHeight: "500px", objectFit: "cover", display: "block" }} />
+            </div>
+
+            {/* Article Content */}
+            <div className="article-content" style={{ paddingBottom: "60px" }}>
+              <Paragraph style={{ fontSize: "19px", lineHeight: 1.8, color: "#475569", fontWeight: 500, fontStyle: "italic", marginBottom: 32, paddingLeft: 20, borderLeft: "4px solid var(--primary-green)" }}>
+                {selectedPost.excerpt}
+              </Paragraph>
+              
+              {Array.isArray(selectedPost.content) ? (
+                selectedPost.content.map((para, idx) => (
+                  <Paragraph key={idx} style={{ fontSize: "18px", lineHeight: 1.8, color: "#334155", marginBottom: 24 }}>
+                    {para}
+                  </Paragraph>
+                ))
+              ) : (
+                <Paragraph style={{ fontSize: "18px", lineHeight: 1.8, color: "#334155", marginBottom: 24, whiteSpace: "pre-wrap" }}>
+                  {selectedPost.content}
+                </Paragraph>
+              )}
+            </div>
+          </div>
+        </section>
+
+      ) : (
+        /* RENDER DAFTAR BERITA (JIKA TIDAK ADA YANG DIPILIH) */
+        <>
+          {/* HERO BANNER */}
           <div
             style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: isMobile ? 24 : 48,
-              marginTop: 32,
-              flexWrap: "wrap",
+              background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 40%, #388E3C 70%, #43A047 100%)",
+              padding: isMobile ? "50px 20px" : "80px 20px",
+              textAlign: "center",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
-            {[
-              { label: "Articles", value: `${posts.length}+` },
-              { label: "Categories", value: `${CATEGORIES.length - 1}` },
-              { label: "Monthly Readers", value: "12K+" },
-            ].map((s) => (
-              <div key={s.label} style={{ textAlign: "center" }}>
-                <Title level={3} style={{ color: "white", margin: 0 }}>
-                  {s.value}
-                </Title>
-                <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>
-                  {s.label}
-                </Text>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ─── CATEGORY TABS ─── */}
-      <div
-        style={{
-          background: "white",
-          borderBottom: "1px solid #f0f0e8",
-          padding: "0 20px",
-          overflowX: "auto",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            display: "flex",
-            gap: 0,
-            minWidth: "max-content",
-          }}
-        >
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.key}
-              onClick={() => setActiveCategory(cat.key)}
+            {/* Decorative pattern */}
+            <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "16px 20px",
-                border: "none",
-                background: "none",
-                cursor: "pointer",
-                fontWeight: activeCategory === cat.key ? 700 : 500,
-                color: activeCategory === cat.key ? cat.color : "#666",
-                borderBottom:
-                  activeCategory === cat.key
-                    ? `3px solid ${cat.color}`
-                    : "3px solid transparent",
-                transition: "all 0.2s",
-                fontSize: 14,
-                whiteSpace: "nowrap",
+                position: "absolute",
+                inset: 0,
+                backgroundImage: "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%)",
               }}
-            >
-              <span
+            />
+            <div style={{ position: "relative", maxWidth: 720, margin: "0 auto", zIndex: 2 }}>
+              <Tag
+                icon={<SafetyCertificateFilled />}
                 style={{
-                  color: activeCategory === cat.key ? cat.color : "#999",
+                  background: "rgba(255,255,255,0.15)",
+                  color: "white",
+                  border: "1px solid rgba(255,255,255,0.3)",
+                  borderRadius: 20,
+                  padding: "4px 16px",
+                  marginBottom: 16,
+                  backdropFilter: "blur(4px)",
                 }}
               >
-                {cat.icon}
-              </span>
-              {cat.label}
-              <Badge
-                count={
-                  cat.key === "all"
-                    ? posts.length
-                    : posts.filter((p) => p.category === cat.key).length
-                }
-                style={{
-                  background:
-                    activeCategory === cat.key ? cat.color : "#f0f0f0",
-                  color: activeCategory === cat.key ? "white" : "#999",
-                  boxShadow: "none",
-                  fontSize: 11,
-                }}
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── MAIN CONTENT ─── */}
-      <div
-        style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: isMobile ? "24px 16px" : "40px 20px",
-        }}
-      >
-        {/* Sort & Results count */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 28,
-            flexWrap: "wrap",
-            gap: 12,
-          }}
-        >
-          <Text style={{ color: "#888", fontSize: 14 }}>
-            Showing{" "}
-            <strong style={{ color: "#1a1a1a" }}>{filteredPosts.length}</strong>{" "}
-            articles
-            {activeCategory !== "all" && (
-              <>
-                {" "}
-                in{" "}
-                <strong style={{ color: "#2E7D32" }}>
-                  {CATEGORIES.find((c) => c.key === activeCategory)?.label}
-                </strong>
-              </>
-            )}
-            {searchText && (
-              <>
-                {" "}
-                for "<strong>{searchText}</strong>"
-              </>
-            )}
-          </Text>
-          <Select
-            value={sortBy}
-            onChange={setSortBy}
-            style={{ width: 160, borderRadius: 8 }}
-            suffixIcon={<FilterOutlined />}
-          >
-            <Option value="latest">Latest First</Option>
-            <Option value="popular">Most Viewed</Option>
-            <Option value="liked">Most Liked</Option>
-          </Select>
-        </div>
-
-        {/* Featured Posts */}
-        {featuredPosts.length > 0 && (
-          <>
-            <div style={{ marginBottom: 16 }}>
+                {lang === "en" ? "Halal News in China" : "中国清真新闻"}
+              </Tag>
               <Title
-                level={5}
                 style={{
-                  color: "#888",
-                  textTransform: "uppercase",
-                  letterSpacing: 1,
-                  margin: 0,
-                  fontSize: 12,
+                  color: "white",
+                  fontSize: isMobile ? "2.2rem" : "3.2rem",
+                  margin: "0 0 16px",
+                  fontWeight: 800,
+                  lineHeight: 1.2,
                 }}
               >
-                <FireOutlined style={{ color: "#ff4d4f", marginRight: 6 }} />
-                Featured Stories
+                {lang === "en" ? "QingzhenMu Journal" : "QingzhenMu 期刊"}
               </Title>
-            </div>
-            <Row gutter={[20, 20]} style={{ marginBottom: 40 }}>
-              {featuredPosts.map((post) => (
-                <Col xs={24} md={12} key={post.id}>
-                  <FeaturedCard
-                    post={post}
-                    onRead={handleRead}
-                    onLike={handleLike}
-                    likedPosts={likedPosts}
-                  />
-                </Col>
-              ))}
-            </Row>
-          </>
-        )}
-
-        {/* Regular Posts */}
-        {regularPosts.length > 0 && (
-          <>
-            <div style={{ marginBottom: 16 }}>
-              <Title
-                level={5}
+              <Paragraph
                 style={{
-                  color: "#888",
-                  textTransform: "uppercase",
-                  letterSpacing: 1,
-                  margin: 0,
-                  fontSize: 12,
+                  color: "rgba(255,255,255,0.85)",
+                  fontSize: isMobile ? 15 : 17,
+                  margin: "0 auto 32px",
+                  maxWidth: 580,
+                  lineHeight: 1.6
                 }}
               >
-                <GlobalOutlined style={{ color: "#2E7D32", marginRight: 6 }} />
-                Latest Articles
-              </Title>
+                {lang === "en" 
+                  ? "The latest news, certifications, travel guides, and community stories about halal living in China — curated for Muslim travelers and residents." 
+                  : "有关中国清真生活的最新新闻、认证、旅游指南和社区故事——专为穆斯林游客和居民精心策划。"}
+              </Paragraph>
+              
+              <div style={{ maxWidth: 550, margin: "0 auto" }}>
+                <Input
+                  size="large"
+                  placeholder={lang === "en" ? "Search articles, guides, or reviews..." : "搜索文章、指南或评论..."}
+                  prefix={<SearchOutlined style={{ color: "var(--primary-green)", fontSize: 18, marginRight: 8 }} />}
+                  style={{ 
+                    borderRadius: 40, 
+                    padding: "8px 24px", 
+                    fontSize: 16,
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+                    border: "none"
+                  }}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  allowClear
+                />
+              </div>
             </div>
-            <Row gutter={[20, 20]}>
-              {regularPosts.map((post) => (
-                <Col xs={24} sm={12} lg={8} key={post.id}>
-                  <BlogCard
-                    post={post}
-                    onRead={handleRead}
-                    onLike={handleLike}
-                    likedPosts={likedPosts}
-                  />
-                </Col>
-              ))}
-            </Row>
-          </>
-        )}
+          </div>
 
-        {/* Empty state */}
-        {filteredPosts.length === 0 && (
-          <div style={{ textAlign: "center", padding: "80px 20px" }}>
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={
-                <div>
-                  <Title level={4} style={{ color: "#888" }}>
-                    No articles found
+          {/* CATEGORY TABS */}
+          <div style={{ background: "white", borderBottom: "1px solid #f0f0e8", padding: "0 20px", overflowX: "auto" }}>
+            <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", gap: 0, minWidth: "max-content" }}>
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.key}
+                  onClick={() => setActiveCategory(cat.key)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "16px 20px",
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    fontWeight: activeCategory === cat.key ? 700 : 500,
+                    color: activeCategory === cat.key ? cat.color : "#666",
+                    borderBottom: activeCategory === cat.key ? `3px solid ${cat.color}` : "3px solid transparent",
+                    transition: "all 0.2s",
+                    fontSize: 14,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <span style={{ color: activeCategory === cat.key ? cat.color : "#999" }}>
+                    {cat.icon}
+                  </span>
+                  {cat.label}
+                  <Badge
+                    count={cat.key === "all" ? posts.length : posts.filter((p) => p.category === cat.key).length}
+                    style={{
+                      background: activeCategory === cat.key ? cat.color : "#f0f0f0",
+                      color: activeCategory === cat.key ? "white" : "#999",
+                      boxShadow: "none",
+                      fontSize: 11,
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* MAIN CONTENT AREA */}
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "24px 16px" : "40px 20px" }}>
+            {/* Sort & Results count */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
+              <Text style={{ color: "#888", fontSize: 14 }}>
+                Showing <strong style={{ color: "#1a1a1a" }}>{filteredPosts.length}</strong> articles
+                {activeCategory !== "all" && (
+                  <> in <strong style={{ color: "#2E7D32" }}>{CATEGORIES.find((c) => c.key === activeCategory)?.label}</strong></>
+                )}
+                {searchText && (
+                  <> for "<strong>{searchText}</strong>"</>
+                )}
+              </Text>
+              
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <Select
+                  value={sortBy}
+                  onChange={setSortBy}
+                  style={{ width: 160, borderRadius: 8 }}
+                  suffixIcon={<FilterOutlined />}
+                >
+                  <Option value="latest">Latest First</Option>
+                  <Option value="popular">Most Viewed</Option>
+                  <Option value="liked">Most Liked</Option>
+                </Select>
+                {!isMobile && (
+                  <Button type="primary" shape="round" icon={<EditOutlined />} onClick={handleWriteOpen} style={{ background: "#2E7D32", borderColor: "#2E7D32", fontWeight: 600 }}>
+                    Write Article
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Featured Posts */}
+            {featuredPosts.length > 0 && (
+              <>
+                <div style={{ marginBottom: 16 }}>
+                  <Title level={5} style={{ color: "#888", textTransform: "uppercase", letterSpacing: 1, margin: 0, fontSize: 12 }}>
+                    <FireOutlined style={{ color: "#ff4d4f", marginRight: 6 }} /> Featured Stories
                   </Title>
-                  <Text type="secondary">
-                    Try a different category or search keyword
-                  </Text>
                 </div>
-              }
-            >
-              <Button
-                type="primary"
-                style={{ background: "#2E7D32" }}
-                onClick={() => {
-                  setActiveCategory("all");
-                  setSearchText("");
-                }}
-              >
-                View All Articles
+                <Row gutter={[20, 20]} style={{ marginBottom: 40 }}>
+                  {featuredPosts.map((post) => (
+                    <Col xs={24} md={12} key={post.id}>
+                      <FeaturedCard post={post} onRead={handleRead} onLike={handleLike} likedPosts={likedPosts} />
+                    </Col>
+                  ))}
+                </Row>
+              </>
+            )}
+
+            {/* Regular Posts */}
+            {regularPosts.length > 0 && (
+              <>
+                <div style={{ marginBottom: 16 }}>
+                  <Title level={5} style={{ color: "#888", textTransform: "uppercase", letterSpacing: 1, margin: 0, fontSize: 12 }}>
+                    <GlobalOutlined style={{ color: "#2E7D32", marginRight: 6 }} /> Latest Articles
+                  </Title>
+                </div>
+                <Row gutter={[20, 20]}>
+                  {regularPosts.map((post) => (
+                    <Col xs={24} sm={12} lg={8} key={post.id}>
+                      <BlogCard post={post} onRead={handleRead} onLike={handleLike} likedPosts={likedPosts} />
+                    </Col>
+                  ))}
+                </Row>
+              </>
+            )}
+
+            {/* Empty state */}
+            {filteredPosts.length === 0 && (
+              <div style={{ textAlign: "center", padding: "80px 20px" }}>
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <div>
+                      <Title level={4} style={{ color: "#888" }}>No articles found</Title>
+                      <Text type="secondary">Try a different category or search keyword</Text>
+                    </div>
+                  }
+                >
+                  <Button type="primary" style={{ background: "#2E7D32" }} onClick={() => { setActiveCategory("all"); setSearchText(""); }}>
+                    View All Articles
+                  </Button>
+                </Empty>
+              </div>
+            )}
+
+            {/* CTA Write */}
+            <div style={{ marginTop: 60, borderRadius: 20, background: "linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%)", border: "1px solid #C8E6C9", padding: isMobile ? "32px 20px" : "48px 40px", textAlign: "center" }}>
+              <CheckCircleFilled style={{ fontSize: 40, color: "#2E7D32", marginBottom: 16 }} />
+              <Title level={3} style={{ color: "#1B5E20", margin: "0 0 12px" }}>
+                Have a Story About Halal in China?
+              </Title>
+              <Paragraph style={{ color: "#4CAF50", fontSize: 16, margin: "0 auto 28px", maxWidth: 600 }}>
+                Share news, experiences, or tips with our community. Help Muslim travelers and residents navigate China with confidence.
+              </Paragraph>
+              <Button type="primary" size="large" shape="round" icon={<EditOutlined />} onClick={handleWriteOpen} style={{ background: "#2E7D32", borderColor: "#2E7D32", height: 48, paddingLeft: 32, paddingRight: 32, fontWeight: 700, fontSize: 15 }}>
+                Write an Article
               </Button>
-            </Empty>
+            </div>
           </div>
-        )}
+        </>
+      )}
 
-        {/* CTA Write */}
-        <div
-          style={{
-            marginTop: 60,
-            borderRadius: 20,
-            background: "linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%)",
-            border: "1px solid #C8E6C9",
-            padding: isMobile ? "32px 20px" : "48px 40px",
-            textAlign: "center",
-          }}
-        >
-          <CheckCircleFilled
-            style={{ fontSize: 40, color: "#2E7D32", marginBottom: 16 }}
-          />
-          <Title level={3} style={{ color: "#1B5E20", margin: "0 0 12px" }}>
-            Have a Story About Halal in China?
-          </Title>
-          <Paragraph
-            style={{ color: "#4CAF50", fontSize: 16, margin: "0 0 28px" }}
-          >
-            Share news, experiences, or tips with our community. Help Muslim
-            travelers and residents navigate China with confidence.
-          </Paragraph>
-          <Button
-            type="primary"
-            size="large"
-            shape="round"
-            icon={<EditOutlined />}
-            onClick={handleWriteOpen}
-            style={{
-              background: "#2E7D32",
-              borderColor: "#2E7D32",
-              height: 48,
-              paddingLeft: 32,
-              paddingRight: 32,
-              fontWeight: 700,
-              fontSize: 15,
-            }}
-          >
-            Write an Article
-          </Button>
-        </div>
-      </div>
+      {/* FOOTER */}
+      <footer className="footer-section" style={{ background: "#0f172a", color: "white", padding: "80px 0 24px", marginTop: "auto" }}>
+        <div className="container" style={{ padding: "0 20px", maxWidth: 1200, margin: "0 auto" }}>
+          <div className="footer-content" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", marginBottom: "60px", gap: "40px" }}>
+            <div style={{ maxWidth: 320 }}>
+              <div className="brand-logo" style={{ color: "white", marginBottom: 20, display: "flex", alignItems: "center", gap: "10px" }}>
+                <GlobalOutlined style={{ color: "var(--secondary-green)", fontSize: 24 }} />
+                <span style={{ fontSize: "24px", fontWeight: "800" }}>QingzhenMu</span>
+              </div>
+              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.6 }}>
+                {t("footer_desc") || "Empowering Muslim travelers across China with reliable guides and halal information."}
+              </Paragraph>
+            </div>
 
-      {/* ─── FOOTER ─── */}
-      <footer
-        style={{
-          background: "#001529",
-          color: "white",
-          padding: "40px 20px 20px",
-          marginTop: 60,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 16,
-            paddingBottom: 20,
-            borderBottom: "1px solid rgba(255,255,255,0.1)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <GlobalOutlined style={{ color: "#52c41a", fontSize: 20 }} />
-            <Text strong style={{ color: "white", fontSize: 18 }}>
-              QingzhenMu
+            <div className="footer-links" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_about") || "About Us"}</Button>
+              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_careers") || "Careers"}</Button>
+              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_privacy") || "Privacy Policy"}</Button>
+              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_terms") || "Terms of Service"}</Button>
+              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_contact") || "Contact Us"}</Button>
+            </div>
+
+            <div className="footer-social" style={{ display: "flex", gap: "24px", fontSize: "24px" }}>
+              <FacebookFilled style={{ cursor: "pointer", color: "rgba(255,255,255,0.8)", transition: "color 0.3s" }} onMouseOver={(e) => e.currentTarget.style.color = "white"} onMouseOut={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"} />
+              <InstagramFilled style={{ cursor: "pointer", color: "rgba(255,255,255,0.8)", transition: "color 0.3s" }} onMouseOver={(e) => e.currentTarget.style.color = "white"} onMouseOut={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"} />
+              <YoutubeFilled style={{ cursor: "pointer", color: "rgba(255,255,255,0.8)", transition: "color 0.3s" }} onMouseOver={(e) => e.currentTarget.style.color = "white"} onMouseOut={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"} />
+            </div>
+          </div>
+
+          <div className="copyright" style={{ textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "24px" }}>
+            <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
+              {t("copyright") || "© 2026 QingzhenMu. Empowering Muslim travelers across China."}
             </Text>
-            <Text style={{ color: "rgba(255,255,255,0.4)" }}>/ Halal News</Text>
           </div>
-          <Button
-            type="link"
-            style={{ color: "rgba(255,255,255,0.6)" }}
-            onClick={() => onNavigate && onNavigate("landing")}
-          >
-            ← Back to Home
-          </Button>
-        </div>
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            paddingTop: 20,
-            textAlign: "center",
-          }}
-        >
-          <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
-            © 2025 QingzhenMu. Empowering Muslim travelers across China.
-          </Text>
         </div>
       </footer>
 
-      {/* ─── READ MODAL ─── */}
-      <Modal
-        open={isReadModalOpen}
-        onCancel={() => setIsReadModalOpen(false)}
-        footer={null}
-        width={isMobile ? "100%" : 760}
-        centered
-        style={{ top: isMobile ? 0 : 20 }}
-        styles={{ body: { padding: 0, maxHeight: "80vh", overflowY: "auto" } }}
-      >
-        {selectedPost && (
-          <div>
-            <img
-              src={selectedPost.image}
-              alt={selectedPost.title}
-              style={{
-                width: "100%",
-                height: isMobile ? 200 : 280,
-                objectFit: "cover",
-              }}
-            />
-            <div style={{ padding: isMobile ? "20px 16px" : "32px 40px" }}>
-              {/* Meta */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  marginBottom: 16,
-                  flexWrap: "wrap",
-                }}
-              >
-                {(() => {
-                  const cat = CATEGORIES.find(
-                    (c) => c.key === selectedPost.category,
-                  );
-                  return cat ? (
-                    <Tag
-                      style={{
-                        background: cat.color,
-                        color: "white",
-                        border: "none",
-                        borderRadius: 20,
-                      }}
-                    >
-                      {cat.icon} {cat.label}
-                    </Tag>
-                  ) : null;
-                })()}
-                {selectedPost.tags.map((tag) => (
-                  <Tag
-                    key={tag}
-                    icon={<TagOutlined />}
-                    style={{ borderRadius: 20 }}
-                  >
-                    {tag}
-                  </Tag>
-                ))}
-              </div>
-
-              <Title level={2} style={{ lineHeight: 1.3, marginBottom: 16 }}>
-                {selectedPost.title}
-              </Title>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  marginBottom: 24,
-                  flexWrap: "wrap",
-                }}
-              >
-                <Avatar src={selectedPost.authorAvatar} size={36} />
-                <div>
-                  <Text strong>{selectedPost.author}</Text>
-                  <br />
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {selectedPost.date} · {selectedPost.readTime} ·{" "}
-                    <EyeOutlined /> {selectedPost.views.toLocaleString()} views
-                  </Text>
-                </div>
-                <Button
-                  type="text"
-                  icon={
-                    likedPosts.includes(selectedPost.id) ? (
-                      <HeartFilled style={{ color: "#ff4d4f" }} />
-                    ) : (
-                      <HeartOutlined />
-                    )
-                  }
-                  onClick={() => handleLike(selectedPost.id)}
-                  style={{ marginLeft: "auto" }}
-                >
-                  {selectedPost.likes +
-                    (likedPosts.includes(selectedPost.id) ? 1 : 0)}{" "}
-                  Likes
-                </Button>
-              </div>
-
-              <Divider />
-
-              <Paragraph
-                style={{ fontSize: 16, lineHeight: 1.8, color: "#333" }}
-              >
-                {selectedPost.excerpt}
-              </Paragraph>
-              <Paragraph
-                style={{
-                  fontSize: 15,
-                  lineHeight: 1.9,
-                  color: "#555",
-                  marginTop: 16,
-                }}
-              >
-                This article explores the developments in halal standards and
-                practices in China, providing actionable insights for Muslim
-                consumers, business owners, and travelers looking to navigate
-                the evolving halal ecosystem in China.
-              </Paragraph>
-              <Paragraph
-                style={{ fontSize: 15, lineHeight: 1.9, color: "#555" }}
-              >
-                With China's Muslim population estimated at over 20 million
-                people, the demand for certified halal products and services has
-                never been higher. Industry experts predict continued
-                double-digit growth as both domestic consumption and Muslim
-                tourism from Southeast Asia and the Middle East continue to
-                rise.
-              </Paragraph>
-
-              <Divider />
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text type="secondary" style={{ fontSize: 13 }}>
-                  Found this helpful? Share it with your community.
-                </Text>
-                <Button icon={<ShareAltOutlined />} shape="round">
-                  Share
-                </Button>
-              </div>
-            </div>
+      {/* DOWNLOAD APP MODAL */}
+      <Modal title={null} footer={null} open={isDownloadModalOpen} onCancel={() => setIsDownloadModalOpen(false)} centered width={400} styles={{ body: { padding: 32 } }}>
+        <div style={{ textAlign: "center" }}>
+          <GlobalOutlined style={{ fontSize: 56, color: "var(--primary-green)", marginBottom: 20 }} />
+          <Title level={3} style={{ fontWeight: 800 }}>{t("modal_title") || "Get QingzhenMu App"}</Title>
+          <Paragraph style={{ color: "#64748b", marginBottom: 32 }}>{t("modal_desc") || "Download our mobile app to find halal food and prayer spaces on the go."}</Paragraph>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <Button type="primary" size="large" icon={<AppleFilled />} style={{ background: "#0f172a", borderColor: "#0f172a", height: 50, borderRadius: 12, fontWeight: 600 }} block onClick={() => message.info("Redirecting to App Store...")}>
+              Download on App Store
+            </Button>
+            <Button type="primary" size="large" icon={<AndroidFilled />} style={{ background: "var(--primary-green)", borderColor: "var(--primary-green)", height: 50, borderRadius: 12, fontWeight: 600 }} block onClick={() => message.info("Redirecting to Play Store...")}>
+              Get it on Google Play
+            </Button>
           </div>
-        )}
+        </div>
       </Modal>
 
-      {/* ─── WRITE ARTICLE MODAL ─── */}
+      {/* WRITE ARTICLE MODAL */}
       <Modal
         title={
           <div>
@@ -1299,121 +1120,49 @@ function BlogPage({ onNavigate }) {
               <EditOutlined style={{ marginRight: 8, color: "#2E7D32" }} />
               Write an Article
             </Title>
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              Share halal news & stories with the community
-            </Text>
+            <Text type="secondary" style={{ fontSize: 13 }}>Share halal news & stories with the community</Text>
           </div>
         }
         open={isWriteModalOpen}
-        onCancel={() => {
-          setIsWriteModalOpen(false);
-          form.resetFields();
-        }}
+        onCancel={() => { setIsWriteModalOpen(false); form.resetFields(); }}
         footer={null}
         centered
         width={isMobile ? "100%" : 680}
-        styles={{
-          body: { padding: "24px 28px", maxHeight: "75vh", overflowY: "auto" },
-        }}
+        styles={{ body: { padding: "24px 28px", maxHeight: "75vh", overflowY: "auto" } }}
       >
         {user && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "12px 16px",
-              background: "#f6ffed",
-              borderRadius: 10,
-              border: "1px solid #b7eb8f",
-              marginBottom: 20,
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "#f6ffed", borderRadius: 10, border: "1px solid #b7eb8f", marginBottom: 20 }}>
             <Avatar src={user.avatar_url} icon={<UserOutlined />} />
-            <Text>
-              Publishing as <strong>{user.name || user.username}</strong>
-            </Text>
+            <Text>Publishing as <strong>{user.name || user.username}</strong></Text>
           </div>
         )}
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmitArticle}
-          size="large"
-        >
-          <Form.Item
-            name="category"
-            label="Category"
-            rules={[{ required: true, message: "Please select a category" }]}
-          >
+        <Form form={form} layout="vertical" onFinish={handleSubmitArticle} size="large">
+          <Form.Item name="category" label="Category" rules={[{ required: true, message: "Please select a category" }]}>
             <Select placeholder="Select article category">
               {CATEGORIES.filter((c) => c.key !== "all").map((cat) => (
-                <Option key={cat.key} value={cat.key}>
-                  {cat.icon} {cat.label}
-                </Option>
+                <Option key={cat.key} value={cat.key}>{cat.icon} {cat.label}</Option>
               ))}
             </Select>
           </Form.Item>
 
-          <Form.Item
-            name="title"
-            label="Article Title"
-            rules={[
-              { required: true, message: "Please enter a title" },
-              { min: 10, message: "Title should be at least 10 characters" },
-            ]}
-          >
-            <Input
-              placeholder="Enter a clear, informative title..."
-              style={{ borderRadius: 10 }}
-            />
+          <Form.Item name="title" label="Article Title" rules={[{ required: true, message: "Please enter a title" }, { min: 10, message: "Title should be at least 10 characters" }]}>
+            <Input placeholder="Enter a clear, informative title..." style={{ borderRadius: 10 }} />
           </Form.Item>
 
-          <Form.Item
-            name="excerpt"
-            label="Short Summary"
-            rules={[
-              { required: true, message: "Please write a short summary" },
-            ]}
-          >
-            <TextArea
-              rows={2}
-              placeholder="A brief 1-2 sentence summary of your article..."
-              style={{ borderRadius: 10 }}
-            />
+          <Form.Item name="excerpt" label="Short Summary" rules={[{ required: true, message: "Please write a short summary" }]}>
+            <TextArea rows={2} placeholder="A brief 1-2 sentence summary of your article..." style={{ borderRadius: 10 }} />
           </Form.Item>
 
-          <Form.Item
-            name="content"
-            label="Article Content"
-            rules={[
-              { required: true, message: "Please write the article content" },
-              {
-                min: 100,
-                message: "Article should be at least 100 characters",
-              },
-            ]}
-          >
-            <TextArea
-              rows={8}
-              placeholder="Write your full article here... You can include facts, personal experience, tips, or news about halal in China."
-              style={{ borderRadius: 10 }}
-            />
+          <Form.Item name="content" label="Article Content" rules={[{ required: true, message: "Please write the article content" }, { min: 100, message: "Article should be at least 100 characters" }]}>
+            <TextArea rows={8} placeholder="Write your full article here... You can include facts, personal experience, tips, or news about halal in China." style={{ borderRadius: 10 }} />
           </Form.Item>
 
           <Form.Item name="tags" label="Tags (comma separated)">
-            <Input
-              placeholder="e.g. certification, beijing, food"
-              style={{ borderRadius: 10 }}
-            />
+            <Input placeholder="e.g. certification, beijing, food" style={{ borderRadius: 10 }} />
           </Form.Item>
 
           <Form.Item label="Cover Image (Optional)">
-            <Upload
-              listType="picture-card"
-              maxCount={1}
-              beforeUpload={() => false}
-            >
+            <Upload listType="picture-card" maxCount={1} beforeUpload={() => false}>
               <div>
                 <CameraOutlined />
                 <div style={{ marginTop: 8, fontSize: 12 }}>Upload Image</div>
@@ -1423,35 +1172,15 @@ function BlogPage({ onNavigate }) {
 
           <Form.Item style={{ marginBottom: 0 }}>
             <div style={{ display: "flex", gap: 10 }}>
-              <Button
-                block
-                onClick={() => {
-                  setIsWriteModalOpen(false);
-                  form.resetFields();
-                }}
-                style={{ borderRadius: 24 }}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                block
-                loading={submitting}
-                style={{
-                  background: "#2E7D32",
-                  borderColor: "#2E7D32",
-                  borderRadius: 24,
-                  fontWeight: 700,
-                  height: 44,
-                }}
-              >
+              <Button block onClick={() => { setIsWriteModalOpen(false); form.resetFields(); }} style={{ borderRadius: 24 }}>Cancel</Button>
+              <Button type="primary" htmlType="submit" block loading={submitting} style={{ background: "#2E7D32", borderColor: "#2E7D32", borderRadius: 24, fontWeight: 700, height: 44 }}>
                 {submitting ? "Submitting..." : "Submit Article"}
               </Button>
             </div>
           </Form.Item>
         </Form>
       </Modal>
+
     </div>
   );
 }

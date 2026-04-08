@@ -1004,8 +1004,9 @@ html,
   }
 
   /* 5. Layout Mobile (Map Full, Sidebar Hidden/Drawer) */
+/* 5. Layout Mobile (Map Full, Sidebar Hidden/Drawer) */
   .finder-layout {
-    flexdirection: column;
+    flex-direction: column; 
     height: calc(100dvh - 64px);
     width: 100vw;
   }
