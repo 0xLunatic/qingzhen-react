@@ -37,7 +37,7 @@ export const en = {
   // Features Section
   discover_title: "Discover Halal & Muslim-friendly Features",
   card_finder_title: "Halal Finder",
-  card_finder_desc: "Nearby halal restaurants, groceries, hotels & more.",
+  card_finder_desc: "Nearby restaurants, mosque & more.",
   card_mosque_title: "Mosque Space",
   card_mosque_desc: "Find mosques and prayer spaces comfortably.",
 

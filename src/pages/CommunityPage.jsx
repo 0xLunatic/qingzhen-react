@@ -65,7 +65,8 @@ const en = {
   nav_blog: "Blog",
   nav_signin: "Sign In",
   nav_download: "Download App",
-  footer_desc: "Empowering Muslim travelers across China with reliable guides and halal information.",
+  footer_desc:
+    "Empowering Muslim travelers across China with reliable guides and halal information.",
   footer_about: "About Us",
   footer_careers: "Careers",
   footer_privacy: "Privacy Policy",
@@ -73,7 +74,8 @@ const en = {
   footer_contact: "Contact Us",
   copyright: "© 2026 QingzhenMu. All rights reserved.",
   modal_title: "Get QingzhenMu App",
-  modal_desc: "Download our mobile app to find halal food and prayer spaces on the go.",
+  modal_desc:
+    "Download our mobile app to find halal food and prayer spaces on the go.",
 };
 const cn = {
   nav_finder: "清真寻找",
@@ -688,7 +690,7 @@ function CommunityPage({ onNavigate }) {
   const [activeRegion, setActiveRegion] = useState("All Regions");
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [loading, setLoading] = useState(false);
-  
+
   // Navigation & User state
   const [user, setUser] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -718,7 +720,7 @@ function CommunityPage({ onNavigate }) {
   const toggleLanguage = () => {
     setLang((prev) => (prev === "en" ? "cn" : "en"));
     message.success(
-      lang === "en" ? "Switched to Chinese" : "Switched to English"
+      lang === "en" ? "Switched to Chinese" : "Switched to English",
     );
   };
 
@@ -747,19 +749,61 @@ function CommunityPage({ onNavigate }) {
 
   const renderMobileMenu = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Button type="text" block style={{ textAlign: "left" }} onClick={() => { onNavigate("finder"); setIsMobileMenuOpen(false); }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("finder");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_finder")}
       </Button>
-      <Button type="text" block style={{ textAlign: "left" }} onClick={() => { onNavigate("mosque"); setIsMobileMenuOpen(false); }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("mosque");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_mosque")}
       </Button>
-      <Button type="text" block style={{ textAlign: "left" }} onClick={() => { onNavigate("prayer"); setIsMobileMenuOpen(false); }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("prayer");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_prayer")}
       </Button>
-      <Button type="text" block style={{ textAlign: "left", color: "var(--primary-green)", fontWeight: "bold", background: "rgba(15, 81, 50, 0.05)" }} onClick={() => setIsMobileMenuOpen(false)}>
+      <Button
+        type="text"
+        block
+        style={{
+          textAlign: "left",
+          color: "var(--primary-green)",
+          fontWeight: "bold",
+          background: "rgba(15, 81, 50, 0.05)",
+        }}
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
         {t("nav_community")}
       </Button>
-      <Button type="text" block style={{ textAlign: "left" }} onClick={() => { onNavigate("blog"); setIsMobileMenuOpen(false); }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("blog-page");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_blog")}
       </Button>
 
@@ -767,28 +811,72 @@ function CommunityPage({ onNavigate }) {
 
       {user ? (
         <div style={{ padding: "0 8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <Avatar src={user.avatar_url} icon={<UserOutlined />} style={{ border: "2px solid var(--primary-green)" }} />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            <Avatar
+              src={user.avatar_url}
+              icon={<UserOutlined />}
+              style={{ border: "2px solid var(--primary-green)" }}
+            />
             <Text strong>{user.name || user.username}</Text>
           </div>
-          <Button block icon={<UserOutlined />} onClick={() => message.info("Profile")} style={{ marginBottom: 8, borderRadius: 8 }}>
+          <Button
+            block
+            icon={<UserOutlined />}
+            onClick={() => message.info("Profile")}
+            style={{ marginBottom: 8, borderRadius: 8 }}
+          >
             My Profile
           </Button>
-          <Button block icon={<LogoutOutlined />} danger onClick={handleLogout} style={{ borderRadius: 8 }}>
+          <Button
+            block
+            icon={<LogoutOutlined />}
+            danger
+            onClick={handleLogout}
+            style={{ borderRadius: 8 }}
+          >
             Log Out
           </Button>
         </div>
       ) : (
-        <Button type="primary" block onClick={() => onNavigate("auth")} style={{ borderRadius: 8, background: "var(--primary-green)" }}>
+        <Button
+          type="primary"
+          block
+          onClick={() => onNavigate("auth")}
+          style={{ borderRadius: 8, background: "var(--primary-green)" }}
+        >
           {t("nav_signin")}
         </Button>
       )}
 
-      <Button block onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }} icon={<TranslationOutlined />} style={{ borderRadius: 8 }}>
+      <Button
+        block
+        onClick={() => {
+          toggleLanguage();
+          setIsMobileMenuOpen(false);
+        }}
+        icon={<TranslationOutlined />}
+        style={{ borderRadius: 8 }}
+      >
         {lang === "en" ? "CN" : "EN"}
       </Button>
 
-      <Button block shape="round" className="btn-gold" onClick={() => { setIsDownloadModalOpen(true); setIsMobileMenuOpen(false); }} style={{ marginTop: 8 }}>
+      <Button
+        block
+        shape="round"
+        className="btn-gold"
+        onClick={() => {
+          setIsDownloadModalOpen(true);
+          setIsMobileMenuOpen(false);
+        }}
+        style={{ marginTop: 8 }}
+      >
         {t("nav_download")}
       </Button>
     </div>
@@ -816,64 +904,199 @@ function CommunityPage({ onNavigate }) {
   const totalMembers = COMMUNITIES.reduce((sum, c) => sum + c.members, 0);
 
   return (
-    <div style={{ background: "#f8f9fa", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      
+    <div
+      style={{
+        background: "#f8f9fa",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {/* ── HEADER / NAVBAR ── */}
-      <header className="navbar-container" style={{ padding: "0 20px", background: "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(10px)", position: "sticky", top: 0, zIndex: 1000, borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
-        <div className="container navbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: "64px" }}>
-          <div className="brand-logo" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }} onClick={() => onNavigate("home")}>
+      <header
+        className="navbar-container"
+        style={{
+          padding: "0 20px",
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(10px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          borderBottom: "1px solid rgba(0,0,0,0.05)",
+        }}
+      >
+        <div
+          className="container navbar"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            height: "64px",
+          }}
+        >
+          <div
+            className="brand-logo"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              cursor: "pointer",
+            }}
+            onClick={() => onNavigate("home")}
+          >
             <div className="logo-icon-wrapper">
-              <img src={logoImage} alt="Logo Brand" className="logo-icon" style={{ width: "32px" }} />
+              <img
+                src={logoImage}
+                alt="Logo Brand"
+                className="logo-icon"
+                style={{ width: "32px" }}
+              />
             </div>
-            <span style={{ fontWeight: "800", fontSize: "18px", color: "var(--text-dark)" }}>QingzhenMu</span>
+            <span
+              style={{
+                fontWeight: "800",
+                fontSize: "18px",
+                color: "var(--text-dark)",
+              }}
+            >
+              QingzhenMu
+            </span>
           </div>
 
-          <div className="nav-links desktop-only" style={{ display: isMobile ? "none" : "flex", gap: "24px" }}>
-            <Button type="text" onClick={() => onNavigate("finder")} style={{ fontWeight: 500 }}>{t("nav_finder")}</Button>
-            <Button type="text" onClick={() => onNavigate("mosque")} style={{ fontWeight: 500 }}>{t("nav_mosque")}</Button>
-            <Button type="text" onClick={() => onNavigate("prayer")} style={{ fontWeight: 500 }}>{t("nav_prayer")}</Button>
-            <Button type="text" onClick={() => {}} style={{ color: "var(--primary-green)", fontWeight: "700", background: "rgba(15, 81, 50, 0.05)", borderRadius: "8px" }}>{t("nav_community")}</Button>
-            <Button type="text" onClick={() => onNavigate("blog")} style={{ fontWeight: 500 }}>{t("nav_blog")}</Button>
+          <div
+            className="nav-links desktop-only"
+            style={{ display: isMobile ? "none" : "flex", gap: "24px" }}
+          >
+            <Button
+              type="text"
+              onClick={() => onNavigate("finder")}
+              style={{ fontWeight: 500 }}
+            >
+              {t("nav_finder")}
+            </Button>
+            <Button
+              type="text"
+              onClick={() => onNavigate("mosque")}
+              style={{ fontWeight: 500 }}
+            >
+              {t("nav_mosque")}
+            </Button>
+            <Button
+              type="text"
+              onClick={() => onNavigate("prayer")}
+              style={{ fontWeight: 500 }}
+            >
+              {t("nav_prayer")}
+            </Button>
+            <Button
+              type="text"
+              onClick={() => onNavigate("community-page")}
+              style={{
+                color: "var(--primary-green)",
+                fontWeight: "700",
+                background: "rgba(15, 81, 50, 0.05)",
+                borderRadius: "8px",
+              }}
+            >
+              {t("nav_community")}
+            </Button>
+            <Button
+              type="text"
+              onClick={() => onNavigate("blog-page")}
+              style={{ fontWeight: 500 }}
+            >
+              {t("nav_blog")}
+            </Button>
           </div>
 
-          <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            className="nav-actions"
+            style={{ display: "flex", alignItems: "center", gap: "12px" }}
+          >
             {!isMobile && (
-              <Button type="text" icon={<TranslationOutlined />} onClick={toggleLanguage} style={{ fontWeight: "600", color: "#555" }}>
+              <Button
+                type="text"
+                icon={<TranslationOutlined />}
+                onClick={toggleLanguage}
+                style={{ fontWeight: "600", color: "#555" }}
+              >
                 {lang === "en" ? "CN" : "EN"}
               </Button>
             )}
 
-            <div className="hide-mobile" style={{ display: isMobile ? "none" : "block" }}>
+            <div
+              className="hide-mobile"
+              style={{ display: isMobile ? "none" : "block" }}
+            >
               {user ? (
-                <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-                  <Button type="text" style={{ height: "auto", padding: "4px 8px", borderRadius: 24 }}>
+                <Dropdown
+                  menu={{ items: userMenuItems }}
+                  placement="bottomRight"
+                >
+                  <Button
+                    type="text"
+                    style={{
+                      height: "auto",
+                      padding: "4px 8px",
+                      borderRadius: 24,
+                    }}
+                  >
                     <Space>
-                      <Avatar src={user.avatar_url} icon={<UserOutlined />} style={{ backgroundColor: "var(--primary-green)" }} />
-                      <Text strong style={{ color: "var(--text-dark)" }}>{user.name || user.username || "User"}</Text>
+                      <Avatar
+                        src={user.avatar_url}
+                        icon={<UserOutlined />}
+                        style={{ backgroundColor: "var(--primary-green)" }}
+                      />
+                      <Text strong style={{ color: "var(--text-dark)" }}>
+                        {user.name || user.username || "User"}
+                      </Text>
                       <DownOutlined style={{ fontSize: 10, color: "#999" }} />
                     </Space>
                   </Button>
                 </Dropdown>
               ) : (
-                <Button type="text" onClick={() => onNavigate("auth")} style={{ fontWeight: 600 }}>{t("nav_signin")}</Button>
+                <Button
+                  type="text"
+                  onClick={() => onNavigate("auth")}
+                  style={{ fontWeight: 600 }}
+                >
+                  {t("nav_signin")}
+                </Button>
               )}
             </div>
 
             {!isMobile && (
-              <Button type="primary" shape="round" className="btn-gold" onClick={() => setIsDownloadModalOpen(true)} style={{ boxShadow: "0 4px 14px rgba(197, 157, 36, 0.3)" }}>
+              <Button
+                type="primary"
+                shape="round"
+                className="btn-gold"
+                onClick={() => setIsDownloadModalOpen(true)}
+                style={{ boxShadow: "0 4px 14px rgba(197, 157, 36, 0.3)" }}
+              >
                 {t("nav_download")}
               </Button>
             )}
 
             {isMobile && (
-              <Button type="text" className="mobile-menu-toggle" onClick={() => setIsMobileMenuOpen(true)} icon={<MenuOutlined style={{ fontSize: "20px" }} />} />
+              <Button
+                type="text"
+                className="mobile-menu-toggle"
+                onClick={() => setIsMobileMenuOpen(true)}
+                icon={<MenuOutlined style={{ fontSize: "20px" }} />}
+              />
             )}
           </div>
         </div>
       </header>
 
       {/* DRAWER UNTUK MENU MOBILE */}
-      <Drawer title={<span style={{ fontWeight: 700 }}>Menu</span>} placement="right" onClose={() => setIsMobileMenuOpen(false)} open={isMobileMenuOpen} width={280}>
+      <Drawer
+        title={<span style={{ fontWeight: 700 }}>Menu</span>}
+        placement="right"
+        onClose={() => setIsMobileMenuOpen(false)}
+        open={isMobileMenuOpen}
+        width={280}
+      >
         {renderMobileMenu()}
       </Drawer>
 
@@ -913,7 +1136,9 @@ function CommunityPage({ onNavigate }) {
             }}
           />
 
-          <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+          <div
+            style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}
+          >
             <div
               style={{ textAlign: "center", marginBottom: isMobile ? 32 : 48 }}
             >
@@ -951,8 +1176,8 @@ function CommunityPage({ onNavigate }) {
                   lineHeight: 1.7,
                 }}
               >
-                Connect with verified Muslim organizations, student associations,
-                and halal business networks near you.
+                Connect with verified Muslim organizations, student
+                associations, and halal business networks near you.
               </Paragraph>
 
               {/* Search Bar */}
@@ -1053,9 +1278,11 @@ function CommunityPage({ onNavigate }) {
                   fontSize: 13,
                   fontWeight: 600,
                   flexShrink: 0,
-                  background: activeCategory === cat.key ? "#2E7D32" : "#f5f5f5",
+                  background:
+                    activeCategory === cat.key ? "#2E7D32" : "#f5f5f5",
                   color: activeCategory === cat.key ? "white" : "#555",
-                  borderColor: activeCategory === cat.key ? "#2E7D32" : "#f5f5f5",
+                  borderColor:
+                    activeCategory === cat.key ? "#2E7D32" : "#f5f5f5",
                   transition: "all 0.2s",
                 }}
               >
@@ -1213,35 +1440,167 @@ function CommunityPage({ onNavigate }) {
       </div>
 
       {/* ── FOOTER ── */}
-      <footer className="footer-section" style={{ background: "#0f172a", color: "white", padding: "80px 0 24px", marginTop: "auto" }}>
-        <div className="container" style={{ padding: "0 20px", maxWidth: 1200, margin: "0 auto" }}>
-          <div className="footer-content" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", marginBottom: "60px", gap: "40px" }}>
+      <footer
+        className="footer-section"
+        style={{
+          background: "#0f172a",
+          color: "white",
+          padding: "80px 0 24px",
+          marginTop: "auto",
+        }}
+      >
+        <div
+          className="container"
+          style={{ padding: "0 20px", maxWidth: 1200, margin: "0 auto" }}
+        >
+          <div
+            className="footer-content"
+            style={{
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              justifyContent: "space-between",
+              marginBottom: "60px",
+              gap: "40px",
+            }}
+          >
             <div style={{ maxWidth: 320 }}>
-              <div className="brand-logo" style={{ color: "white", marginBottom: 20, display: "flex", alignItems: "center", gap: "10px" }}>
-                <GlobalOutlined style={{ color: "var(--secondary-green)", fontSize: 24 }} />
-                <span style={{ fontSize: "24px", fontWeight: "800" }}>QingzhenMu</span>
+              <div
+                className="brand-logo"
+                style={{
+                  color: "white",
+                  marginBottom: 20,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                }}
+              >
+                <GlobalOutlined
+                  style={{ color: "var(--secondary-green)", fontSize: 24 }}
+                />
+                <span style={{ fontSize: "24px", fontWeight: "800" }}>
+                  QingzhenMu
+                </span>
               </div>
-              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.6 }}>
+              <Paragraph
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                }}
+              >
                 {t("footer_desc")}
               </Paragraph>
             </div>
 
-            <div className="footer-links" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_about")}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_careers")}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_privacy")}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_terms")}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_contact")}</Button>
+            <div
+              className="footer-links"
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
+              <Button
+                type="link"
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  textAlign: "left",
+                  padding: 0,
+                  fontSize: 15,
+                }}
+              >
+                {t("footer_about")}
+              </Button>
+              <Button
+                type="link"
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  textAlign: "left",
+                  padding: 0,
+                  fontSize: 15,
+                }}
+              >
+                {t("footer_careers")}
+              </Button>
+              <Button
+                type="link"
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  textAlign: "left",
+                  padding: 0,
+                  fontSize: 15,
+                }}
+              >
+                {t("footer_privacy")}
+              </Button>
+              <Button
+                type="link"
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  textAlign: "left",
+                  padding: 0,
+                  fontSize: 15,
+                }}
+              >
+                {t("footer_terms")}
+              </Button>
+              <Button
+                type="link"
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  textAlign: "left",
+                  padding: 0,
+                  fontSize: 15,
+                }}
+              >
+                {t("footer_contact")}
+              </Button>
             </div>
 
-            <div className="footer-social" style={{ display: "flex", gap: "24px", fontSize: "24px" }}>
-              <FacebookFilled style={{ cursor: "pointer", color: "rgba(255,255,255,0.8)", transition: "color 0.3s" }} onMouseOver={(e) => e.currentTarget.style.color = "white"} onMouseOut={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"} />
-              <InstagramFilled style={{ cursor: "pointer", color: "rgba(255,255,255,0.8)", transition: "color 0.3s" }} onMouseOver={(e) => e.currentTarget.style.color = "white"} onMouseOut={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"} />
-              <YoutubeFilled style={{ cursor: "pointer", color: "rgba(255,255,255,0.8)", transition: "color 0.3s" }} onMouseOver={(e) => e.currentTarget.style.color = "white"} onMouseOut={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"} />
+            <div
+              className="footer-social"
+              style={{ display: "flex", gap: "24px", fontSize: "24px" }}
+            >
+              <FacebookFilled
+                style={{
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.8)",
+                  transition: "color 0.3s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = "white")}
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.8)")
+                }
+              />
+              <InstagramFilled
+                style={{
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.8)",
+                  transition: "color 0.3s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = "white")}
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.8)")
+                }
+              />
+              <YoutubeFilled
+                style={{
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.8)",
+                  transition: "color 0.3s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = "white")}
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.8)")
+                }
+              />
             </div>
           </div>
 
-          <div className="copyright" style={{ textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "24px" }}>
+          <div
+            className="copyright"
+            style={{
+              textAlign: "center",
+              borderTop: "1px solid rgba(255,255,255,0.1)",
+              paddingTop: "24px",
+            }}
+          >
             <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
               {t("copyright")}
             </Text>
@@ -1250,16 +1609,60 @@ function CommunityPage({ onNavigate }) {
       </footer>
 
       {/* ── DOWNLOAD APP MODAL ── */}
-      <Modal title={null} footer={null} open={isDownloadModalOpen} onCancel={() => setIsDownloadModalOpen(false)} centered width={400} styles={{ body: { padding: 32 } }}>
+      <Modal
+        title={null}
+        footer={null}
+        open={isDownloadModalOpen}
+        onCancel={() => setIsDownloadModalOpen(false)}
+        centered
+        width={400}
+        styles={{ body: { padding: 32 } }}
+      >
         <div style={{ textAlign: "center" }}>
-          <GlobalOutlined style={{ fontSize: 56, color: "var(--primary-green)", marginBottom: 20 }} />
-          <Title level={3} style={{ fontWeight: 800 }}>{t("modal_title")}</Title>
-          <Paragraph style={{ color: "#64748b", marginBottom: 32 }}>{t("modal_desc")}</Paragraph>
+          <GlobalOutlined
+            style={{
+              fontSize: 56,
+              color: "var(--primary-green)",
+              marginBottom: 20,
+            }}
+          />
+          <Title level={3} style={{ fontWeight: 800 }}>
+            {t("modal_title")}
+          </Title>
+          <Paragraph style={{ color: "#64748b", marginBottom: 32 }}>
+            {t("modal_desc")}
+          </Paragraph>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <Button type="primary" size="large" icon={<AppleFilled />} style={{ background: "#0f172a", borderColor: "#0f172a", height: 50, borderRadius: 12, fontWeight: 600 }} block onClick={() => message.info("Redirecting to App Store...")}>
+            <Button
+              type="primary"
+              size="large"
+              icon={<AppleFilled />}
+              style={{
+                background: "#0f172a",
+                borderColor: "#0f172a",
+                height: 50,
+                borderRadius: 12,
+                fontWeight: 600,
+              }}
+              block
+              onClick={() => message.info("Redirecting to App Store...")}
+            >
               Download on App Store
             </Button>
-            <Button type="primary" size="large" icon={<AndroidFilled />} style={{ background: "var(--primary-green)", borderColor: "var(--primary-green)", height: 50, borderRadius: 12, fontWeight: 600 }} block onClick={() => message.info("Redirecting to Play Store...")}>
+            <Button
+              type="primary"
+              size="large"
+              icon={<AndroidFilled />}
+              style={{
+                background: "var(--primary-green)",
+                borderColor: "var(--primary-green)",
+                height: 50,
+                borderRadius: 12,
+                fontWeight: 600,
+              }}
+              block
+              onClick={() => message.info("Redirecting to Play Store...")}
+            >
               Get it on Google Play
             </Button>
           </div>

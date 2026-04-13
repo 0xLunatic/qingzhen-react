@@ -1557,7 +1557,11 @@ function HalalFinder({ onNavigate }) {
       {/* MAIN CONTENT */}
       <div
         className="finder-layout"
-        style={{ flexDirection: isMobile ? "column" : "row" }}
+        style={{
+          flexDirection: isMobile ? "column" : "row",
+          flex: 1,
+          overflow: "hidden",
+        }}
       >
         <div
           className="finder-map-container"
@@ -2022,7 +2026,12 @@ function HalalFinder({ onNavigate }) {
         >
           <div
             className="finder-list-container"
-            style={{ width: "100%", height: "100%" }}
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
             {renderListContent()}
           </div>

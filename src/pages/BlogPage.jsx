@@ -546,7 +546,7 @@ function BlogPage({ onNavigate }) {
   const toggleLanguage = () => {
     setLang((prev) => (prev === "en" ? "cn" : "en"));
     message.success(
-      lang === "en" ? "Switched to Chinese" : "Switched to English"
+      lang === "en" ? "Switched to Chinese" : "Switched to English",
     );
   };
 
@@ -581,19 +581,61 @@ function BlogPage({ onNavigate }) {
   // Helper Menu Mobile (Drawer)
   const renderMobileMenu = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <Button type="text" block style={{ textAlign: "left" }} onClick={() => { onNavigate("finder"); setIsMobileMenuOpen(false); }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("finder");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_finder")}
       </Button>
-      <Button type="text" block style={{ textAlign: "left" }} onClick={() => { onNavigate("mosque"); setIsMobileMenuOpen(false); }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("mosque");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_mosque")}
       </Button>
-      <Button type="text" block style={{ textAlign: "left" }} onClick={() => { onNavigate("prayer"); setIsMobileMenuOpen(false); }}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("prayer");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_prayer")}
       </Button>
-      <Button type="text" block style={{ textAlign: "left" }} onClick={() => setIsMobileMenuOpen(false)}>
+      <Button
+        type="text"
+        block
+        style={{ textAlign: "left" }}
+        onClick={() => {
+          onNavigate("community-page");
+          setIsMobileMenuOpen(false);
+        }}
+      >
         {t("nav_community")}
       </Button>
-      <Button type="text" block style={{ textAlign: "left", color: "var(--primary-green)", fontWeight: "bold", background: "rgba(15, 81, 50, 0.05)" }} onClick={handleNavigateBlog}>
+      <Button
+        type="text"
+        block
+        style={{
+          textAlign: "left",
+          color: "var(--primary-green)",
+          fontWeight: "bold",
+          background: "rgba(15, 81, 50, 0.05)",
+        }}
+        onClick={handleNavigateBlog}
+      >
         {t("nav_blog")}
       </Button>
 
@@ -601,28 +643,72 @@ function BlogPage({ onNavigate }) {
 
       {user ? (
         <div style={{ padding: "0 8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <Avatar src={user.avatar_url} icon={<UserOutlined />} style={{ border: "2px solid var(--primary-green)" }} />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            <Avatar
+              src={user.avatar_url}
+              icon={<UserOutlined />}
+              style={{ border: "2px solid var(--primary-green)" }}
+            />
             <Text strong>{user.name || user.username}</Text>
           </div>
-          <Button block icon={<UserOutlined />} onClick={() => message.info("Profile")} style={{ marginBottom: 8, borderRadius: 8 }}>
+          <Button
+            block
+            icon={<UserOutlined />}
+            onClick={() => message.info("Profile")}
+            style={{ marginBottom: 8, borderRadius: 8 }}
+          >
             My Profile
           </Button>
-          <Button block icon={<LogoutOutlined />} danger onClick={handleLogout} style={{ borderRadius: 8 }}>
+          <Button
+            block
+            icon={<LogoutOutlined />}
+            danger
+            onClick={handleLogout}
+            style={{ borderRadius: 8 }}
+          >
             Log Out
           </Button>
         </div>
       ) : (
-        <Button type="primary" block onClick={() => onNavigate("auth")} style={{ borderRadius: 8, background: "var(--primary-green)" }}>
+        <Button
+          type="primary"
+          block
+          onClick={() => onNavigate("auth")}
+          style={{ borderRadius: 8, background: "var(--primary-green)" }}
+        >
           {t("nav_signin")}
         </Button>
       )}
 
-      <Button block onClick={() => { toggleLanguage(); setIsMobileMenuOpen(false); }} icon={<TranslationOutlined />} style={{ borderRadius: 8 }}>
+      <Button
+        block
+        onClick={() => {
+          toggleLanguage();
+          setIsMobileMenuOpen(false);
+        }}
+        icon={<TranslationOutlined />}
+        style={{ borderRadius: 8 }}
+      >
         {lang === "en" ? "CN" : "EN"}
       </Button>
 
-      <Button block shape="round" className="btn-gold" onClick={() => { setIsDownloadModalOpen(true); setIsMobileMenuOpen(false); }} style={{ marginTop: 8 }}>
+      <Button
+        block
+        shape="round"
+        className="btn-gold"
+        onClick={() => {
+          setIsDownloadModalOpen(true);
+          setIsMobileMenuOpen(false);
+        }}
+        style={{ marginTop: 8 }}
+      >
         {t("nav_download")}
       </Button>
     </div>
@@ -637,7 +723,9 @@ function BlogPage({ onNavigate }) {
         !searchText ||
         p.title.toLowerCase().includes(searchText.toLowerCase()) ||
         p.excerpt.toLowerCase().includes(searchText.toLowerCase()) ||
-        p.tags.some((tag) => tag.toLowerCase().includes(searchText.toLowerCase()));
+        p.tags.some((tag) =>
+          tag.toLowerCase().includes(searchText.toLowerCase()),
+        );
       return matchCat && matchSearch;
     })
     .sort((a, b) => {
@@ -652,7 +740,7 @@ function BlogPage({ onNavigate }) {
 
   const handleLike = (id) => {
     setLikedPosts((prev) =>
-      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id],
     );
   };
 
@@ -660,7 +748,7 @@ function BlogPage({ onNavigate }) {
     setSelectedPost(post);
     // increment view count
     setPosts((prev) =>
-      prev.map((p) => (p.id === post.id ? { ...p, views: p.views + 1 } : p))
+      prev.map((p) => (p.id === post.id ? { ...p, views: p.views + 1 } : p)),
     );
   };
 
@@ -688,12 +776,15 @@ function BlogPage({ onNavigate }) {
         readTime: `${Math.max(1, Math.ceil(values.content?.split(" ").length / 200))} min read`,
         views: 0,
         likes: 0,
-        image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80",
+        image:
+          "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80",
         tags: values.tags ? values.tags.split(",").map((t) => t.trim()) : [],
         featured: false,
       };
       setPosts((prev) => [newPost, ...prev]);
-      message.success("Article submitted successfully! It will be reviewed before publishing.");
+      message.success(
+        "Article submitted successfully! It will be reviewed before publishing.",
+      );
       setIsWriteModalOpen(false);
       form.resetFields();
       setSubmitting(false);
@@ -701,77 +792,223 @@ function BlogPage({ onNavigate }) {
   };
 
   return (
-    <div className="blog-page landing-page" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
-      
+    <div
+      className="blog-page landing-page"
+      style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}
+    >
       {/* HEADER / NAVBAR */}
-      <header className="navbar-container" style={{ padding: "0 20px", background: "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(10px)", position: "sticky", top: 0, zIndex: 1000, borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
-        <div className="container navbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: "64px" }}>
-          <div className="brand-logo" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }} onClick={() => onNavigate("home")}>
+      <header
+        className="navbar-container"
+        style={{
+          padding: "0 20px",
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(10px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          borderBottom: "1px solid rgba(0,0,0,0.05)",
+        }}
+      >
+        <div
+          className="container navbar"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            height: "64px",
+          }}
+        >
+          <div
+            className="brand-logo"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              cursor: "pointer",
+            }}
+            onClick={() => onNavigate("home")}
+          >
             <div className="logo-icon-wrapper">
-              <img src={logoImage} alt="Logo Brand" className="logo-icon" style={{ width: "32px" }} />
+              <img
+                src={logoImage}
+                alt="Logo Brand"
+                className="logo-icon"
+                style={{ width: "32px" }}
+              />
             </div>
-            <span style={{ fontWeight: "800", fontSize: "18px", color: "var(--text-dark)" }}>QingzhenMu</span>
+            <span
+              style={{
+                fontWeight: "800",
+                fontSize: "18px",
+                color: "var(--text-dark)",
+              }}
+            >
+              QingzhenMu
+            </span>
           </div>
 
-          <div className="nav-links desktop-only" style={{ display: isMobile ? "none" : "flex", gap: "24px" }}>
-            <Button type="text" onClick={() => onNavigate("finder")} style={{ fontWeight: 500 }}>{t("nav_finder")}</Button>
-            <Button type="text" onClick={() => onNavigate("mosque")} style={{ fontWeight: 500 }}>{t("nav_mosque")}</Button>
-            <Button type="text" onClick={() => onNavigate("prayer")} style={{ fontWeight: 500 }}>{t("nav_prayer")}</Button>
-            <Button type="text" onClick={() => {}} style={{ fontWeight: 500 }}>{t("nav_community")}</Button>
-            <Button type="text" onClick={handleNavigateBlog} style={{ color: "var(--primary-green)", fontWeight: "700", background: "rgba(15, 81, 50, 0.05)", borderRadius: "8px" }}>{t("nav_blog")}</Button>
+          <div
+            className="nav-links desktop-only"
+            style={{ display: isMobile ? "none" : "flex", gap: "24px" }}
+          >
+            <Button
+              type="text"
+              onClick={() => onNavigate("finder")}
+              style={{ fontWeight: 500 }}
+            >
+              {t("nav_finder")}
+            </Button>
+            <Button
+              type="text"
+              onClick={() => onNavigate("mosque")}
+              style={{ fontWeight: 500 }}
+            >
+              {t("nav_mosque")}
+            </Button>
+            <Button
+              type="text"
+              onClick={() => onNavigate("prayer")}
+              style={{ fontWeight: 500 }}
+            >
+              {t("nav_prayer")}
+            </Button>
+            <Button
+              type="text"
+              onClick={() => onNavigate("community-page")}
+              style={{ fontWeight: 500 }}
+            >
+              {t("nav_community")}
+            </Button>
+            <Button
+              type="text"
+              onClick={handleNavigateBlog}
+              style={{
+                color: "var(--primary-green)",
+                fontWeight: "700",
+                background: "rgba(15, 81, 50, 0.05)",
+                borderRadius: "8px",
+              }}
+            >
+              {t("nav_blog")}
+            </Button>
           </div>
 
-          <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            className="nav-actions"
+            style={{ display: "flex", alignItems: "center", gap: "12px" }}
+          >
             {!isMobile && (
-              <Button type="text" icon={<TranslationOutlined />} onClick={toggleLanguage} style={{ fontWeight: "600", color: "#555" }}>
+              <Button
+                type="text"
+                icon={<TranslationOutlined />}
+                onClick={toggleLanguage}
+                style={{ fontWeight: "600", color: "#555" }}
+              >
                 {lang === "en" ? "CN" : "EN"}
               </Button>
             )}
 
-            <div className="hide-mobile" style={{ display: isMobile ? "none" : "block" }}>
+            <div
+              className="hide-mobile"
+              style={{ display: isMobile ? "none" : "block" }}
+            >
               {user ? (
-                <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-                  <Button type="text" style={{ height: "auto", padding: "4px 8px", borderRadius: 24 }}>
+                <Dropdown
+                  menu={{ items: userMenuItems }}
+                  placement="bottomRight"
+                >
+                  <Button
+                    type="text"
+                    style={{
+                      height: "auto",
+                      padding: "4px 8px",
+                      borderRadius: 24,
+                    }}
+                  >
                     <Space>
-                      <Avatar src={user.avatar_url} icon={<UserOutlined />} style={{ backgroundColor: "var(--primary-green)" }} />
-                      <Text strong style={{ color: "var(--text-dark)" }}>{user.name || user.username || "User"}</Text>
+                      <Avatar
+                        src={user.avatar_url}
+                        icon={<UserOutlined />}
+                        style={{ backgroundColor: "var(--primary-green)" }}
+                      />
+                      <Text strong style={{ color: "var(--text-dark)" }}>
+                        {user.name || user.username || "User"}
+                      </Text>
                       <DownOutlined style={{ fontSize: 10, color: "#999" }} />
                     </Space>
                   </Button>
                 </Dropdown>
               ) : (
-                <Button type="text" onClick={() => onNavigate("auth")} style={{ fontWeight: 600 }}>{t("nav_signin")}</Button>
+                <Button
+                  type="text"
+                  onClick={() => onNavigate("auth")}
+                  style={{ fontWeight: 600 }}
+                >
+                  {t("nav_signin")}
+                </Button>
               )}
             </div>
 
             {!isMobile && (
-              <Button type="primary" shape="round" className="btn-gold" onClick={() => setIsDownloadModalOpen(true)} style={{ boxShadow: "0 4px 14px rgba(197, 157, 36, 0.3)" }}>
+              <Button
+                type="primary"
+                shape="round"
+                className="btn-gold"
+                onClick={() => setIsDownloadModalOpen(true)}
+                style={{ boxShadow: "0 4px 14px rgba(197, 157, 36, 0.3)" }}
+              >
                 {t("nav_download")}
               </Button>
             )}
 
             {isMobile && (
-              <Button type="text" className="mobile-menu-toggle" onClick={() => setIsMobileMenuOpen(true)} icon={<MenuOutlined style={{ fontSize: "20px" }} />} />
+              <Button
+                type="text"
+                className="mobile-menu-toggle"
+                onClick={() => setIsMobileMenuOpen(true)}
+                icon={<MenuOutlined style={{ fontSize: "20px" }} />}
+              />
             )}
           </div>
         </div>
       </header>
 
       {/* DRAWER UNTUK MENU MOBILE */}
-      <Drawer title={<span style={{ fontWeight: 700 }}>Menu</span>} placement="right" onClose={() => setIsMobileMenuOpen(false)} open={isMobileMenuOpen} width={280}>
+      <Drawer
+        title={<span style={{ fontWeight: 700 }}>Menu</span>}
+        placement="right"
+        onClose={() => setIsMobileMenuOpen(false)}
+        open={isMobileMenuOpen}
+        width={280}
+      >
         {renderMobileMenu()}
       </Drawer>
 
       {/* RENDER DETAIL ARTIKEL JIKA ADA YANG DIPILIH */}
       {selectedPost ? (
-        <section style={{ padding: isMobile ? "40px 0" : "60px 0", background: "#fff", minHeight: "80vh" }}>
-          <div className="container" style={{ maxWidth: "800px", margin: "0 auto", padding: "0 20px" }}>
+        <section
+          style={{
+            padding: isMobile ? "40px 0" : "60px 0",
+            background: "#fff",
+            minHeight: "80vh",
+          }}
+        >
+          <div
+            className="container"
+            style={{ maxWidth: "800px", margin: "0 auto", padding: "0 20px" }}
+          >
             {/* Tombol Back */}
             <Button
               type="text"
               icon={<ArrowLeftOutlined />}
               onClick={() => setSelectedPost(null)}
-              style={{ marginBottom: 32, fontWeight: 600, color: "var(--primary-green)", padding: 0, fontSize: "16px" }}
+              style={{
+                marginBottom: 32,
+                fontWeight: 600,
+                color: "var(--primary-green)",
+                padding: 0,
+                fontSize: "16px",
+              }}
             >
               {lang === "en" ? "Back to Journal" : "返回期刊"}
             </Button>
@@ -779,65 +1016,158 @@ function BlogPage({ onNavigate }) {
             {/* Article Header */}
             <div style={{ marginBottom: 32 }}>
               {(() => {
-                const catObj = CATEGORIES.find(c => c.key === selectedPost.category) || CATEGORIES[0];
+                const catObj =
+                  CATEGORIES.find((c) => c.key === selectedPost.category) ||
+                  CATEGORIES[0];
                 return (
-                  <Tag style={{ background: catObj.color, color: "white", padding: "6px 16px", borderRadius: 20, fontWeight: "700", border: "none", marginBottom: 16, fontSize: "14px" }}>
+                  <Tag
+                    style={{
+                      background: catObj.color,
+                      color: "white",
+                      padding: "6px 16px",
+                      borderRadius: 20,
+                      fontWeight: "700",
+                      border: "none",
+                      marginBottom: 16,
+                      fontSize: "14px",
+                    }}
+                  >
                     {catObj.icon} {catObj.label}
                   </Tag>
                 );
               })()}
-              <Title level={1} style={{ marginTop: 0, marginBottom: 24, fontWeight: 800, fontSize: isMobile ? "2.2rem" : "3.2rem", lineHeight: 1.2, color: "var(--text-dark)" }}>
+              <Title
+                level={1}
+                style={{
+                  marginTop: 0,
+                  marginBottom: 24,
+                  fontWeight: 800,
+                  fontSize: isMobile ? "2.2rem" : "3.2rem",
+                  lineHeight: 1.2,
+                  color: "var(--text-dark)",
+                }}
+              >
                 {selectedPost.title}
               </Title>
-              
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 24, borderBottom: "1px solid #f1f5f9" }}>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingBottom: 24,
+                  borderBottom: "1px solid #f1f5f9",
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <Avatar size={48} src={selectedPost.authorAvatar} style={{ backgroundColor: "#f1f5f9" }} />
+                  <Avatar
+                    size={48}
+                    src={selectedPost.authorAvatar}
+                    style={{ backgroundColor: "#f1f5f9" }}
+                  />
                   <div>
-                    <Text strong style={{ display: "block", fontSize: "16px", color: "#334155" }}>{selectedPost.author}</Text>
+                    <Text
+                      strong
+                      style={{
+                        display: "block",
+                        fontSize: "16px",
+                        color: "#334155",
+                      }}
+                    >
+                      {selectedPost.author}
+                    </Text>
                     <Text type="secondary" style={{ fontSize: "14px" }}>
-                      {selectedPost.date} • {selectedPost.readTime} • <EyeOutlined style={{marginLeft: 4}}/> {selectedPost.views.toLocaleString()} views
+                      {selectedPost.date} • {selectedPost.readTime} •{" "}
+                      <EyeOutlined style={{ marginLeft: 4 }} />{" "}
+                      {selectedPost.views.toLocaleString()} views
                     </Text>
                   </div>
                 </div>
                 {/* Tombol Share */}
-                <Button shape="circle" icon={<ShareAltOutlined />} onClick={() => message.success("Link copied to clipboard!")} />
+                <Button
+                  shape="circle"
+                  icon={<ShareAltOutlined />}
+                  onClick={() => message.success("Link copied to clipboard!")}
+                />
               </div>
             </div>
 
             {/* Article Hero Image */}
-            <div style={{ borderRadius: "24px", overflow: "hidden", marginBottom: 40, boxShadow: "0 20px 40px rgba(0,0,0,0.08)" }}>
-              <img src={selectedPost.image} alt={selectedPost.title} style={{ width: "100%", maxHeight: "500px", objectFit: "cover", display: "block" }} />
+            <div
+              style={{
+                borderRadius: "24px",
+                overflow: "hidden",
+                marginBottom: 40,
+                boxShadow: "0 20px 40px rgba(0,0,0,0.08)",
+              }}
+            >
+              <img
+                src={selectedPost.image}
+                alt={selectedPost.title}
+                style={{
+                  width: "100%",
+                  maxHeight: "500px",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
             </div>
 
             {/* Article Content */}
             <div className="article-content" style={{ paddingBottom: "60px" }}>
-              <Paragraph style={{ fontSize: "19px", lineHeight: 1.8, color: "#475569", fontWeight: 500, fontStyle: "italic", marginBottom: 32, paddingLeft: 20, borderLeft: "4px solid var(--primary-green)" }}>
+              <Paragraph
+                style={{
+                  fontSize: "19px",
+                  lineHeight: 1.8,
+                  color: "#475569",
+                  fontWeight: 500,
+                  fontStyle: "italic",
+                  marginBottom: 32,
+                  paddingLeft: 20,
+                  borderLeft: "4px solid var(--primary-green)",
+                }}
+              >
                 {selectedPost.excerpt}
               </Paragraph>
-              
+
               {Array.isArray(selectedPost.content) ? (
                 selectedPost.content.map((para, idx) => (
-                  <Paragraph key={idx} style={{ fontSize: "18px", lineHeight: 1.8, color: "#334155", marginBottom: 24 }}>
+                  <Paragraph
+                    key={idx}
+                    style={{
+                      fontSize: "18px",
+                      lineHeight: 1.8,
+                      color: "#334155",
+                      marginBottom: 24,
+                    }}
+                  >
                     {para}
                   </Paragraph>
                 ))
               ) : (
-                <Paragraph style={{ fontSize: "18px", lineHeight: 1.8, color: "#334155", marginBottom: 24, whiteSpace: "pre-wrap" }}>
+                <Paragraph
+                  style={{
+                    fontSize: "18px",
+                    lineHeight: 1.8,
+                    color: "#334155",
+                    marginBottom: 24,
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
                   {selectedPost.content}
                 </Paragraph>
               )}
             </div>
           </div>
         </section>
-
       ) : (
         /* RENDER DAFTAR BERITA (JIKA TIDAK ADA YANG DIPILIH) */
         <>
           {/* HERO BANNER */}
           <div
             style={{
-              background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 40%, #388E3C 70%, #43A047 100%)",
+              background:
+                "linear-gradient(135deg, #1B5E20 0%, #2E7D32 40%, #388E3C 70%, #43A047 100%)",
               padding: isMobile ? "50px 20px" : "80px 20px",
               textAlign: "center",
               position: "relative",
@@ -849,10 +1179,18 @@ function BlogPage({ onNavigate }) {
               style={{
                 position: "absolute",
                 inset: 0,
-                backgroundImage: "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%)",
+                backgroundImage:
+                  "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%)",
               }}
             />
-            <div style={{ position: "relative", maxWidth: 720, margin: "0 auto", zIndex: 2 }}>
+            <div
+              style={{
+                position: "relative",
+                maxWidth: 720,
+                margin: "0 auto",
+                zIndex: 2,
+              }}
+            >
               <Tag
                 icon={<SafetyCertificateFilled />}
                 style={{
@@ -884,25 +1222,37 @@ function BlogPage({ onNavigate }) {
                   fontSize: isMobile ? 15 : 17,
                   margin: "0 auto 32px",
                   maxWidth: 580,
-                  lineHeight: 1.6
+                  lineHeight: 1.6,
                 }}
               >
-                {lang === "en" 
-                  ? "The latest news, certifications, travel guides, and community stories about halal living in China — curated for Muslim travelers and residents." 
+                {lang === "en"
+                  ? "The latest news, certifications, travel guides, and community stories about halal living in China — curated for Muslim travelers and residents."
                   : "有关中国清真生活的最新新闻、认证、旅游指南和社区故事——专为穆斯林游客和居民精心策划。"}
               </Paragraph>
-              
+
               <div style={{ maxWidth: 550, margin: "0 auto" }}>
                 <Input
                   size="large"
-                  placeholder={lang === "en" ? "Search articles, guides, or reviews..." : "搜索文章、指南或评论..."}
-                  prefix={<SearchOutlined style={{ color: "var(--primary-green)", fontSize: 18, marginRight: 8 }} />}
-                  style={{ 
-                    borderRadius: 40, 
-                    padding: "8px 24px", 
+                  placeholder={
+                    lang === "en"
+                      ? "Search articles, guides, or reviews..."
+                      : "搜索文章、指南或评论..."
+                  }
+                  prefix={
+                    <SearchOutlined
+                      style={{
+                        color: "var(--primary-green)",
+                        fontSize: 18,
+                        marginRight: 8,
+                      }}
+                    />
+                  }
+                  style={{
+                    borderRadius: 40,
+                    padding: "8px 24px",
                     fontSize: 16,
                     boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-                    border: "none"
+                    border: "none",
                   }}
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
@@ -913,8 +1263,23 @@ function BlogPage({ onNavigate }) {
           </div>
 
           {/* CATEGORY TABS */}
-          <div style={{ background: "white", borderBottom: "1px solid #f0f0e8", padding: "0 20px", overflowX: "auto" }}>
-            <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", gap: 0, minWidth: "max-content" }}>
+          <div
+            style={{
+              background: "white",
+              borderBottom: "1px solid #f0f0e8",
+              padding: "0 20px",
+              overflowX: "auto",
+            }}
+          >
+            <div
+              style={{
+                maxWidth: 1200,
+                margin: "0 auto",
+                display: "flex",
+                gap: 0,
+                minWidth: "max-content",
+              }}
+            >
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.key}
@@ -929,20 +1294,32 @@ function BlogPage({ onNavigate }) {
                     cursor: "pointer",
                     fontWeight: activeCategory === cat.key ? 700 : 500,
                     color: activeCategory === cat.key ? cat.color : "#666",
-                    borderBottom: activeCategory === cat.key ? `3px solid ${cat.color}` : "3px solid transparent",
+                    borderBottom:
+                      activeCategory === cat.key
+                        ? `3px solid ${cat.color}`
+                        : "3px solid transparent",
                     transition: "all 0.2s",
                     fontSize: 14,
                     whiteSpace: "nowrap",
                   }}
                 >
-                  <span style={{ color: activeCategory === cat.key ? cat.color : "#999" }}>
+                  <span
+                    style={{
+                      color: activeCategory === cat.key ? cat.color : "#999",
+                    }}
+                  >
                     {cat.icon}
                   </span>
                   {cat.label}
                   <Badge
-                    count={cat.key === "all" ? posts.length : posts.filter((p) => p.category === cat.key).length}
+                    count={
+                      cat.key === "all"
+                        ? posts.length
+                        : posts.filter((p) => p.category === cat.key).length
+                    }
                     style={{
-                      background: activeCategory === cat.key ? cat.color : "#f0f0f0",
+                      background:
+                        activeCategory === cat.key ? cat.color : "#f0f0f0",
                       color: activeCategory === cat.key ? "white" : "#999",
                       boxShadow: "none",
                       fontSize: 11,
@@ -954,19 +1331,47 @@ function BlogPage({ onNavigate }) {
           </div>
 
           {/* MAIN CONTENT AREA */}
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "24px 16px" : "40px 20px" }}>
+          <div
+            style={{
+              maxWidth: 1200,
+              margin: "0 auto",
+              padding: isMobile ? "24px 16px" : "40px 20px",
+            }}
+          >
             {/* Sort & Results count */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 28,
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
               <Text style={{ color: "#888", fontSize: 14 }}>
-                Showing <strong style={{ color: "#1a1a1a" }}>{filteredPosts.length}</strong> articles
+                Showing{" "}
+                <strong style={{ color: "#1a1a1a" }}>
+                  {filteredPosts.length}
+                </strong>{" "}
+                articles
                 {activeCategory !== "all" && (
-                  <> in <strong style={{ color: "#2E7D32" }}>{CATEGORIES.find((c) => c.key === activeCategory)?.label}</strong></>
+                  <>
+                    {" "}
+                    in{" "}
+                    <strong style={{ color: "#2E7D32" }}>
+                      {CATEGORIES.find((c) => c.key === activeCategory)?.label}
+                    </strong>
+                  </>
                 )}
                 {searchText && (
-                  <> for "<strong>{searchText}</strong>"</>
+                  <>
+                    {" "}
+                    for "<strong>{searchText}</strong>"
+                  </>
                 )}
               </Text>
-              
+
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                 <Select
                   value={sortBy}
@@ -979,7 +1384,17 @@ function BlogPage({ onNavigate }) {
                   <Option value="liked">Most Liked</Option>
                 </Select>
                 {!isMobile && (
-                  <Button type="primary" shape="round" icon={<EditOutlined />} onClick={handleWriteOpen} style={{ background: "#2E7D32", borderColor: "#2E7D32", fontWeight: 600 }}>
+                  <Button
+                    type="primary"
+                    shape="round"
+                    icon={<EditOutlined />}
+                    onClick={handleWriteOpen}
+                    style={{
+                      background: "#2E7D32",
+                      borderColor: "#2E7D32",
+                      fontWeight: 600,
+                    }}
+                  >
                     Write Article
                   </Button>
                 )}
@@ -990,14 +1405,31 @@ function BlogPage({ onNavigate }) {
             {featuredPosts.length > 0 && (
               <>
                 <div style={{ marginBottom: 16 }}>
-                  <Title level={5} style={{ color: "#888", textTransform: "uppercase", letterSpacing: 1, margin: 0, fontSize: 12 }}>
-                    <FireOutlined style={{ color: "#ff4d4f", marginRight: 6 }} /> Featured Stories
+                  <Title
+                    level={5}
+                    style={{
+                      color: "#888",
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                      margin: 0,
+                      fontSize: 12,
+                    }}
+                  >
+                    <FireOutlined
+                      style={{ color: "#ff4d4f", marginRight: 6 }}
+                    />{" "}
+                    Featured Stories
                   </Title>
                 </div>
                 <Row gutter={[20, 20]} style={{ marginBottom: 40 }}>
                   {featuredPosts.map((post) => (
                     <Col xs={24} md={12} key={post.id}>
-                      <FeaturedCard post={post} onRead={handleRead} onLike={handleLike} likedPosts={likedPosts} />
+                      <FeaturedCard
+                        post={post}
+                        onRead={handleRead}
+                        onLike={handleLike}
+                        likedPosts={likedPosts}
+                      />
                     </Col>
                   ))}
                 </Row>
@@ -1008,14 +1440,31 @@ function BlogPage({ onNavigate }) {
             {regularPosts.length > 0 && (
               <>
                 <div style={{ marginBottom: 16 }}>
-                  <Title level={5} style={{ color: "#888", textTransform: "uppercase", letterSpacing: 1, margin: 0, fontSize: 12 }}>
-                    <GlobalOutlined style={{ color: "#2E7D32", marginRight: 6 }} /> Latest Articles
+                  <Title
+                    level={5}
+                    style={{
+                      color: "#888",
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                      margin: 0,
+                      fontSize: 12,
+                    }}
+                  >
+                    <GlobalOutlined
+                      style={{ color: "#2E7D32", marginRight: 6 }}
+                    />{" "}
+                    Latest Articles
                   </Title>
                 </div>
                 <Row gutter={[20, 20]}>
                   {regularPosts.map((post) => (
                     <Col xs={24} sm={12} lg={8} key={post.id}>
-                      <BlogCard post={post} onRead={handleRead} onLike={handleLike} likedPosts={likedPosts} />
+                      <BlogCard
+                        post={post}
+                        onRead={handleRead}
+                        onLike={handleLike}
+                        likedPosts={likedPosts}
+                      />
                     </Col>
                   ))}
                 </Row>
@@ -1029,12 +1478,23 @@ function BlogPage({ onNavigate }) {
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description={
                     <div>
-                      <Title level={4} style={{ color: "#888" }}>No articles found</Title>
-                      <Text type="secondary">Try a different category or search keyword</Text>
+                      <Title level={4} style={{ color: "#888" }}>
+                        No articles found
+                      </Title>
+                      <Text type="secondary">
+                        Try a different category or search keyword
+                      </Text>
                     </div>
                   }
                 >
-                  <Button type="primary" style={{ background: "#2E7D32" }} onClick={() => { setActiveCategory("all"); setSearchText(""); }}>
+                  <Button
+                    type="primary"
+                    style={{ background: "#2E7D32" }}
+                    onClick={() => {
+                      setActiveCategory("all");
+                      setSearchText("");
+                    }}
+                  >
                     View All Articles
                   </Button>
                 </Empty>
@@ -1042,15 +1502,49 @@ function BlogPage({ onNavigate }) {
             )}
 
             {/* CTA Write */}
-            <div style={{ marginTop: 60, borderRadius: 20, background: "linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%)", border: "1px solid #C8E6C9", padding: isMobile ? "32px 20px" : "48px 40px", textAlign: "center" }}>
-              <CheckCircleFilled style={{ fontSize: 40, color: "#2E7D32", marginBottom: 16 }} />
+            <div
+              style={{
+                marginTop: 60,
+                borderRadius: 20,
+                background: "linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%)",
+                border: "1px solid #C8E6C9",
+                padding: isMobile ? "32px 20px" : "48px 40px",
+                textAlign: "center",
+              }}
+            >
+              <CheckCircleFilled
+                style={{ fontSize: 40, color: "#2E7D32", marginBottom: 16 }}
+              />
               <Title level={3} style={{ color: "#1B5E20", margin: "0 0 12px" }}>
                 Have a Story About Halal in China?
               </Title>
-              <Paragraph style={{ color: "#4CAF50", fontSize: 16, margin: "0 auto 28px", maxWidth: 600 }}>
-                Share news, experiences, or tips with our community. Help Muslim travelers and residents navigate China with confidence.
+              <Paragraph
+                style={{
+                  color: "#4CAF50",
+                  fontSize: 16,
+                  margin: "0 auto 28px",
+                  maxWidth: 600,
+                }}
+              >
+                Share news, experiences, or tips with our community. Help Muslim
+                travelers and residents navigate China with confidence.
               </Paragraph>
-              <Button type="primary" size="large" shape="round" icon={<EditOutlined />} onClick={handleWriteOpen} style={{ background: "#2E7D32", borderColor: "#2E7D32", height: 48, paddingLeft: 32, paddingRight: 32, fontWeight: 700, fontSize: 15 }}>
+              <Button
+                type="primary"
+                size="large"
+                shape="round"
+                icon={<EditOutlined />}
+                onClick={handleWriteOpen}
+                style={{
+                  background: "#2E7D32",
+                  borderColor: "#2E7D32",
+                  height: 48,
+                  paddingLeft: 32,
+                  paddingRight: 32,
+                  fontWeight: 700,
+                  fontSize: 15,
+                }}
+              >
                 Write an Article
               </Button>
             </div>
@@ -1059,53 +1553,232 @@ function BlogPage({ onNavigate }) {
       )}
 
       {/* FOOTER */}
-      <footer className="footer-section" style={{ background: "#0f172a", color: "white", padding: "80px 0 24px", marginTop: "auto" }}>
-        <div className="container" style={{ padding: "0 20px", maxWidth: 1200, margin: "0 auto" }}>
-          <div className="footer-content" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", marginBottom: "60px", gap: "40px" }}>
+      <footer
+        className="footer-section"
+        style={{
+          background: "#0f172a",
+          color: "white",
+          padding: "80px 0 24px",
+          marginTop: "auto",
+        }}
+      >
+        <div
+          className="container"
+          style={{ padding: "0 20px", maxWidth: 1200, margin: "0 auto" }}
+        >
+          <div
+            className="footer-content"
+            style={{
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              justifyContent: "space-between",
+              marginBottom: "60px",
+              gap: "40px",
+            }}
+          >
             <div style={{ maxWidth: 320 }}>
-              <div className="brand-logo" style={{ color: "white", marginBottom: 20, display: "flex", alignItems: "center", gap: "10px" }}>
-                <GlobalOutlined style={{ color: "var(--secondary-green)", fontSize: 24 }} />
-                <span style={{ fontSize: "24px", fontWeight: "800" }}>QingzhenMu</span>
+              <div
+                className="brand-logo"
+                style={{
+                  color: "white",
+                  marginBottom: 20,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                }}
+              >
+                <GlobalOutlined
+                  style={{ color: "var(--secondary-green)", fontSize: 24 }}
+                />
+                <span style={{ fontSize: "24px", fontWeight: "800" }}>
+                  QingzhenMu
+                </span>
               </div>
-              <Paragraph style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.6 }}>
-                {t("footer_desc") || "Empowering Muslim travelers across China with reliable guides and halal information."}
+              <Paragraph
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                }}
+              >
+                {t("footer_desc") ||
+                  "Empowering Muslim travelers across China with reliable guides and halal information."}
               </Paragraph>
             </div>
 
-            <div className="footer-links" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_about") || "About Us"}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_careers") || "Careers"}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_privacy") || "Privacy Policy"}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_terms") || "Terms of Service"}</Button>
-              <Button type="link" style={{ color: "rgba(255,255,255,0.8)", textAlign: "left", padding: 0, fontSize: 15 }}>{t("footer_contact") || "Contact Us"}</Button>
+            <div
+              className="footer-links"
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
+              <Button
+                type="link"
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  textAlign: "left",
+                  padding: 0,
+                  fontSize: 15,
+                }}
+              >
+                {t("footer_about") || "About Us"}
+              </Button>
+              <Button
+                type="link"
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  textAlign: "left",
+                  padding: 0,
+                  fontSize: 15,
+                }}
+              >
+                {t("footer_careers") || "Careers"}
+              </Button>
+              <Button
+                type="link"
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  textAlign: "left",
+                  padding: 0,
+                  fontSize: 15,
+                }}
+              >
+                {t("footer_privacy") || "Privacy Policy"}
+              </Button>
+              <Button
+                type="link"
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  textAlign: "left",
+                  padding: 0,
+                  fontSize: 15,
+                }}
+              >
+                {t("footer_terms") || "Terms of Service"}
+              </Button>
+              <Button
+                type="link"
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  textAlign: "left",
+                  padding: 0,
+                  fontSize: 15,
+                }}
+              >
+                {t("footer_contact") || "Contact Us"}
+              </Button>
             </div>
 
-            <div className="footer-social" style={{ display: "flex", gap: "24px", fontSize: "24px" }}>
-              <FacebookFilled style={{ cursor: "pointer", color: "rgba(255,255,255,0.8)", transition: "color 0.3s" }} onMouseOver={(e) => e.currentTarget.style.color = "white"} onMouseOut={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"} />
-              <InstagramFilled style={{ cursor: "pointer", color: "rgba(255,255,255,0.8)", transition: "color 0.3s" }} onMouseOver={(e) => e.currentTarget.style.color = "white"} onMouseOut={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"} />
-              <YoutubeFilled style={{ cursor: "pointer", color: "rgba(255,255,255,0.8)", transition: "color 0.3s" }} onMouseOver={(e) => e.currentTarget.style.color = "white"} onMouseOut={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"} />
+            <div
+              className="footer-social"
+              style={{ display: "flex", gap: "24px", fontSize: "24px" }}
+            >
+              <FacebookFilled
+                style={{
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.8)",
+                  transition: "color 0.3s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = "white")}
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.8)")
+                }
+              />
+              <InstagramFilled
+                style={{
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.8)",
+                  transition: "color 0.3s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = "white")}
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.8)")
+                }
+              />
+              <YoutubeFilled
+                style={{
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.8)",
+                  transition: "color 0.3s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = "white")}
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.8)")
+                }
+              />
             </div>
           </div>
 
-          <div className="copyright" style={{ textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "24px" }}>
+          <div
+            className="copyright"
+            style={{
+              textAlign: "center",
+              borderTop: "1px solid rgba(255,255,255,0.1)",
+              paddingTop: "24px",
+            }}
+          >
             <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
-              {t("copyright") || "© 2026 QingzhenMu. Empowering Muslim travelers across China."}
+              {t("copyright") ||
+                "© 2026 QingzhenMu. Empowering Muslim travelers across China."}
             </Text>
           </div>
         </div>
       </footer>
 
       {/* DOWNLOAD APP MODAL */}
-      <Modal title={null} footer={null} open={isDownloadModalOpen} onCancel={() => setIsDownloadModalOpen(false)} centered width={400} styles={{ body: { padding: 32 } }}>
+      <Modal
+        title={null}
+        footer={null}
+        open={isDownloadModalOpen}
+        onCancel={() => setIsDownloadModalOpen(false)}
+        centered
+        width={400}
+        styles={{ body: { padding: 32 } }}
+      >
         <div style={{ textAlign: "center" }}>
-          <GlobalOutlined style={{ fontSize: 56, color: "var(--primary-green)", marginBottom: 20 }} />
-          <Title level={3} style={{ fontWeight: 800 }}>{t("modal_title") || "Get QingzhenMu App"}</Title>
-          <Paragraph style={{ color: "#64748b", marginBottom: 32 }}>{t("modal_desc") || "Download our mobile app to find halal food and prayer spaces on the go."}</Paragraph>
+          <GlobalOutlined
+            style={{
+              fontSize: 56,
+              color: "var(--primary-green)",
+              marginBottom: 20,
+            }}
+          />
+          <Title level={3} style={{ fontWeight: 800 }}>
+            {t("modal_title") || "Get QingzhenMu App"}
+          </Title>
+          <Paragraph style={{ color: "#64748b", marginBottom: 32 }}>
+            {t("modal_desc") ||
+              "Download our mobile app to find halal food and prayer spaces on the go."}
+          </Paragraph>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <Button type="primary" size="large" icon={<AppleFilled />} style={{ background: "#0f172a", borderColor: "#0f172a", height: 50, borderRadius: 12, fontWeight: 600 }} block onClick={() => message.info("Redirecting to App Store...")}>
+            <Button
+              type="primary"
+              size="large"
+              icon={<AppleFilled />}
+              style={{
+                background: "#0f172a",
+                borderColor: "#0f172a",
+                height: 50,
+                borderRadius: 12,
+                fontWeight: 600,
+              }}
+              block
+              onClick={() => message.info("Redirecting to App Store...")}
+            >
               Download on App Store
             </Button>
-            <Button type="primary" size="large" icon={<AndroidFilled />} style={{ background: "var(--primary-green)", borderColor: "var(--primary-green)", height: 50, borderRadius: 12, fontWeight: 600 }} block onClick={() => message.info("Redirecting to Play Store...")}>
+            <Button
+              type="primary"
+              size="large"
+              icon={<AndroidFilled />}
+              style={{
+                background: "var(--primary-green)",
+                borderColor: "var(--primary-green)",
+                height: 50,
+                borderRadius: 12,
+                fontWeight: 600,
+              }}
+              block
+              onClick={() => message.info("Redirecting to Play Store...")}
+            >
               Get it on Google Play
             </Button>
           </div>
@@ -1120,49 +1793,121 @@ function BlogPage({ onNavigate }) {
               <EditOutlined style={{ marginRight: 8, color: "#2E7D32" }} />
               Write an Article
             </Title>
-            <Text type="secondary" style={{ fontSize: 13 }}>Share halal news & stories with the community</Text>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              Share halal news & stories with the community
+            </Text>
           </div>
         }
         open={isWriteModalOpen}
-        onCancel={() => { setIsWriteModalOpen(false); form.resetFields(); }}
+        onCancel={() => {
+          setIsWriteModalOpen(false);
+          form.resetFields();
+        }}
         footer={null}
         centered
         width={isMobile ? "100%" : 680}
-        styles={{ body: { padding: "24px 28px", maxHeight: "75vh", overflowY: "auto" } }}
+        styles={{
+          body: { padding: "24px 28px", maxHeight: "75vh", overflowY: "auto" },
+        }}
       >
         {user && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "#f6ffed", borderRadius: 10, border: "1px solid #b7eb8f", marginBottom: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "12px 16px",
+              background: "#f6ffed",
+              borderRadius: 10,
+              border: "1px solid #b7eb8f",
+              marginBottom: 20,
+            }}
+          >
             <Avatar src={user.avatar_url} icon={<UserOutlined />} />
-            <Text>Publishing as <strong>{user.name || user.username}</strong></Text>
+            <Text>
+              Publishing as <strong>{user.name || user.username}</strong>
+            </Text>
           </div>
         )}
-        <Form form={form} layout="vertical" onFinish={handleSubmitArticle} size="large">
-          <Form.Item name="category" label="Category" rules={[{ required: true, message: "Please select a category" }]}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmitArticle}
+          size="large"
+        >
+          <Form.Item
+            name="category"
+            label="Category"
+            rules={[{ required: true, message: "Please select a category" }]}
+          >
             <Select placeholder="Select article category">
               {CATEGORIES.filter((c) => c.key !== "all").map((cat) => (
-                <Option key={cat.key} value={cat.key}>{cat.icon} {cat.label}</Option>
+                <Option key={cat.key} value={cat.key}>
+                  {cat.icon} {cat.label}
+                </Option>
               ))}
             </Select>
           </Form.Item>
 
-          <Form.Item name="title" label="Article Title" rules={[{ required: true, message: "Please enter a title" }, { min: 10, message: "Title should be at least 10 characters" }]}>
-            <Input placeholder="Enter a clear, informative title..." style={{ borderRadius: 10 }} />
+          <Form.Item
+            name="title"
+            label="Article Title"
+            rules={[
+              { required: true, message: "Please enter a title" },
+              { min: 10, message: "Title should be at least 10 characters" },
+            ]}
+          >
+            <Input
+              placeholder="Enter a clear, informative title..."
+              style={{ borderRadius: 10 }}
+            />
           </Form.Item>
 
-          <Form.Item name="excerpt" label="Short Summary" rules={[{ required: true, message: "Please write a short summary" }]}>
-            <TextArea rows={2} placeholder="A brief 1-2 sentence summary of your article..." style={{ borderRadius: 10 }} />
+          <Form.Item
+            name="excerpt"
+            label="Short Summary"
+            rules={[
+              { required: true, message: "Please write a short summary" },
+            ]}
+          >
+            <TextArea
+              rows={2}
+              placeholder="A brief 1-2 sentence summary of your article..."
+              style={{ borderRadius: 10 }}
+            />
           </Form.Item>
 
-          <Form.Item name="content" label="Article Content" rules={[{ required: true, message: "Please write the article content" }, { min: 100, message: "Article should be at least 100 characters" }]}>
-            <TextArea rows={8} placeholder="Write your full article here... You can include facts, personal experience, tips, or news about halal in China." style={{ borderRadius: 10 }} />
+          <Form.Item
+            name="content"
+            label="Article Content"
+            rules={[
+              { required: true, message: "Please write the article content" },
+              {
+                min: 100,
+                message: "Article should be at least 100 characters",
+              },
+            ]}
+          >
+            <TextArea
+              rows={8}
+              placeholder="Write your full article here... You can include facts, personal experience, tips, or news about halal in China."
+              style={{ borderRadius: 10 }}
+            />
           </Form.Item>
 
           <Form.Item name="tags" label="Tags (comma separated)">
-            <Input placeholder="e.g. certification, beijing, food" style={{ borderRadius: 10 }} />
+            <Input
+              placeholder="e.g. certification, beijing, food"
+              style={{ borderRadius: 10 }}
+            />
           </Form.Item>
 
           <Form.Item label="Cover Image (Optional)">
-            <Upload listType="picture-card" maxCount={1} beforeUpload={() => false}>
+            <Upload
+              listType="picture-card"
+              maxCount={1}
+              beforeUpload={() => false}
+            >
               <div>
                 <CameraOutlined />
                 <div style={{ marginTop: 8, fontSize: 12 }}>Upload Image</div>
@@ -1172,15 +1917,35 @@ function BlogPage({ onNavigate }) {
 
           <Form.Item style={{ marginBottom: 0 }}>
             <div style={{ display: "flex", gap: 10 }}>
-              <Button block onClick={() => { setIsWriteModalOpen(false); form.resetFields(); }} style={{ borderRadius: 24 }}>Cancel</Button>
-              <Button type="primary" htmlType="submit" block loading={submitting} style={{ background: "#2E7D32", borderColor: "#2E7D32", borderRadius: 24, fontWeight: 700, height: 44 }}>
+              <Button
+                block
+                onClick={() => {
+                  setIsWriteModalOpen(false);
+                  form.resetFields();
+                }}
+                style={{ borderRadius: 24 }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                block
+                loading={submitting}
+                style={{
+                  background: "#2E7D32",
+                  borderColor: "#2E7D32",
+                  borderRadius: 24,
+                  fontWeight: 700,
+                  height: 44,
+                }}
+              >
                 {submitting ? "Submitting..." : "Submit Article"}
               </Button>
             </div>
           </Form.Item>
         </Form>
       </Modal>
-
     </div>
   );
 }

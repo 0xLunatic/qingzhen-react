@@ -875,14 +875,14 @@ function LandingPage({ onNavigate }) {
                   boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 }}
               >
-                <Row style={{ height: "100%", margin: 0 }}>
+                <Row style={{ margin: 0 }}>
                   <Col
                     xs={24}
                     md={12}
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      height: "100%",
+
                       // Hapus border kanan di mobile, tambah border bawah
                       borderRight: !isMobile ? "1px solid #f0f0f0" : "none",
                       borderBottom: isMobile ? "1px solid #f0f0f0" : "none",
@@ -1076,90 +1076,58 @@ function LandingPage({ onNavigate }) {
                 </div>
 
                 <Row gutter={[12, 12]}>
-                  <Col span={14}>
+                  <Col span={24}>
                     <Button
                       type="primary"
                       className="btn-green"
                       style={{
                         width: "100%",
-                        height: 44,
+                        height: 52,
                         borderRadius: 12,
                         justifyContent: "flex-start",
                         fontSize: 15,
                         background: "#2E7D32",
                       }}
                       icon={<ShopOutlined />}
+                      onClick={() => onNavigate("finder")}
                     >
                       {t("cat_rest")}
-                    </Button>
-                  </Col>
-                  <Col span={10}>
-                    <Button
-                      style={{
-                        width: "100%",
-                        height: 44,
-                        borderRadius: 12,
-                        justifyContent: "flex-start",
-                        background: "#f5f5f5",
-                        border: "none",
-                        color: "#333",
-                        fontSize: 15,
-                      }}
-                      icon={<ShoppingCartOutlined />}
-                    >
-                      {t("cat_groceries")}
-                    </Button>
-                  </Col>
-                  <Col span={10}>
-                    <Button
-                      style={{
-                        width: "100%",
-                        height: 44,
-                        borderRadius: 12,
-                        justifyContent: "flex-start",
-                        background: "#f5f5f5",
-                        border: "none",
-                        color: "#333",
-                        fontSize: 15,
-                      }}
-                      icon={<BankOutlined />}
-                    >
-                      {t("cat_hotels")}
-                    </Button>
-                  </Col>
-                  <Col span={14}>
-                    <Button
-                      style={{
-                        width: "100%",
-                        height: 44,
-                        borderRadius: 12,
-                        justifyContent: "flex-start",
-                        background: "#f5f5f5",
-                        border: "none",
-                        color: "#333",
-                        fontSize: 15,
-                      }}
-                      icon={<CoffeeOutlined />}
-                    >
-                      {t("cat_cafes")}
                     </Button>
                   </Col>
                   <Col span={24}>
                     <Button
                       style={{
-                        width: "auto",
-                        height: 44,
+                        width: "100%",
+                        height: 52,
                         borderRadius: 12,
                         justifyContent: "flex-start",
                         background: "#f5f5f5",
                         border: "none",
                         color: "#333",
                         fontSize: 15,
-                        paddingRight: 24,
                       }}
-                      icon={<FireOutlined />}
+                      icon={<CompassOutlined />}
+                      onClick={() => onNavigate("mosque")}
                     >
-                      {t("cat_butcher")}
+                      {t("nav_mosque")}
+                    </Button>
+                  </Col>
+                  <Col span={24}>
+                    <Button
+                      style={{
+                        width: "100%",
+                        height: 52,
+                        borderRadius: 12,
+                        justifyContent: "flex-start",
+                        background: "#f5f5f5",
+                        border: "none",
+                        color: "#333",
+                        fontSize: 15,
+                      }}
+                      icon={<CompassFilled />}
+                      onClick={() => onNavigate("prayer")}
+                    >
+                      {t("nav_prayer")}
                     </Button>
                   </Col>
                 </Row>
