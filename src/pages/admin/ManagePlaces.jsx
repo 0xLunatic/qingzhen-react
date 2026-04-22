@@ -341,7 +341,7 @@ const ManagePlaces = () => {
           <Popconfirm
             title={<span style={{ color: "red" }}>Delete Place?</span>}
             description="Are you sure?"
-            onConfirm={() => handleDelete(r.id)}
+            onConfirm={() => handleDelete(record.id)}
             okText="Delete"
             cancelText="Cancel"
             okButtonProps={{ danger: true }}
