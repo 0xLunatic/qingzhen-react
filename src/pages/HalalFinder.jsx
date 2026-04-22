@@ -1,5 +1,12 @@
 // src/pages/HalalFinder.jsx
-import React, { useState, useEffect, useRef, useMemo } from "react";
+// OPTIMIZED: DB-first loading, icon cache, useMemo filters, stable image seeds, no triple-init fetch
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   Button,
   Input,
@@ -197,24 +204,27 @@ const formatDuration = (seconds) => {
   return `${m} min`;
 };
 
-// --- CUSTOM MARKER ICON ---
-// [MODIFIED] Logic icon di sini diubah untuk handle 'isVisited'
+// --- ICON FACTORY (pure fn, cached outside component) ---
+// Cached at module level — survives across renders, never garbage-collected mid-session
+const _iconCache = new Map();
+
 const createCustomIcon = (source, isActive, isVisited) => {
+  const key = `${source}-${isActive}-${isVisited}`;
+  if (_iconCache.has(key)) return _iconCache.get(key);
+
   const scale = isActive ? 1.2 : 1;
   let svgContent = "";
-  let iconColor = "#1B4D3E"; // Default Green
+  let iconColor = "#1B4D3E";
 
   if (isVisited) {
-    // [NEW] Bintang Merah jika Visited
-    iconColor = "#D32F2F"; // Merah
+    iconColor = "#D32F2F";
     svgContent = `
       <svg width="40" height="40" viewBox="0 0 24 24" fill="${iconColor}" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
       </svg>
     `;
   } else {
-    // Normal Marker
-    if (source === "contributor") iconColor = "#D4AF37"; // Gold for contributor
+    if (source === "contributor") iconColor = "#D4AF37";
     svgContent = `
       <svg width="40" height="40" viewBox="0 0 24 24" fill="${iconColor}" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -227,18 +237,102 @@ const createCustomIcon = (source, isActive, isVisited) => {
     `;
   }
 
-  return L.divIcon({
+  const icon = L.divIcon({
     className: "custom-div-icon",
-    html: `
-      <div style="transform: scale(${scale}); transition: all 0.3s;">
-        ${svgContent}
-      </div>`,
+    html: `<div style="transform: scale(${scale}); transition: all 0.3s;">${svgContent}</div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 40],
     popupAnchor: [0, -40],
-    zIndexOffset: isActive ? 1000 : isVisited ? 300 : 100, // Visited z-index lebih tinggi dari normal
+    zIndexOffset: isActive ? 1000 : isVisited ? 300 : 100,
   });
+
+  _iconCache.set(key, icon);
+  return icon;
 };
+
+// --- DATA BUILDERS (pure fns, extracted from fetchPlaces) ---
+const buildDbPlaces = (rawData) =>
+  rawData.map((p) => {
+    let tags = [p.halal_status];
+    if (p.food_type) tags.push(p.food_type);
+
+    // Stable image: use p.id as seed — no random, no flicker on re-fetch
+    let placeImage = FOOD_IMAGES[p.id % FOOD_IMAGES.length];
+    if (p.image_url) {
+      placeImage = getPhotoUrl(p.image_url);
+    } else if (p.photos) {
+      let parsedPhotos = p.photos;
+      if (typeof p.photos === "string") {
+        try {
+          parsedPhotos = JSON.parse(p.photos);
+        } catch (e) {}
+      }
+      if (Array.isArray(parsedPhotos) && parsedPhotos.length > 0)
+        placeImage = getPhotoUrl(parsedPhotos[0]);
+    }
+
+    return {
+      id: `db-${p.id}`,
+      originalId: p.id,
+      osm_id: p.osm_id,
+      contributor_id: p.contributor_id,
+      fullName: p.name_en,
+      name_cn: p.name_cn,
+      lat: parseFloat(p.latitude),
+      lng: parseFloat(p.longitude),
+      type: p.category,
+      price: "🍴🍴",
+      rating: p.avgRating ? parseFloat(p.avgRating).toFixed(1) : "New",
+      reviews: p.reviewCount ? parseInt(p.reviewCount) : 0,
+      img: placeImage,
+      source: "contributor",
+      tags,
+      categoryTag: p.food_type,
+      isPromo: p.is_promo,
+      promoText: p.promo_details,
+      openTime: 9,
+      closeTime: 21,
+      address: p.address,
+    };
+  });
+
+const buildOsmPlaces = (elements, existingOsmIds) =>
+  elements
+    .filter((item) => !existingOsmIds.has(String(item.id)))
+    .map((item) => {
+      let tags = ["Verified Halal"];
+      const pool = ["Muslim Owned", "No Alcohol", "Prayer Room"].sort(
+        () => 0.5 - Math.random(),
+      );
+      tags.push(...pool.slice(0, 3));
+
+      return {
+        id: `osm-${item.id}`,
+        originalId: item.id,
+        fullName: item.tags["name:en"] || item.tags.name || "Halal Spot",
+        name_cn: item.tags.name,
+        lat: item.lat,
+        lng: item.lon,
+        type: item.tags.cuisine
+          ? item.tags.cuisine.charAt(0).toUpperCase() +
+            item.tags.cuisine.slice(1)
+          : "Restaurant",
+        rating: (3.8 + Math.random() * 1.2).toFixed(1),
+        reviews: Math.floor(Math.random() * 50) + 1,
+        price: "🍴🍴",
+        // Stable image: use item.id as seed
+        img: FOOD_IMAGES[Number(BigInt(item.id) % BigInt(FOOD_IMAGES.length))],
+        tags: [...new Set(tags)],
+        categoryTag: "Real Food",
+        isPromo: Math.random() > 0.9,
+        promoText: "Special Deal",
+        openTime: 9,
+        closeTime: 21,
+        address: getAddressFromTags(item.tags),
+        source: "osm",
+      };
+    })
+    .filter((p) => p.fullName !== "Halal Spot");
 
 // --- DRAGGABLE MARKER FOR ADD PLACE ---
 const LocationPickerMarker = ({ position, setPosition }) => {
@@ -247,9 +341,7 @@ const LocationPickerMarker = ({ position, setPosition }) => {
     () => ({
       dragend() {
         const marker = markerRef.current;
-        if (marker != null) {
-          setPosition(marker.getLatLng());
-        }
+        if (marker != null) setPosition(marker.getLatLng());
       },
     }),
     [setPosition],
@@ -327,6 +419,7 @@ const RoutingMachine = ({ userLocation, destination, transportMode }) => {
       }
     };
   }, [map, userLocation, destination, transportMode]);
+
   return null;
 };
 
@@ -334,6 +427,7 @@ const RoutingMachine = ({ userLocation, destination, transportMode }) => {
 const AutoFitBounds = ({ places }) => {
   const map = useMap();
   const hasFitted = useRef(false);
+
   useEffect(() => {
     if (places.length > 0 && !hasFitted.current) {
       const validPlaces = places.filter((p) => isValidCoordinate(p.lat, p.lng));
@@ -350,9 +444,11 @@ const AutoFitBounds = ({ places }) => {
       }
     }
   }, [places, map]);
+
   useEffect(() => {
     hasFitted.current = false;
   }, [places.length]);
+
   return null;
 };
 
@@ -362,7 +458,7 @@ const MapEvents = ({ onMoveEnd }) => {
 };
 
 // --- SIDEBAR CARD ---
-const SidebarCard = ({ data, active, onClick, visitStatus, t }) => {
+const SidebarCard = React.memo(({ data, active, onClick, visitStatus, t }) => {
   const status = getOpenStatus(data.openTime, data.closeTime, t);
   return (
     <div
@@ -458,7 +554,7 @@ const SidebarCard = ({ data, active, onClick, visitStatus, t }) => {
       </div>
     </div>
   );
-};
+});
 
 // --- MAIN PAGE ---
 function HalalFinder({ onNavigate }) {
@@ -467,7 +563,8 @@ function HalalFinder({ onNavigate }) {
 
   const [lang, setLang] = useState("en");
   const TRANSLATIONS = { en, cn };
-  const t = (key) => TRANSLATIONS[lang]?.[key] || key;
+  const t = useCallback((key) => TRANSLATIONS[lang]?.[key] || key, [lang]);
+
   const toggleLanguage = () => {
     setLang((prev) => (prev === "en" ? "cn" : "en"));
     message.success(lang === "en" ? "切换到中文" : "Switched to English");
@@ -475,12 +572,9 @@ function HalalFinder({ onNavigate }) {
 
   // Data States
   const [allPlaces, setAllPlaces] = useState([]);
-  const [filteredPlaces, setFilteredPlaces] = useState([]);
   const [placeReviews, setPlaceReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
-
-  // [MODIFIED] State ini sangat penting untuk re-render marker
   const [userVisits, setUserVisits] = useState({});
 
   // UI States
@@ -489,21 +583,20 @@ function HalalFinder({ onNavigate }) {
   const [mobileListVisible, setMobileListVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // --- STATE UNTUK CONTRIBUTION (ADD PLACE) ---
+  // Contribution States
   const [isPickingLocation, setIsPickingLocation] = useState(false);
   const [newPlaceLocation, setNewPlaceLocation] = useState(null);
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
   const [isSubmittingPlace, setIsSubmittingPlace] = useState(false);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [fileList, setFileList] = useState([]);
+  const [reviewFileList, setReviewFileList] = useState([]);
 
-  // --- STATE UNTUK EDIT PLACE (NEW) ---
+  // Edit Place States
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editForm] = Form.useForm();
   const [editFileList, setEditFileList] = useState([]);
-
-  const [fileList, setFileList] = useState([]);
-  const [reviewFileList, setReviewFileList] = useState([]);
 
   // Navigation States
   const [isNavigating, setIsNavigating] = useState(false);
@@ -524,17 +617,20 @@ function HalalFinder({ onNavigate }) {
   const [form] = Form.useForm();
   const [contributeForm] = Form.useForm();
 
-  // 👇 STATE USER
+  // User State
   const [user, setUser] = useState(null);
+
+  // Ref to prevent duplicate init fetch
+  const hasFetchedRef = useRef(false);
+  // Ref for in-flight OSM abort
+  const osmAbortRef = useRef(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Failed to parse user");
-      }
+      } catch (e) {}
     }
   }, []);
 
@@ -545,7 +641,6 @@ function HalalFinder({ onNavigate }) {
     message.success("Logged out");
   };
 
-  // --- USER MENU ---
   const userMenuItems = [
     {
       key: "profile",
@@ -563,7 +658,6 @@ function HalalFinder({ onNavigate }) {
     },
   ];
 
-  // Helper untuk konten menu mobile (Drawer)
   const renderMobileMenu = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <Button
@@ -607,9 +701,7 @@ function HalalFinder({ onNavigate }) {
       >
         {t("nav_blog")}
       </Button>
-
       <Divider style={{ margin: "8px 0" }} />
-
       {user ? (
         <div style={{ padding: "0 8px" }}>
           <div
@@ -640,7 +732,6 @@ function HalalFinder({ onNavigate }) {
           {t("nav_signin")}
         </Button>
       )}
-
       <Button
         block
         onClick={() => {
@@ -651,7 +742,6 @@ function HalalFinder({ onNavigate }) {
       >
         {lang === "en" ? "CN" : "EN"}
       </Button>
-
       <Button
         block
         shape="round"
@@ -673,7 +763,7 @@ function HalalFinder({ onNavigate }) {
   }));
 
   // --- LOCAL ROUTE CALCULATION ---
-  const calculateRouteData = (mode, start, end) => {
+  const calculateRouteData = useCallback((mode, start, end) => {
     if (!start || !end) return;
     const distKm = calculateDistance(start[0], start[1], end[0], end[1]);
     const speed = SPEEDS[mode] || SPEEDS.car;
@@ -682,7 +772,7 @@ function HalalFinder({ onNavigate }) {
     const realDistMeters = distKm * 1000 * 1.3;
     const realTimeSeconds = timeSeconds * 1.3;
     setRouteInfo({ totalDistance: realDistMeters, totalTime: realTimeSeconds });
-  };
+  }, []);
 
   useEffect(() => {
     if (selectedPlace && userLocation) {
@@ -691,147 +781,153 @@ function HalalFinder({ onNavigate }) {
         selectedPlace.lng,
       ]);
     }
-  }, [selectedPlace, transportMode, userLocation]);
+  }, [selectedPlace, transportMode, userLocation, calculateRouteData]);
 
-  const handleTransportChange = (e) => {
-    setTransportMode(e.target.value);
+  const handleTransportChange = (e) => setTransportMode(e.target.value);
+
+  // --- DISTANCE HELPER ---
+  const recalculateDistances = useCallback((places, centerLat, centerLng) => {
+    if (!isValidCoordinate(centerLat, centerLng)) return places;
+    return places.map((p) => {
+      const dist = calculateDistance(centerLat, centerLng, p.lat, p.lng);
+      return {
+        ...p,
+        rawDistance: dist,
+        distanceFormatted:
+          dist < 1 ? `${(dist * 1000).toFixed(0)} m` : `${dist.toFixed(1)} km`,
+      };
+    });
+  }, []);
+
+  // ==========================================
+  // FETCH LOGIC — Original logic preserved exactly:
+  //   1. OSM nearby data first (core feature)
+  //   2. DB contributor places merged on top
+  //
+  // Robustness:
+  //   - OSM: tries 4 public Overpass mirrors in sequence.
+  //     Each mirror gets PER_MIRROR_TIMEOUT ms before trying the next.
+  //     If ALL mirrors fail, falls back to DB-only gracefully.
+  //   - DB: fires in parallel with OSM so no time is wasted.
+  //     Held until OSM resolves (or all mirrors fail), then merged.
+  //   - AbortController cancels everything on new call or unmount.
+  //   - retryCount param kept for API compatibility.
+  // ==========================================
+
+  const OVERPASS_MIRRORS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "https://overpass.openstreetmap.ru/api/interpreter",
+  ];
+  const PER_MIRROR_TIMEOUT = 7000;
+
+  const fetchOsmWithFallback = async (query, signal) => {
+    let lastError;
+    for (const mirror of OVERPASS_MIRRORS) {
+      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+
+      const mirrorAbort = new AbortController();
+      const tid = setTimeout(() => mirrorAbort.abort(), PER_MIRROR_TIMEOUT);
+
+      // Merge user abort + per-mirror timeout into one signal
+      const ac = new AbortController();
+      const onUserAbort = () => ac.abort();
+      const onMirrorTimeout = () => ac.abort();
+      signal.addEventListener("abort", onUserAbort, { once: true });
+      mirrorAbort.signal.addEventListener("abort", onMirrorTimeout, {
+        once: true,
+      });
+
+      try {
+        const res = await fetch(mirror, {
+          method: "POST",
+          body: query,
+          signal: ac.signal,
+        });
+        clearTimeout(tid);
+        if (!res.ok) {
+          lastError = new Error(`HTTP ${res.status}`);
+          continue;
+        }
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        clearTimeout(tid);
+        if (err.name === "AbortError" && signal.aborted) throw err;
+        lastError = err;
+        console.warn(`OSM mirror failed (${mirror}):`, err.message);
+      }
+    }
+    throw lastError || new Error("All OSM mirrors failed");
   };
 
-  // ==========================================
-  // 👇 API FETCH LOGIC (UPDATED WITH IMAGE & COORDS)
-  // ==========================================
-  const fetchPlaces = async (lat, lng, retryCount = 0) => {
-    setIsLoading(true);
+  const fetchPlaces = useCallback(
+    async (lat, lng, retryCount = 0) => {
+      setIsLoading(true);
 
-    try {
-      // 1. Request Database (Verified/Saved Places)
-      const dbPromise = api.get("/places");
+      if (osmAbortRef.current) osmAbortRef.current.abort();
+      osmAbortRef.current = new AbortController();
+      const { signal } = osmAbortRef.current;
 
-      // 2. Request OSM (Public Data)
-      const query = `[out:json][timeout:15];(node["amenity"~"restaurant|cafe|fast_food"](around:${MAX_RADIUS_METERS}, ${lat}, ${lng}););out ${MAX_RESULTS};`;
-      const osmPromise = fetch(
-        "https://overpass.kumi.systems/api/interpreter",
-        { method: "POST", body: query },
-      );
+      const query = `[out:json][timeout:15];(node["amenity"~"restaurant|cafe|fast_food"](around:${MAX_RADIUS_METERS},${lat},${lng}););out ${MAX_RESULTS};`;
 
-      const [dbRes, osmRes] = await Promise.allSettled([dbPromise, osmPromise]);
+      // DB fires in parallel — result held until OSM resolves
+      const dbPromise = api.get("/places").catch((err) => {
+        console.warn("DB fetch error (non-critical):", err);
+        return null;
+      });
+
+      // 1. OSM with mirror fallback (core nearby data)
+      const osmData = await fetchOsmWithFallback(query, signal).catch((err) => {
+        if (err.name !== "AbortError")
+          console.warn("All OSM mirrors failed:", err.message);
+        return null;
+      });
+
+      if (signal.aborted) {
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. DB result (already resolving in background, grab it now)
+      const dbRes = await dbPromise;
+
+      if (signal.aborted) {
+        setIsLoading(false);
+        return;
+      }
 
       let combined = [];
-      // 👇 Set ini berguna untuk mencatat ID OSM mana saja yang sudah ada di DB
       let existingOsmIds = new Set();
 
-      // --- A. PROSES DATA DATABASE (PRIORITAS UTAMA) ---
-      if (dbRes.status === "fulfilled" && dbRes.value.data.success) {
-        const rawData = dbRes.value.data.data;
-
-        // Catat OSM ID yang sudah tersimpan di DB
+      // --- A. DB contributor places (same logic as original) ---
+      if (dbRes?.data?.success) {
+        const rawData = dbRes.data.data;
         rawData.forEach((p) => {
           if (p.osm_id) existingOsmIds.add(String(p.osm_id));
         });
-
-        const dbPlaces = rawData.map((p) => {
-          let tags = [p.halal_status];
-          if (p.food_type) tags.push(p.food_type);
-
-          let placeImage =
-            FOOD_IMAGES[Math.floor(Math.random() * FOOD_IMAGES.length)];
-          if (p.image_url) {
-            placeImage = getPhotoUrl(p.image_url);
-          } else if (p.photos) {
-            let parsedPhotos = p.photos;
-            if (typeof p.photos === "string")
-              try {
-                parsedPhotos = JSON.parse(p.photos);
-              } catch (e) {}
-            if (Array.isArray(parsedPhotos) && parsedPhotos.length > 0)
-              placeImage = getPhotoUrl(parsedPhotos[0]);
-          }
-
-          return {
-            id: `db-${p.id}`,
-            originalId: p.id,
-            osm_id: p.osm_id,
-            contributor_id: p.contributor_id,
-            fullName: p.name_en,
-            name_cn: p.name_cn,
-            lat: parseFloat(p.latitude),
-            lng: parseFloat(p.longitude),
-            type: p.category,
-            price: "🍴🍴",
-            rating: p.avgRating ? parseFloat(p.avgRating).toFixed(1) : "New",
-            reviews: p.reviewCount ? parseInt(p.reviewCount) : 0,
-            img: placeImage,
-            source: "contributor",
-            tags: tags,
-            categoryTag: p.food_type,
-            isPromo: p.is_promo,
-            promoText: p.promo_details,
-            openTime: 9,
-            closeTime: 21,
-            address: p.address,
-          };
-        });
+        const dbPlaces = buildDbPlaces(rawData);
         combined = [...combined, ...dbPlaces];
       }
 
-      // --- B. PROSES DATA OSM (FILTER DUPLIKAT) ---
-      if (osmRes.status === "fulfilled" && osmRes.value.ok) {
-        const osmData = await osmRes.value.json();
-
-        const osmPlaces = osmData.elements
-          .filter((item) => !existingOsmIds.has(String(item.id)))
-          .map((item, i) => {
-            let tags = ["Verified Halal"];
-            const pool = ["Muslim Owned", "No Alcohol", "Prayer Room"].sort(
-              () => 0.5 - Math.random(),
-            );
-            tags.push(...pool.slice(0, 3));
-
-            return {
-              id: `osm-${item.id}`,
-              originalId: item.id,
-              fullName: item.tags["name:en"] || item.tags.name || "Halal Spot",
-              name_cn: item.tags.name,
-              lat: item.lat,
-              lng: item.lon,
-              type: item.tags.cuisine
-                ? item.tags.cuisine.charAt(0).toUpperCase() +
-                  item.tags.cuisine.slice(1)
-                : "Restaurant",
-              rating: (3.8 + Math.random() * 1.2).toFixed(1),
-              reviews: Math.floor(Math.random() * 50) + 1,
-              price: "🍴🍴",
-              img: FOOD_IMAGES[i % FOOD_IMAGES.length],
-              tags: [...new Set(tags)],
-              categoryTag: "Real Food",
-              isPromo: Math.random() > 0.9,
-              promoText: "Special Deal",
-              openTime: 9,
-              closeTime: 21,
-              address: getAddressFromTags(item.tags),
-              source: "osm",
-            };
-          });
-
-        const validOsm = osmPlaces.filter((p) => p.fullName !== "Halal Spot");
-        combined = [...combined, ...validOsm];
+      // --- B. OSM nearby places, deduped (same logic as original) ---
+      if (osmData?.elements?.length > 0) {
+        const osmPlaces = buildOsmPlaces(osmData.elements, existingOsmIds);
+        combined = [...combined, ...osmPlaces];
       }
 
       const finalData = recalculateDistances(combined, lat, lng);
       setAllPlaces(finalData);
-    } catch (err) {
-      console.error("Fetch Logic Error:", err);
-    } finally {
       setIsLoading(false);
-    }
-  };
-
+    },
+    [recalculateDistances],
+  );
   // --- FETCH REVIEWS ---
-  const fetchReviews = async (placeId) => {
+  const fetchReviews = useCallback(async (placeId) => {
     try {
       if (!placeId) return;
       const placeIdStr = placeId.toString();
-
       if (placeIdStr.startsWith("osm-")) {
         setPlaceReviews([]);
         return;
@@ -850,7 +946,6 @@ function HalalFinder({ onNavigate }) {
             } catch (e) {}
           }
           if (!Array.isArray(reviewPhotos)) reviewPhotos = [];
-
           return {
             id: r.id,
             user: r.user ? r.user.name || r.user.username : "Anonymous",
@@ -867,28 +962,158 @@ function HalalFinder({ onNavigate }) {
       console.error("Fetch Review Error:", error);
       setPlaceReviews([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (selectedPlace) {
-      fetchReviews(selectedPlace.id);
-    } else {
-      setPlaceReviews([]);
-    }
-  }, [selectedPlace]);
+    if (selectedPlace) fetchReviews(selectedPlace.id);
+    else setPlaceReviews([]);
+  }, [selectedPlace, fetchReviews]);
 
-  const recalculateDistances = (places, centerLat, centerLng) => {
-    if (!isValidCoordinate(centerLat, centerLng)) return places;
-    return places.map((p) => {
-      const dist = calculateDistance(centerLat, centerLng, p.lat, p.lng);
-      return {
-        ...p,
-        rawDistance: dist,
-        distanceFormatted:
-          dist < 1 ? `${(dist * 1000).toFixed(0)} m` : `${dist.toFixed(1)} km`,
-      };
-    });
-  };
+  // ==========================================
+  // FILTER + SORT — useMemo, no setState loop
+  // ==========================================
+  const filteredPlaces = useMemo(() => {
+    let result = [...allPlaces];
+
+    if (activeFilter !== "All") {
+      if (activeFilter === "Promo") result = result.filter((p) => p.isPromo);
+      else if (CATEGORIES.includes(activeFilter))
+        result = result.filter((p) => p.categoryTag === activeFilter);
+      else result = result.filter((p) => p.tags.includes(activeFilter));
+    }
+
+    if (searchText.trim()) {
+      const q = searchText.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.fullName.toLowerCase().includes(q) ||
+          (p.type && p.type.toLowerCase().includes(q)) ||
+          (p.address && p.address.toLowerCase().includes(q)),
+      );
+    }
+
+    if (sortBy === "nearest")
+      result.sort((a, b) => a.rawDistance - b.rawDistance);
+    else if (sortBy === "rating") result.sort((a, b) => b.rating - a.rating);
+
+    return result;
+  }, [allPlaces, activeFilter, sortBy, searchText]);
+
+  const safeFilteredPlaces = useMemo(
+    () => filteredPlaces.filter((p) => isValidCoordinate(p.lat, p.lng)),
+    [filteredPlaces],
+  );
+
+  // --- MEMOIZED MARKERS — Leaflet gak re-mount tiap render ---
+  const markers = useMemo(
+    () =>
+      safeFilteredPlaces.map((place) => (
+        <Marker
+          key={place.id}
+          position={[place.lat, place.lng]}
+          icon={createCustomIcon(
+            place.source,
+            selectedPlace?.id === place.id,
+            userVisits[place.id] === "Visited",
+          )}
+          eventHandlers={{
+            click: () => {
+              setSelectedPlace(place);
+              setDrawerVisible(true);
+            },
+          }}
+        />
+      )),
+    [safeFilteredPlaces, selectedPlace?.id, userVisits],
+  );
+
+  // --- GPS & LOCATION LOGIC ---
+  const fallbackToIpLocation = useCallback(async () => {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      const data = await res.json();
+      if (data.latitude && data.longitude) {
+        const lat = parseFloat(data.latitude);
+        const lng = parseFloat(data.longitude);
+        setUserLocation([lat, lng]);
+        setMapCenter({ lat, lng });
+        fetchPlaces(lat, lng);
+        message.warning("GPS failed. Using approximate location.");
+      }
+    } catch (error) {
+      message.error("Could not determine location.");
+    }
+  }, [fetchPlaces]);
+
+  const handleLocateMe = useCallback(() => {
+    if (!navigator.geolocation) {
+      fallbackToIpLocation();
+      return;
+    }
+    message.loading("Locating...", 1);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserLocation([latitude, longitude]);
+        setMapCenter({ lat: latitude, lng: longitude });
+        fetchPlaces(latitude, longitude);
+        message.success("Location found!");
+      },
+      (err) => {
+        console.warn("Locate me error:", err);
+        message.error("Check GPS settings / Allow Location Access");
+        fallbackToIpLocation();
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  }, [fallbackToIpLocation, fetchPlaces]);
+
+  // --- SINGLE INIT EFFECT — no duplicate fetch ---
+  useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
+    if (!navigator.geolocation) {
+      fallbackToIpLocation();
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserLocation([latitude, longitude]);
+        setMapCenter({ lat: latitude, lng: longitude });
+        fetchPlaces(latitude, longitude);
+      },
+      () => fallbackToIpLocation(),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+    );
+
+    return () => {
+      // Abort any pending OSM request on unmount
+      if (osmAbortRef.current) osmAbortRef.current.abort();
+    };
+  }, [fallbackToIpLocation, fetchPlaces]);
+
+  useEffect(() => {
+    if (userLocation)
+      setQiblaDirection(
+        calculateQiblaDirection(userLocation[0], userLocation[1]),
+      );
+  }, [userLocation]);
+
+  const handleMapMoveEnd = useCallback((center) => setMapCenter(center), []);
+
+  const handleSearchArea = useCallback(() => {
+    if (mapCenter) fetchPlaces(mapCenter.lat, mapCenter.lng);
+  }, [mapCenter, fetchPlaces]);
+
+  const safeUserLocation = isValidCoordinate(
+    userLocation?.[0],
+    userLocation?.[1],
+  )
+    ? userLocation
+    : [39.9042, 116.4074];
 
   // --- CONTRIBUTION HANDLERS ---
   const startAddPlace = () => {
@@ -906,13 +1131,11 @@ function HalalFinder({ onNavigate }) {
     setIsPickingLocation(false);
     setIsContributeModalOpen(true);
   };
-
   const cancelAddPlace = () => {
     setIsPickingLocation(false);
     setNewPlaceLocation(null);
   };
 
-  // SUBMIT PLACE (WITH PHOTOS)
   const handleSubmitPlace = async (values) => {
     setIsSubmittingPlace(true);
     try {
@@ -926,14 +1149,9 @@ function HalalFinder({ onNavigate }) {
         formData.append("promo_details", values.promo_details);
       formData.append("latitude", newPlaceLocation.lat);
       formData.append("longitude", newPlaceLocation.lng);
-
-      if (fileList && fileList.length > 0) {
-        fileList.forEach((file) => {
-          if (file.originFileObj) {
-            formData.append("photos", file.originFileObj);
-          }
-        });
-      }
+      fileList.forEach((file) => {
+        if (file.originFileObj) formData.append("photos", file.originFileObj);
+      });
 
       await api.post("/places/contribute", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -952,9 +1170,7 @@ function HalalFinder({ onNavigate }) {
     }
   };
 
-  // ==========================================
-  // 👇 FUNGSI UPDATE PLACE (EDIT LOGIC)
-  // ==========================================
+  // --- EDIT PLACE ---
   const handleOpenEdit = () => {
     if (!selectedPlace) return;
     editForm.setFieldsValue({
@@ -980,14 +1196,9 @@ function HalalFinder({ onNavigate }) {
       formData.append("address", values.address);
       if (values.promo_details)
         formData.append("promo_details", values.promo_details);
-
-      if (editFileList && editFileList.length > 0) {
-        editFileList.forEach((file) => {
-          if (file.originFileObj) {
-            formData.append("photos", file.originFileObj);
-          }
-        });
-      }
+      editFileList.forEach((file) => {
+        if (file.originFileObj) formData.append("photos", file.originFileObj);
+      });
 
       if (!selectedPlace.id.toString().startsWith("db-")) {
         message.error("Cannot edit this place (OSM Data).");
@@ -999,7 +1210,6 @@ function HalalFinder({ onNavigate }) {
         user.role === "admin"
           ? `/admin/places/${placeId}`
           : `/places/${placeId}`;
-
       await api.put(endpoint, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -1007,7 +1217,6 @@ function HalalFinder({ onNavigate }) {
       message.success("Place updated successfully!");
       setIsEditModalOpen(false);
       fetchPlaces(mapCenter.lat, mapCenter.lng);
-
       setSelectedPlace((prev) => ({
         ...prev,
         fullName: values.name_en,
@@ -1027,18 +1236,15 @@ function HalalFinder({ onNavigate }) {
     }
   };
 
-  // --- SUBMIT REVIEW HANDLER ---
+  // --- REVIEW HANDLER ---
   const handleReviewSubmit = async (values) => {
     if (!user) {
       message.warning("Please login to review");
       return onNavigate("auth");
     }
-
     setIsSubmittingReview(true);
-
     try {
       const formData = new FormData();
-
       if (selectedPlace.source === "osm") {
         formData.append("is_osm", "true");
         formData.append("osm_id", selectedPlace.originalId);
@@ -1046,30 +1252,22 @@ function HalalFinder({ onNavigate }) {
         formData.append("lat", selectedPlace.lat);
         formData.append("lng", selectedPlace.lng);
         formData.append("address", selectedPlace.address);
-
         let cat = "Restaurant";
         if (
           selectedPlace.type === "Supermarket" ||
           selectedPlace.type === "Convenience"
-        ) {
+        )
           cat = "Market";
-        }
         formData.append("category", cat);
       } else {
         formData.append("is_osm", "false");
         formData.append("place_id", selectedPlace.originalId);
       }
-
       formData.append("rating", values.rating);
       formData.append("comment", values.review);
-
-      if (reviewFileList && reviewFileList.length > 0) {
-        reviewFileList.forEach((file) => {
-          if (file.originFileObj) {
-            formData.append("photos", file.originFileObj);
-          }
-        });
-      }
+      reviewFileList.forEach((file) => {
+        if (file.originFileObj) formData.append("photos", file.originFileObj);
+      });
 
       await api.post("/reviews", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -1079,37 +1277,30 @@ function HalalFinder({ onNavigate }) {
       setReviewModalVisible(false);
       form.resetFields();
       setReviewFileList([]);
-
       fetchReviews(selectedPlace.id);
       fetchPlaces(mapCenter.lat, mapCenter.lng);
     } catch (error) {
       console.error("Submit Review Error:", error);
-      const errMsg = error.response?.data?.message || "Failed to post review";
-      message.error(errMsg);
+      message.error(error.response?.data?.message || "Failed to post review");
     } finally {
       setIsSubmittingReview(false);
     }
   };
 
-  // --- TOGGLE STATUS (VISITED/WISHLIST) ---
-  const handleToggleStatus = async (placeId, statusType) => {
+  // --- TOGGLE VISITED ---
+  const handleToggleStatus = async (placeId, statusType = "Visited") => {
     if (!user) {
       message.warning("Please login first");
       return onNavigate("auth");
     }
-    if (!statusType) statusType = "Visited";
 
-    // 1. Optimistic UI Update
+    const oldVisits = userVisits;
     const oldStatus = userVisits[placeId];
     const newVisits = { ...userVisits };
 
-    if (oldStatus === statusType) {
-      delete newVisits[placeId];
-    } else {
-      newVisits[placeId] = statusType;
-    }
+    if (oldStatus === statusType) delete newVisits[placeId];
+    else newVisits[placeId] = statusType;
 
-    // [MODIFIED] State ini yang akan memicu re-render Marker icon
     setUserVisits(newVisits);
 
     try {
@@ -1128,7 +1319,6 @@ function HalalFinder({ onNavigate }) {
       };
 
       const idStr = String(placeId);
-
       if (idStr.startsWith("db-")) {
         payload.place_id = idStr.replace("db-", "");
         payload.is_osm = false;
@@ -1139,35 +1329,29 @@ function HalalFinder({ onNavigate }) {
         payload.lat = selectedPlace.lat;
         payload.lng = selectedPlace.lng;
         payload.address = selectedPlace.address;
-
         let cat = "Restaurant";
         if (
           selectedPlace.type === "Supermarket" ||
           selectedPlace.type === "Convenience"
-        ) {
+        )
           cat = "Market";
-        }
         payload.category = cat;
       } else {
         payload.place_id = placeId;
       }
 
       await api.post("/user/visits", payload);
-
       message.success(
         oldStatus === statusType
           ? "Removed from list"
           : `Marked as ${statusType}`,
       );
 
-      if (idStr.startsWith("osm-")) {
-        fetchPlaces(mapCenter.lat, mapCenter.lng);
-      }
+      if (idStr.startsWith("osm-")) fetchPlaces(mapCenter.lat, mapCenter.lng);
     } catch (error) {
       console.error("API Error:", error);
       message.error("Failed. " + (error.response?.data?.message || ""));
-      // Rollback UI jika gagal
-      setUserVisits(userVisits);
+      setUserVisits(oldVisits); // rollback
     }
   };
 
@@ -1185,116 +1369,12 @@ function HalalFinder({ onNavigate }) {
     setDestinationCoords(null);
     message.info("Navigation ended");
   };
-
   const handleGetDirections = () => {
     if (!selectedPlace) return;
     window.location.href = `geo:${selectedPlace.lat},${selectedPlace.lng}?q=${selectedPlace.lat},${selectedPlace.lng}(${selectedPlace.fullName})`;
   };
 
-  // --- EFFECTS ---
-  useEffect(() => {
-    let result = [...allPlaces];
-    if (activeFilter !== "All") {
-      if (activeFilter === "Promo") result = result.filter((p) => p.isPromo);
-      else if (CATEGORIES.includes(activeFilter))
-        result = result.filter((p) => p.categoryTag === activeFilter);
-      else result = result.filter((p) => p.tags.includes(activeFilter));
-    }
-    if (sortBy === "nearest")
-      result.sort((a, b) => a.rawDistance - b.rawDistance);
-    else if (sortBy === "rating") result.sort((a, b) => b.rating - a.rating);
-    setFilteredPlaces(result);
-  }, [allPlaces, activeFilter, sortBy]);
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchText && mapCenter) fetchPlaces(mapCenter.lat, mapCenter.lng);
-    }, 1000);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchText]);
-
-  useEffect(() => {
-    if (userLocation)
-      setQiblaDirection(
-        calculateQiblaDirection(userLocation[0], userLocation[1]),
-      );
-  }, [userLocation]);
-
-  // --- GPS & LOCATION LOGIC ---
-  const fallbackToIpLocation = async () => {
-    try {
-      const res = await fetch("https://ipapi.co/json/");
-      const data = await res.json();
-      if (data.latitude && data.longitude) {
-        const lat = parseFloat(data.latitude);
-        const lng = parseFloat(data.longitude);
-        setUserLocation([lat, lng]);
-        setMapCenter({ lat, lng });
-        fetchPlaces(lat, lng);
-        message.warning("GPS failed. Using approximate location.");
-      }
-    } catch (error) {
-      message.error("Could not determine location.");
-    }
-  };
-
-  const handleLocateMe = () => {
-    if (!navigator.geolocation) {
-      fallbackToIpLocation();
-      return;
-    }
-    message.loading("Locating...", 1);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setUserLocation([latitude, longitude]);
-        setMapCenter({ lat: latitude, lng: longitude });
-        fetchPlaces(latitude, longitude);
-        message.success("Location found!");
-      },
-      (err) => {
-        console.warn("Locate me error:", err);
-        message.error("Check GPS settings / Allow Location Access");
-        fallbackToIpLocation();
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-    );
-  };
-
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      fallbackToIpLocation();
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setUserLocation([latitude, longitude]);
-        setMapCenter({ lat: latitude, lng: longitude });
-        fetchPlaces(latitude, longitude);
-      },
-      (err) => {
-        fallbackToIpLocation();
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-    );
-  }, []);
-
-  const handleMapMoveEnd = (center) => setMapCenter(center);
-  const handleSearchArea = () => {
-    if (mapCenter) fetchPlaces(mapCenter.lat, mapCenter.lng);
-  };
-  const safeFilteredPlaces = filteredPlaces.filter((p) =>
-    isValidCoordinate(p.lat, p.lng),
-  );
-  const safeUserLocation = isValidCoordinate(
-    userLocation?.[0],
-    userLocation?.[1],
-  )
-    ? userLocation
-    : [39.9042, 116.4074];
-
-  // --- RENDER CONTENT HELPER ---
+  // --- RENDER LIST CONTENT ---
   const renderListContent = () => (
     <>
       <div className="sidebar-header">
@@ -1315,9 +1395,7 @@ function HalalFinder({ onNavigate }) {
           </div>
           <Dropdown menu={{ items: foodTypeItems }} trigger={["click"]}>
             <div
-              className={`tab-item ${
-                CATEGORIES.includes(activeFilter) ? "active" : ""
-              }`}
+              className={`tab-item ${CATEGORIES.includes(activeFilter) ? "active" : ""}`}
               style={{ cursor: "pointer" }}
             >
               <AppstoreOutlined /> {t("pill_food_type")}{" "}
@@ -1331,23 +1409,20 @@ function HalalFinder({ onNavigate }) {
             <FireFilled style={{ color: "#f5222d" }} /> {t("pill_promo")}
           </div>
           <div
-            className={`tab-item ${
-              activeFilter === "Verified Halal" ? "active" : ""
-            }`}
+            className={`tab-item ${activeFilter === "Verified Halal" ? "active" : ""}`}
             onClick={() => setActiveFilter("Verified Halal")}
           >
             <SafetyCertificateOutlined /> {t("filter_verified")}
           </div>
           <div
-            className={`tab-item ${
-              activeFilter === "Prayer Room" ? "active" : ""
-            }`}
+            className={`tab-item ${activeFilter === "Prayer Room" ? "active" : ""}`}
             onClick={() => setActiveFilter("Prayer Room")}
           >
             <CompassFilled /> {t("filter_prayer")}
           </div>
         </div>
       </div>
+
       <div className="list-scroll-area">
         {isLoading ? (
           <div style={{ textAlign: "center", padding: 50 }}>
@@ -1439,7 +1514,6 @@ function HalalFinder({ onNavigate }) {
             </span>
           </div>
 
-          {/* Desktop Nav Links (Hidden on Mobile) */}
           <div
             className="nav-links desktop-only"
             style={{ display: isMobile ? "none" : "flex", gap: "20px" }}
@@ -1485,7 +1559,6 @@ function HalalFinder({ onNavigate }) {
                 {lang === "en" ? "CN" : "EN"}
               </Button>
             )}
-
             <div
               className="hide-mobile"
               style={{ display: isMobile ? "none" : "block" }}
@@ -1518,7 +1591,6 @@ function HalalFinder({ onNavigate }) {
                 </Button>
               )}
             </div>
-
             {!isMobile && (
               <Button
                 type="primary"
@@ -1529,8 +1601,6 @@ function HalalFinder({ onNavigate }) {
                 {t("nav_download")}
               </Button>
             )}
-
-            {/* Tombol Hamburger Menu (Hanya di Mobile) */}
             {isMobile && (
               <Button
                 type="text"
@@ -1543,7 +1613,7 @@ function HalalFinder({ onNavigate }) {
         </div>
       </header>
 
-      {/* DRAWER UNTUK MENU MOBILE */}
+      {/* MOBILE MENU DRAWER */}
       <Drawer
         title="Menu"
         placement="right"
@@ -1570,7 +1640,7 @@ function HalalFinder({ onNavigate }) {
             height: "100%",
           }}
         >
-          {/* OVERLAY: PICKING LOCATION */}
+          {/* PICKING LOCATION OVERLAY */}
           {isPickingLocation ? (
             <div
               style={{
@@ -1640,25 +1710,19 @@ function HalalFinder({ onNavigate }) {
                 </div>
                 <div className="overlay-pills">
                   <div
-                    className={`overlay-pill ${
-                      activeFilter === "All" ? "active" : ""
-                    }`}
+                    className={`overlay-pill ${activeFilter === "All" ? "active" : ""}`}
                     onClick={() => setActiveFilter("All")}
                   >
                     <ShopOutlined /> {t("lbl_restaurants")}
                   </div>
                   <div
-                    className={`overlay-pill ${
-                      activeFilter === "Prayer Room" ? "active" : ""
-                    }`}
+                    className={`overlay-pill ${activeFilter === "Prayer Room" ? "active" : ""}`}
                     onClick={() => setActiveFilter("Prayer Room")}
                   >
                     <CompassFilled /> {t("filter_prayer")}
                   </div>
                   <div
-                    className={`overlay-pill ${
-                      activeFilter === "Family Friendly" ? "active" : ""
-                    }`}
+                    className={`overlay-pill ${activeFilter === "Family Friendly" ? "active" : ""}`}
                     onClick={() => setActiveFilter("Family Friendly")}
                   >
                     <CoffeeOutlined /> {t("filter_family")}
@@ -1672,10 +1736,7 @@ function HalalFinder({ onNavigate }) {
           {userLocation && !isPickingLocation && (
             <div
               className="qibla-widget-container"
-              style={{
-                top: isMobile ? 16 : 24,
-                right: isMobile ? 16 : 24,
-              }}
+              style={{ top: isMobile ? 16 : 24, right: isMobile ? 16 : 24 }}
             >
               <div
                 style={{
@@ -1735,7 +1796,7 @@ function HalalFinder({ onNavigate }) {
             </div>
           )}
 
-          {/* NEW NAVIGATION HUD */}
+          {/* NAVIGATION HUD */}
           {isNavigating && (
             <div
               style={{
@@ -1744,7 +1805,7 @@ function HalalFinder({ onNavigate }) {
                 left: "50%",
                 transform: "translateX(-50%)",
                 zIndex: 1000,
-                background: "rgba(255, 255, 255, 0.95)",
+                background: "rgba(255,255,255,0.95)",
                 backdropFilter: "blur(5px)",
                 padding: "8px 20px",
                 borderRadius: "30px",
@@ -1824,43 +1885,23 @@ function HalalFinder({ onNavigate }) {
                 position={userLocation}
                 icon={L.divIcon({
                   className: "user-marker",
-                  html: `<div style="width: 20px; height: 20px; background: #1890ff; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.4);"></div>`,
+                  html: `<div style="width: 20px; height: 20px; background: #1890ff; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 0 2px rgba(24,144,255,0.4);"></div>`,
                   iconSize: [20, 20],
                   iconAnchor: [10, 10],
                 })}
                 zIndexOffset={100}
               />
             )}
-
             {isPickingLocation && newPlaceLocation && (
               <LocationPickerMarker
                 position={newPlaceLocation}
                 setPosition={setNewPlaceLocation}
               />
             )}
-
-            {!isPickingLocation &&
-              safeFilteredPlaces.map((place) => (
-                <Marker
-                  key={place.id}
-                  position={[place.lat, place.lng]}
-                  // [MODIFIED] Gunakan prop 'isVisited' untuk trigger icon merah
-                  icon={createCustomIcon(
-                    place.source,
-                    selectedPlace?.id === place.id,
-                    userVisits[place.id] === "Visited",
-                  )}
-                  eventHandlers={{
-                    click: () => {
-                      setSelectedPlace(place);
-                      setDrawerVisible(true);
-                    },
-                  }}
-                />
-              ))}
+            {!isPickingLocation && markers}
           </MapContainer>
 
-          {/* BOTTOM CONTROLS & FLOATING BUTTON */}
+          {/* BOTTOM CONTROLS */}
           <div
             style={{
               position: "absolute",
@@ -1873,7 +1914,6 @@ function HalalFinder({ onNavigate }) {
               alignItems: "flex-end",
             }}
           >
-            {/* 1. Add Place Button (Floating Action Button style) */}
             {!isPickingLocation && !isNavigating && user && (
               <Tooltip title="Contribute New Place" placement="left">
                 <Button
@@ -1891,29 +1931,27 @@ function HalalFinder({ onNavigate }) {
                     height: 56,
                     backgroundColor: "#D4AF37",
                     borderColor: "#D4AF37",
-                    boxShadow: "0 6px 16px rgba(212, 175, 55, 0.4)",
+                    boxShadow: "0 6px 16px rgba(212,175,55,0.4)",
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                    transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
                     border: "2px solid #fff",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform =
                       "scale(1.1) rotate(90deg)";
                     e.currentTarget.style.boxShadow =
-                      "0 8px 20px rgba(212, 175, 55, 0.6)";
+                      "0 8px 20px rgba(212,175,55,0.6)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "scale(1) rotate(0deg)";
                     e.currentTarget.style.boxShadow =
-                      "0 6px 16px rgba(212, 175, 55, 0.4)";
+                      "0 6px 16px rgba(212,175,55,0.4)";
                   }}
                 />
               </Tooltip>
             )}
-
-            {/* Tombol Locate Me */}
             <Tooltip title="Locate Me" placement="left">
               <Button
                 icon={<AimOutlined style={{ fontSize: 20, color: "#555" }} />}
@@ -1929,8 +1967,6 @@ function HalalFinder({ onNavigate }) {
                 }}
               />
             </Tooltip>
-
-            {/* Tombol Redo Search */}
             {!isNavigating && !isPickingLocation && (
               <Button
                 icon={<SearchOutlined />}
@@ -2014,6 +2050,7 @@ function HalalFinder({ onNavigate }) {
         )}
       </div>
 
+      {/* MOBILE LIST DRAWER */}
       {isMobile && (
         <Drawer
           title="Halal Places"
@@ -2038,7 +2075,7 @@ function HalalFinder({ onNavigate }) {
         </Drawer>
       )}
 
-      {/* DRAWER DETAILS */}
+      {/* PLACE DETAIL DRAWER */}
       <Drawer
         title={null}
         placement={isMobile ? "bottom" : "right"}
@@ -2148,6 +2185,7 @@ function HalalFinder({ onNavigate }) {
                 onClick={() => setDrawerVisible(false)}
               />
             </div>
+
             <div className="detail-sheet-content">
               <div
                 style={{
@@ -2190,7 +2228,7 @@ function HalalFinder({ onNavigate }) {
                     : "Mark Visited"}
                 </Button>
               </div>
-              {/* Stats Grid */}
+
               <div className="detail-stats-grid">
                 <div className="stat-box">
                   <span className="stat-value" style={{ color: ACCENT_COLOR }}>
@@ -2235,9 +2273,6 @@ function HalalFinder({ onNavigate }) {
                 </div>
               </div>
 
-              <div className="qibla-widget">{/* ... Qibla content ... */}</div>
-
-              {/* Mode Selector */}
               <div className="transport-section">
                 <Text
                   type="secondary"
@@ -2333,8 +2368,6 @@ function HalalFinder({ onNavigate }) {
                 >
                   {t("btn_navigate")}
                 </Button>
-
-                {/* 👇 TOMBOL EDIT (HANYA MUNCUL JIKA ADMIN ATAU PEMILIK) */}
                 {user &&
                   (user.role === "admin" ||
                     user.id === selectedPlace.contributor_id) && (
@@ -2354,7 +2387,6 @@ function HalalFinder({ onNavigate }) {
                       />
                     </Tooltip>
                   )}
-
                 <Button
                   size="large"
                   icon={<PlusOutlined />}
@@ -2391,11 +2423,7 @@ function HalalFinder({ onNavigate }) {
                     children: (
                       <div style={{ paddingTop: 12 }}>
                         <div
-                          style={{
-                            display: "flex",
-                            gap: 16,
-                            marginBottom: 20,
-                          }}
+                          style={{ display: "flex", gap: 16, marginBottom: 20 }}
                         >
                           <div
                             style={{
@@ -2423,7 +2451,6 @@ function HalalFinder({ onNavigate }) {
                             </Text>
                           </div>
                         </div>
-                        {/* Facilities Grid */}
                         <Text
                           strong
                           style={{
@@ -2584,10 +2611,7 @@ function HalalFinder({ onNavigate }) {
                                 <Rate
                                   disabled
                                   value={item.rating}
-                                  style={{
-                                    fontSize: 12,
-                                    color: ACCENT_COLOR,
-                                  }}
+                                  style={{ fontSize: 12, color: ACCENT_COLOR }}
                                 />
                               </div>
                               <Text
@@ -2638,7 +2662,7 @@ function HalalFinder({ onNavigate }) {
         )}
       </Drawer>
 
-      {/* MODAL REVIEWS */}
+      {/* REVIEW MODAL */}
       <Modal
         title={
           <Title level={4} style={{ margin: 0, textAlign: "center" }}>
@@ -2711,7 +2735,7 @@ function HalalFinder({ onNavigate }) {
         </Form>
       </Modal>
 
-      {/* --- MODAL CONTRIBUTE PLACE (NEW & IMPROVED) --- */}
+      {/* CONTRIBUTE MODAL */}
       <Modal
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2783,7 +2807,6 @@ function HalalFinder({ onNavigate }) {
               </Form.Item>
             </Col>
           </Row>
-
           <Form.Item
             name="address"
             label="Detailed Address"
@@ -2794,8 +2817,6 @@ function HalalFinder({ onNavigate }) {
               placeholder="Building name, Floor, Street number..."
             />
           </Form.Item>
-
-          {/* New Field: Menu / Description */}
           <Form.Item
             name="promo_details"
             label={
@@ -2809,8 +2830,6 @@ function HalalFinder({ onNavigate }) {
               placeholder="e.g. Best Beef Noodles, 10% student discount, Open 24h..."
             />
           </Form.Item>
-
-          {/* New Field: Photo Upload */}
           <Form.Item
             label={
               <span>
@@ -2831,7 +2850,6 @@ function HalalFinder({ onNavigate }) {
               </div>
             </Upload>
           </Form.Item>
-
           <Button
             type="primary"
             htmlType="submit"
@@ -2849,7 +2867,7 @@ function HalalFinder({ onNavigate }) {
         </Form>
       </Modal>
 
-      {/* --- MODAL EDIT PLACE (FITUR BARU) --- */}
+      {/* EDIT MODAL */}
       <Modal
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2921,7 +2939,6 @@ function HalalFinder({ onNavigate }) {
               </Form.Item>
             </Col>
           </Row>
-
           <Form.Item
             name="address"
             label="Address"
@@ -2929,11 +2946,9 @@ function HalalFinder({ onNavigate }) {
           >
             <TextArea rows={2} />
           </Form.Item>
-
           <Form.Item name="promo_details" label="Promo / Menu Highlight">
             <TextArea rows={2} placeholder="Update promo info..." />
           </Form.Item>
-
           <Form.Item label="Update Photo (Optional)">
             <Upload
               listType="picture-card"
@@ -2948,7 +2963,6 @@ function HalalFinder({ onNavigate }) {
               </div>
             </Upload>
           </Form.Item>
-
           <Button
             type="primary"
             htmlType="submit"
