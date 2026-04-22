@@ -54,7 +54,7 @@ const ACCENT_COLOR = "#C6A87C";
 const MECCA_COORDS = { lat: 21.4225, lng: 39.8262 };
 
 // 👇 KONFIGURASI BACKEND (Sama seperti HalalFinder)
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 // --- HELPER FUNCTIONS ---
 
