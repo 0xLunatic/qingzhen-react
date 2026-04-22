@@ -138,10 +138,11 @@ const ManagePlaces = () => {
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/admin/places/${id}`);
+      await api.delete(`/admin/places/${id}`); // pastikan tidak ada typo di path ini
       message.success("Place deleted");
       setPlaces((prev) => prev.filter((p) => p.id !== id));
     } catch (error) {
+      console.error(error.response); // lihat response error spesifiknya
       message.error("Failed to delete");
     }
   };
@@ -341,7 +342,10 @@ const ManagePlaces = () => {
           <Popconfirm
             title={<span style={{ color: "red" }}>Delete Place?</span>}
             description="Are you sure?"
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => {
+              console.log("Deleting id:", record.id); // cek di browser console
+              handleDelete(record.id);
+            }}
             okText="Delete"
             cancelText="Cancel"
             okButtonProps={{ danger: true }}
